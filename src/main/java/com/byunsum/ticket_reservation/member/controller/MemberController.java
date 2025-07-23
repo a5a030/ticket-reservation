@@ -83,10 +83,12 @@ public class MemberController {
     public ResponseEntity<?> getLoginMember(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
+        /* 인터셉터에서 검증하므로 세션 null 체크할 필요 없어짐
         if(session == null || session.getAttribute("loginMember") == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("로그인 상태가 아닙니다.");
         }
+         */
 
         Member loginMember = (Member) session.getAttribute("loginMember");
         return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getName()));
