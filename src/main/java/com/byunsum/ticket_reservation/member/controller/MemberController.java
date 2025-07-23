@@ -44,12 +44,16 @@ public class MemberController {
     */
 
     @PostMapping("/new")
-    public Member create(@RequestBody MemberForm form) {
-        Member member = new Member();
-        member.setName(form.getName());
-        member.setPassword(form.getPassword());
-        memberService.join(member);
-        return member; //@RestController에서 json으로 응답
+    public ResponseEntity<?> create(@RequestBody MemberForm form) {
+        try {
+            Member member = new Member();
+            member.setName(form.getName());
+            member.setPassword(form.getPassword());
+            memberService.join(member);
+            return ResponseEntity.ok(member); // 200 ok + member json
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     /*
