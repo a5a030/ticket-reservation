@@ -1,15 +1,64 @@
 package com.byunsum.ticket_reservation.member.controller;
 
+import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.member.form.MemberForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.List;
+
+@RestController
+@RequestMapping("/members")
 public class MemberController {
     private final MemberService memberService;
 
     @Autowired
     public MemberController(MemberService memberService) {
         this.memberService = memberService;
+    }
+
+    @GetMapping("/new")
+    public String createForm(Model model) {
+        model.addAttribute("memberForm", new MemberForm());
+        return "members/createMemberForm";
+    }
+
+    /* @Controller용
+    @PostMapping("/new")
+    public String create(@ModelAttribute MemberForm form) {
+        Member member = new Member();
+        member.setName(form.getName());
+        member.setPassword(form.getPassword()); //추후 암호화 적용
+        memberService.join(member);
+
+        return "redirect:/";
+    }
+    */
+
+    @PostMapping("/new")
+    public Member create(@RequestBody MemberForm form) {
+        Member member = new Member();
+        member.setName(form.getName());
+        member.setPassword(form.getPassword());
+        memberService.join(member);
+        return member; //@RestController에서 json으로 응답
+    }
+
+    /*
+    @GetMapping
+    public String list(Model model) {
+        List<Member> members = memberService.findMembers();
+        model.addAttribute("members", members);
+
+        return "members/memberList"; //HTML 뷰 렌더링
+    }
+    */
+
+    @GetMapping
+    public List<Member> list() {
+        return memberService.findMembers(); //@RestController에서 json 배열로 반환
     }
 }

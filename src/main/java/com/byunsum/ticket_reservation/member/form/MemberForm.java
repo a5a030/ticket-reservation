@@ -1,8 +1,7 @@
-package com.byunsum.ticket_reservation.member.domain;
+package com.byunsum.ticket_reservation.member.form;
 
-public class Member {
-    private  String name;
-    private Long id;
+public class MemberForm {
+    private String name;
     private String password;
 
     public String getName() {
@@ -11,14 +10,6 @@ public class Member {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getPassword() {
