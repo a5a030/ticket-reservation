@@ -39,17 +39,18 @@ public class MemberService {
         return memberRepository.findById(memberId);
     }
 
-    public Optional<Member> login(String name, String rawPassword) {
+    public Member login(String name, String rawPassword) {
         Optional<Member> findMember = memberRepository.findByName(name);
 
-        if (findMember.isPresent()) {
-            Member member = findMember.get();
-
-            if(passwordEncoder.matches(rawPassword, member.getPassword())) {
-                return Optional.of(member);
-            }
+        if (findMember.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
         }
 
-        return Optional.empty();
+        Member member = findMember.get();
+        if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return member;
     }
 }

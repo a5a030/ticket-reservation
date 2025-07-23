@@ -6,6 +6,8 @@ import com.byunsum.ticket_reservation.member.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,17 +29,26 @@ public class LoginController {
     }
 
     @PostMapping
-    public String login(@RequestBody LoginForm loginForm, HttpServletRequest request) {
-        Optional<Member> loginMember = memberService.login(loginForm.getName(), loginForm.getPassword());
+    public ResponseEntity<?> login(@RequestBody LoginForm loginForm, HttpServletRequest request) {
+        try {
+            // 기존세션 무효화
+            HttpSession oldSession = request.getSession();
+            if(oldSession != null) {
+                oldSession.invalidate();
+            }
 
-        if (loginMember.isEmpty()) {
-            return "로그인 실패";
+            // 로그인 검증
+            Member loginMember = memberService.login(loginForm.getName(), loginForm.getPassword());
+
+            // 새 세션 생성
+            HttpSession newSession = request.getSession(true);
+            newSession.setAttribute("loginMember", loginMember);
+            newSession.setMaxInactiveInterval(30 * 60);
+
+            return ResponseEntity.ok("로그인 성공");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
-
-        HttpSession session = request.getSession();
-        session.setAttribute("loginMember", loginMember.get());
-
-        return "로그인 성공";
     }
 
     @PostMapping("/logout")
