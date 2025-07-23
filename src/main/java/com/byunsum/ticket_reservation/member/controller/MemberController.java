@@ -1,9 +1,14 @@
 package com.byunsum.ticket_reservation.member.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.member.dto.SessionMemberDTO;
 import com.byunsum.ticket_reservation.member.form.MemberForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -60,5 +65,18 @@ public class MemberController {
     @GetMapping
     public List<Member> list() {
         return memberService.findMembers(); //@RestController에서 json 배열로 반환
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getLoginMember(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+
+        if(session == null || session.getAttribute("loginMember") == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("로그인 상태가 아닙니다.");
+        }
+
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getName()));
     }
 }
