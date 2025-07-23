@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,9 @@ public class MemberController {
     public MemberController(MemberService memberService) {
         this.memberService = memberService;
     }
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/new")
     public String createForm(Model model) {
@@ -48,7 +52,11 @@ public class MemberController {
         try {
             Member member = new Member();
             member.setName(form.getName());
-            member.setPassword(form.getPassword());
+            String encodedPassword = passwordEncoder.encode(form.getPassword());
+            member.setPassword(encodedPassword); //비밀번호 암호화
+
+            System.out.println("암호화된 비밀번호: "+encodedPassword);
+
             memberService.join(member);
             return ResponseEntity.ok(member); // 200 ok + member json
         } catch (IllegalStateException e) {

@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.member.service;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +11,11 @@ import java.util.Optional;
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public MemberService(MemberRepository memberRepository) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public long join(Member member) {
@@ -36,8 +39,17 @@ public class MemberService {
         return memberRepository.findById(memberId);
     }
 
-    public Optional<Member> login(String name, String password) {
-        return memberRepository.findByName(name)
-                .filter((m) -> password.equals(m.getPassword()));
+    public Optional<Member> login(String name, String rawPassword) {
+        Optional<Member> findMember = memberRepository.findByName(name);
+
+        if (findMember.isPresent()) {
+            Member member = findMember.get();
+
+            if(passwordEncoder.matches(rawPassword, member.getPassword())) {
+                return Optional.of(member);
+            }
+        }
+
+        return Optional.empty();
     }
 }
