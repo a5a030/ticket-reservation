@@ -29,11 +29,13 @@ public class MemberController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /* @Controller용
     @GetMapping("/new")
     public String createForm(Model model) {
         model.addAttribute("memberForm", new MemberForm());
         return "members/createMemberForm";
     }
+    */
 
     /* @Controller용
     @PostMapping("/new")
@@ -92,5 +94,17 @@ public class MemberController {
 
         Member loginMember = (Member) session.getAttribute("loginMember");
         return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getName()));
+    }
+
+    @GetMapping("/secret")
+    public ResponseEntity<?> secretPage(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Member loginMember = (session != null) ? (Member) session.getAttribute("loginMember") : null;
+
+        if(loginMember == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        return ResponseEntity.ok("로그인한 이용자만 접근 가능한 페이지입니다.");
     }
 }
