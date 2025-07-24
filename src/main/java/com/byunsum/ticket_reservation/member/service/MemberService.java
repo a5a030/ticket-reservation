@@ -2,6 +2,8 @@ package com.byunsum.ticket_reservation.member.service;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +16,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    @Autowired
+    public MemberService(@Qualifier("jpaMemberRepository") MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -62,5 +65,9 @@ public class MemberService {
 
         member.setName(newName);
         member.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    public void deleteById(Long id) {
+        memberRepository.deleteById(id);
     }
 }

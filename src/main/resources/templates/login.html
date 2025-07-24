@@ -20,5 +20,10 @@
     <label>비밀번호: <input type="password" name="password" /></label><br>
     <button type="submit">로그인</button>
 </form>
+
+<div th:if="${param.withdrawSuccess}">
+    <p style="color: green;">회원 탈퇴가 완료되었습니다.</p>
+</div>
+
 </body>
 </html>

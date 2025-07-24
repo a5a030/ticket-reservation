@@ -1,6 +1,14 @@
 package com.byunsum.ticket_reservation.member.domain;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class Member {
+    @Id
+    @GeneratedValue
     private  String name;
     private Long id;
     private String password;

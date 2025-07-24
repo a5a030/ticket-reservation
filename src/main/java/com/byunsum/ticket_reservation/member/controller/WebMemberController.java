@@ -71,4 +71,19 @@ public class WebMemberController {
 
         return  "redirect:/web/members/me?updated";
     }
+
+    @PostMapping("/withdraw")
+    public String withdraw(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+
+        if(session == null || session.getAttribute("loginMember") == null){
+            return "redirect:/web/members/login-form?error=unauthorized";
+        }
+
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        memberService.deleteById(loginMember.getId());
+        session.invalidate();
+
+        return "redirect:/web/login-form?withdrawSuccess";
+    }
 }
