@@ -3,6 +3,8 @@ package com.byunsum.ticket_reservation.member.controller;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.form.MemberForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -40,5 +42,33 @@ public class WebMemberController {
         } catch (IllegalStateException e) {
             return "redirect:/web/members/join-form?error";
         }
+    }
+
+    @GetMapping("/edit")
+    public String editForm(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        Member loginMember = (Member) session.getAttribute("loginMember");
+
+        if(loginMember==null){
+            return "redirect:/web/members/login-form?error=unauthorized";
+        }
+
+        model.addAttribute("member", loginMember);
+        return "edit";
+    }
+
+    @PostMapping("/edit")
+    public String edit(@RequestParam String name, @RequestParam String password, HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        Member loginMember = (Member) session.getAttribute("loginMember");
+
+        if(loginMember==null){
+            return "redirect:/web/members/login-form?error=unauthorized";
+        }
+
+        memberService.update(loginMember.getId(),  name, password);
+        loginMember.setName(name);
+
+        return  "redirect:/web/members/me?updated";
     }
 }

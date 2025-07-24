@@ -4,6 +4,7 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,5 +53,14 @@ public class MemberService {
         }
 
         return member;
+    }
+
+    @Transactional
+    public void update(Long memberId, String newName, String newPassword) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
+
+        member.setName(newName);
+        member.setPassword(passwordEncoder.encode(newPassword));
     }
 }
