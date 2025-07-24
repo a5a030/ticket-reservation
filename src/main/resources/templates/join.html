@@ -1,0 +1,26 @@
+<!-- src/main/resources/templates/join.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>회원가입</title>
+</head>
+<body>
+<h1>회원가입</h1>
+
+<div th:if="${param.success}">
+  <p style="color:green;">회원가입이 완료되었습니다!</p>
+</div>
+
+<div th:if="${param.error}">
+  <p style="color:red;">이미 존재하는 회원입니다.</p>
+</div>
+
+
+<form method="post" action="/web/members/new">
+  <label>이름: <input type="text" name="name" /></label><br>
+  <label>비밀번호: <input type="password" name="password" /></label><br>
+  <button type="submit">가입</button>
+</form>
+</body>
+</html>
