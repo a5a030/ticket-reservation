@@ -5,10 +5,7 @@ import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.service.ReservationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reservations")
@@ -24,5 +21,12 @@ public class ReservationController {
         ReservationResponse response = reservationService.createReservation(request);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{code}")
+    public ResponseEntity<ReservationResponse> getReservation(@PathVariable String code) {
+        ReservationResponse response = reservationService.getReservationByCode(code);
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -29,6 +29,7 @@ public class ReservationService {
         Seat seat = seatRepository.findById(request.getSeatId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
 
+
         if(seat.isReserved()) {
             throw new IllegalStateException("이미 예약된 좌석입니다.");
         }
@@ -37,6 +38,20 @@ public class ReservationService {
 
         Reservation reservation = new Reservation(performance, seat);
         reservationRepository.save(reservation);
+
+        return new ReservationResponse(
+                reservation.getReservationCode(),
+                seat.getSeatNo(),
+                seat.getPrice(),
+                reservation.getCreatedAt()
+        );
+    }
+
+    public ReservationResponse getReservationByCode(String code) {
+        Reservation reservation = reservationRepository.findByReservationCode(code)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 예매번호입니다."));
+
+        Seat seat = reservation.getSeat();
 
         return new ReservationResponse(
                 reservation.getReservationCode(),

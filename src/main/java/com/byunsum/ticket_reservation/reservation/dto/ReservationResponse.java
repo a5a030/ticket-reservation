@@ -10,7 +10,7 @@ public class ReservationResponse {
 
     public ReservationResponse(String reservationCode, String seatNo, int price, LocalDateTime reservedAt) {
         this.reservationCode = reservationCode;
-        this.seatNo = seatNo;
+        this.seatNo  = seatNo;
         this.price = price;
         this.reservedAt = reservedAt;
     }
