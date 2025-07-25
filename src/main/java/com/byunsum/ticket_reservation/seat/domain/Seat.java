@@ -2,7 +2,6 @@ package com.byunsum.ticket_reservation.seat.domain;
 
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 public class Seat {
