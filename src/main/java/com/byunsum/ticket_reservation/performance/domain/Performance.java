@@ -1,12 +1,13 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
+import com.byunsum.ticket_reservation.seat.domain.Seat;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Performance {
@@ -110,5 +111,12 @@ public class Performance {
 
     public void setPosterUrl(String posterUrl) {
         this.posterUrl = posterUrl;
+    }
+
+    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
+    private List<Seat> seat = new ArrayList<>();
+
+    public List<Seat> getSeat() {
+        return seat;
     }
 }
