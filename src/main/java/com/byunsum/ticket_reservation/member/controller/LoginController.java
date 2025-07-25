@@ -3,7 +3,9 @@ package com.byunsum.ticket_reservation.member.controller;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.form.LoginForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,9 @@ public class LoginController {
     }
 
     @PostMapping
-    public ResponseEntity<?> login(@RequestBody LoginForm loginForm, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginForm loginForm,
+                                   HttpServletRequest request,
+                                   HttpServletResponse response) {
         try {
             // 기존세션 무효화
             HttpSession oldSession = request.getSession();
@@ -43,9 +47,17 @@ public class LoginController {
             // 새 세션 생성
             HttpSession newSession = request.getSession(true);
             newSession.setAttribute("loginMember", loginMember);
-            newSession.setMaxInactiveInterval(30 * 60);
 
-            return ResponseEntity.ok("로그인 성공");
+            Cookie cookie = new Cookie("memberId", String.valueOf(loginMember.getId()));
+            cookie.setMaxAge(60 * 60 * 24 * 7); //7일
+            cookie.setPath("/");
+            response.addCookie(cookie);
+
+//            newSession.setMaxInactiveInterval(30 * 60);
+
+//            return ResponseEntity.ok("로그인 성공");
+            return ResponseEntity.ok("/web/members/me"); //프론트에서 리디렉션 처리
+
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
