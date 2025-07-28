@@ -15,11 +15,15 @@ public class QuestionService {
         this.questionRepository = questionRepository;
     }
 
-    public QuestionResponseDto create(QuestionRequestDto dto, Member author) {
-        Question question = new Question(dto.getTitle(), dto.getContent(), author);
+    public QuestionResponseDto create(QuestionRequestDto dto, Member member) {
+        Question question = new Question();
+        question.setTitle(dto.getTitle());
+        question.setContent(dto.getContent());
+        question.setAuthor(member);
+
         Question saved = questionRepository.save(question);
 
-        return new QuestionResponseDto(saved.getId(), saved.getCreatedAt());
+        return new QuestionResponseDto(saved);
     }
 }
 

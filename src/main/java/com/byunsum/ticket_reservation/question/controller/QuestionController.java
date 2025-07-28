@@ -6,7 +6,9 @@ import com.byunsum.ticket_reservation.question.dto.QuestionRequestDto;
 import com.byunsum.ticket_reservation.question.dto.QuestionResponseDto;
 import com.byunsum.ticket_reservation.question.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,13 +25,12 @@ public class QuestionController {
 
     @PostMapping
     public ResponseEntity<QuestionResponseDto> createQuestion(
-            @RequestBody QuestionRequestDto dto
+            @RequestBody QuestionRequestDto dto,  @AuthenticationPrincipal Member member
 //            , @RequestAttribute("loginMember") Member loginMemer //jwt 인증 사용자 주입 방식
     ) {
-        // 테스트용 멤버 생성
-        Member member = new Member();
-        member.setName("tester");
-        member = memberRepository.save(member);
+        if(member == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         QuestionResponseDto response = questionService.create(dto, member);
         return ResponseEntity.ok(response);

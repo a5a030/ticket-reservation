@@ -1,15 +1,17 @@
 package com.byunsum.ticket_reservation.question.dto;
 
+import com.byunsum.ticket_reservation.question.domain.Question;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class QuestionResponseDto {
     private Long id;
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    public QuestionResponseDto(Long id, LocalDateTime createdAt) {
-        this.id = id;
-        this.createdAt = formatDateTime(createdAt);
+    public QuestionResponseDto(Question question) {
+        this.id = question.getId();
+        this.createdAt = question.getCreatedAt();
     }
 
     private String formatDateTime(LocalDateTime dateTime) {
@@ -25,7 +27,7 @@ public class QuestionResponseDto {
         return id;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 }
