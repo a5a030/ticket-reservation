@@ -52,6 +52,10 @@ public class Answer {
         this.content = content;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public void setQuestion(Question question) {
         this.question = question;
     }
