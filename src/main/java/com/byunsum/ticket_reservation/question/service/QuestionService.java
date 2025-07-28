@@ -7,6 +7,9 @@ import com.byunsum.ticket_reservation.question.dto.QuestionResponseDto;
 import com.byunsum.ticket_reservation.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
@@ -24,6 +27,14 @@ public class QuestionService {
         Question saved = questionRepository.save(question);
 
         return new QuestionResponseDto(saved);
+    }
+
+    public List<QuestionResponseDto> findMyQuestions(Member member) {
+        List<Question> questions = questionRepository.findByAuthor(member);
+
+        return questions.stream()
+                .map(q -> new QuestionResponseDto(q))
+                .collect(Collectors.toList());
     }
 }
 

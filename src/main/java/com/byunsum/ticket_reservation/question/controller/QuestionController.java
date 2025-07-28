@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/questions")
 public class QuestionController {
@@ -34,5 +36,12 @@ public class QuestionController {
 
         QuestionResponseDto response = questionService.create(dto, member);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<QuestionResponseDto>> getMyQuestions(@AuthenticationPrincipal Member member) {
+        List<QuestionResponseDto> questions = questionService.findMyQuestions(member);
+
+        return ResponseEntity.ok(questions);
     }
 }
