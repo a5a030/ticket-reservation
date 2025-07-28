@@ -22,6 +22,13 @@ public class AuthController {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    @PostMapping("/signup")
+    public ResponseEntity<String> signup(@RequestBody LoginRequestDto requestDto) {
+        memberService.register(requestDto.getName(), requestDto.getPassword(), requestDto.getEmail());
+
+        return ResponseEntity.ok("회원가입 성공");
+    }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto) {
         Member member = memberService.login(requestDto.getName(), requestDto.getPassword());

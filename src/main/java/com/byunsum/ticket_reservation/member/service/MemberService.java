@@ -83,4 +83,20 @@ public class MemberService {
 
         return member;
     }
+
+    public void register(String name, String rawPassword, String email) {
+        Optional<Member> existing = memberRepository.findByName(name);
+
+        if (existing.isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 사용자입니다.");
+        }
+
+        Member member = new Member();
+        member.setName(name);
+        member.setPassword(passwordEncoder.encode(rawPassword));
+        member.setEmail(email);
+        member.setRole("ROLE_USER");
+
+        memberRepository.save(member);
+    }
 }
