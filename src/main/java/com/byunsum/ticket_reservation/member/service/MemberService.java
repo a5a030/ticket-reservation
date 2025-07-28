@@ -114,6 +114,7 @@ public class MemberService implements UserDetailsService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다.: " + name));
 
         member.setRefreshToken(refreshToken);
+        System.out.println("[DEBUG] 리프레시 토큰 저장: " + refreshToken);
     }
 
     public Member findByName(String name) {

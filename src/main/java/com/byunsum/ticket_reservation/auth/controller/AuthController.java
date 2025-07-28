@@ -29,7 +29,7 @@ public class AuthController {
         Member member = memberService.findByName(requestDto.getName());
 
         String accessToken = jwtTokenProvider.createToken(member.getName(),  member.getRole());
-        String refreshToken = jwtTokenProvider.createToken(member.getName(),  member.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getName(),  member.getRole());
 
         memberService.updateRefreshToken(member.getName(),  refreshToken);
 
@@ -39,11 +39,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto) {
         Member member = memberService.login(requestDto.getName(), requestDto.getPassword());
-        String acceessToken = jwtTokenProvider.createToken(member.getUsername(), member.getRole());
+        String accessToken = jwtTokenProvider.createToken(member.getUsername(), member.getRole());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getUsername(), member.getRole());
 
-
-        return ResponseEntity.ok(new LoginResponseDto(acceessToken, refreshToken));
+        memberService.updateRefreshToken(member.getName(), refreshToken);
+        return ResponseEntity.ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
     @PostMapping("/refresh")
