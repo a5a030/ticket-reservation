@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/signup", "auth/login", "/members/new").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/signup", "auth/login", "/auth/refresh","/members/new").permitAll().anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberService), UsernamePasswordAuthenticationFilter.class);
 //                .authorizeHttpRequests(authorize -> authorize
 //                        .requestMatchers("/members/new", "/login", "/logout", "/members/me").permitAll()

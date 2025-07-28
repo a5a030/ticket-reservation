@@ -1,10 +1,10 @@
 package com.byunsum.ticket_reservation.auth.dto;
 
-public class LoginResponseDto {
+public class RefreshTokenResponseDto {
     private String accessToken;
     private String refreshToken;
 
-    public LoginResponseDto(String accessToken, String refreshToken) {
+    public RefreshTokenResponseDto(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }

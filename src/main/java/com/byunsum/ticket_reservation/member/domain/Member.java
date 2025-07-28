@@ -19,6 +19,9 @@ public class Member implements UserDetails {
     private String email;
     private String role; // ROLE_USER or ROLE_ADMIN
 
+    @Column(name = "refresh_token", length = 500)
+    private String refreshToken;
+
     public String getName() {
         return name;
     }
@@ -87,5 +90,13 @@ public class Member implements UserDetails {
     @Override
     public String getUsername() {
         return name;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }

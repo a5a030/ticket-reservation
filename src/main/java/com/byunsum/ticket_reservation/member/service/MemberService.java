@@ -107,4 +107,17 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findByName(name)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + name));
     }
+
+    @Transactional
+    public void updateRefreshToken(String name, String refreshToken) {
+        Member member = memberRepository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다.: " + name));
+
+        member.setRefreshToken(refreshToken);
+    }
+
+    public Member findByName(String name) {
+        return memberRepository.findByName(name)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 덦습니다.: " + name));
+    }
 }

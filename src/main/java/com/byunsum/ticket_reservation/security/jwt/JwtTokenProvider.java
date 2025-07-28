@@ -14,6 +14,8 @@ import java.util.List;
 public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final long tokenValidityInMilliseconds = 1000 * 60 * 60  * 2; //2시간
+    private final long REFRESH_TOKEN_VALID_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
+
 
     public JwtTokenProvider() {
         //시크릿키는 256비트 이상 권장(Basee64 인코딩)
@@ -40,7 +42,10 @@ public class JwtTokenProvider {
     }
 
     public String getName(String token) {
-        return parseClaims(token).getSubject();
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token).getBody().getSubject();
     }
 
     public String getRole(String token) {
@@ -49,7 +54,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            parseClaims(token);
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
             System.out.println("만료된 토큰입니다.: " + e.getMessage());
@@ -72,5 +77,18 @@ public class JwtTokenProvider {
     public List<GrantedAuthority> getAuthorities(String token) {
         String role = getRole(token);
         return List.of(new SimpleGrantedAuthority("ROLE_"+role));
+    }
+
+    public String createRefreshToken(String name, String role) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + REFRESH_TOKEN_VALID_TIME);
+
+        return Jwts.builder()
+                .setSubject(name)
+                .claim("role", role)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 }
