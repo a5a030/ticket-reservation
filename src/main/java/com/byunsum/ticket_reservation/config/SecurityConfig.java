@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.config;
 
+import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationEntryPoint;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationFilter;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
@@ -30,15 +31,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, MemberService memberService) throws Exception {
         http
                 .httpBasic(httpBasic -> httpBasic.disable()).csrf(csrf -> csrf.disable())
                 .formLogin(formLogin -> formLogin.disable())
                 .logout(logout -> logout.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/login", "/auth/signup", "/members/new").permitAll().anyRequest().authenticated())
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/signup", "auth/login", "/members/new").permitAll().anyRequest().authenticated())
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberService), UsernamePasswordAuthenticationFilter.class);
 //                .authorizeHttpRequests(authorize -> authorize
 //                        .requestMatchers("/members/new", "/login", "/logout", "/members/me").permitAll()
 //                        .anyRequest().permitAll()

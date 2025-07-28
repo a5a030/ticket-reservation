@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.auth.controller;
 
 import com.byunsum.ticket_reservation.auth.dto.LoginRequestDto;
 import com.byunsum.ticket_reservation.auth.dto.LoginResponseDto;
+import com.byunsum.ticket_reservation.auth.dto.SignupRequestDto;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
@@ -23,7 +24,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody LoginRequestDto requestDto) {
+    public ResponseEntity<String> signup(@RequestBody SignupRequestDto requestDto) {
         memberService.register(requestDto.getName(), requestDto.getPassword(), requestDto.getEmail());
 
         return ResponseEntity.ok("회원가입 성공");

@@ -22,10 +22,10 @@ public class JwtTokenProvider {
     }
 
     //토큰 생성
-    public String createToken(String username, String role) {
+    public String createToken(String name, String role) {
 
-        Claims  claims = Jwts.claims().setSubject(username);
-        claims.setSubject(username);
+        Claims  claims = Jwts.claims().setSubject(name);
+        claims.setSubject(name);
         claims.put("role", role);
 
         Date now = new Date();
@@ -39,7 +39,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String getUsername(String token) {
+    public String getName(String token) {
         return parseClaims(token).getSubject();
     }
 
@@ -52,9 +52,9 @@ public class JwtTokenProvider {
             parseClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
-            System.out.println("만료된 토큰입니다.");
+            System.out.println("만료된 토큰입니다.: " + e.getMessage());
         } catch (JwtException e) {
-            System.out.println("유효하지 않은 토큰입니다.");
+            System.out.println("유효하지 않은 토큰입니다.: " + e.getMessage());
         }
 
         return false;

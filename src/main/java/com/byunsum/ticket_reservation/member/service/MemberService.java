@@ -5,6 +5,8 @@ import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class MemberService {
+public class MemberService implements UserDetailsService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -98,5 +100,11 @@ public class MemberService {
         member.setRole("ROLE_USER");
 
         memberRepository.save(member);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
+        return memberRepository.findByName(name)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + name));
     }
 }
