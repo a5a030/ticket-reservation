@@ -8,13 +8,14 @@ import com.byunsum.ticket_reservation.question.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/questions")
+@RequestMapping("/questions")
 public class QuestionController {
     @Autowired
     private MemberRepository memberRepository;
@@ -42,6 +43,13 @@ public class QuestionController {
     public ResponseEntity<List<QuestionResponseDto>> getMyQuestions(@AuthenticationPrincipal Member member) {
         List<QuestionResponseDto> questions = questionService.findMyQuestions(member);
 
+        return ResponseEntity.ok(questions);
+    }
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<QuestionResponseDto>> getAllQuestions() {
+        List<QuestionResponseDto> questions = questionService.findAllQuestions();
         return ResponseEntity.ok(questions);
     }
 }

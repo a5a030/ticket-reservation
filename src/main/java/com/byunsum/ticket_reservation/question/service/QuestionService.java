@@ -36,5 +36,11 @@ public class QuestionService {
                 .map(q -> new QuestionResponseDto(q))
                 .collect(Collectors.toList());
     }
+
+    public List<QuestionResponseDto> findAllQuestions() {
+        return  questionRepository.findAll().stream()
+                .map(q -> new QuestionResponseDto(q))
+                .collect(Collectors.toList());
+    }
 }
 
