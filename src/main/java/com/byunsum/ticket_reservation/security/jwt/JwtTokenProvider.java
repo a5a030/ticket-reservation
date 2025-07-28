@@ -1,0 +1,76 @@
+package com.byunsum.ticket_reservation.security.jwt;
+
+import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Component;
+import io.jsonwebtoken.*;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.List;
+
+@Component
+public class JwtTokenProvider {
+    private final SecretKey secretKey;
+    private final long tokenValidityInMilliseconds = 1000 * 60 * 60  * 2; //2시간
+
+    public JwtTokenProvider() {
+        //시크릿키는 256비트 이상 권장(Basee64 인코딩)
+        String secret = "MySuperSecretKeyThatIsAtLeast32CharactersLong!";
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    //토큰 생성
+    public String createToken(String username, String role) {
+
+        Claims  claims = Jwts.claims().setSubject(username);
+        claims.setSubject(username);
+        claims.put("role", role);
+
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + tokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expiry) //유효기간 명시
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String getUsername(String token) {
+        return parseClaims(token).getSubject();
+    }
+
+    public String getRole(String token) {
+        return (String) parseClaims(token).get("role");
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            System.out.println("만료된 토큰입니다.");
+        } catch (JwtException e) {
+            System.out.println("유효하지 않은 토큰입니다.");
+        }
+
+        return false;
+    }
+
+    // 내부용 토큰 파싱
+    private Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token) //jws 전용
+                .getBody();
+    }
+
+    public List<GrantedAuthority> getAuthorities(String token) {
+        String role = getRole(token);
+        return List.of(new SimpleGrantedAuthority(role));
+    }
+}
