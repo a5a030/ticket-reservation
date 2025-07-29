@@ -105,4 +105,23 @@ public class ReservationService {
                 reservation.getCreatedAt()
         );
     }
+
+    @Transactional
+    public void cancelReservation(String reservationCode, Long memberId) {
+        Reservation reservation = reservationRepository.findByReservationCode(reservationCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if(reservation.isCanceled()) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED);
+        }
+
+        reservation.cancel();
+
+        // Redis 상태 복구(재예매 가능하게)
+        Long seatId = reservation.getSeat().getId();
+        String key = getKey(seatId);
+        redisTemplate.delete(key);
+
+        reservation.getSeat().setReserved(false);
+    }
 }

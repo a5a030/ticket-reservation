@@ -23,6 +23,8 @@ public class Reservation {
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
+    private boolean isCanceled = false;
+
     //예매일시
     private LocalDateTime createdAt;
 
@@ -54,5 +56,13 @@ public class Reservation {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isCanceled() {
+        return isCanceled;
+    }
+
+    public void cancel() {
+        this.isCanceled = true;
     }
 }

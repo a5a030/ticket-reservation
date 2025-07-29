@@ -38,4 +38,11 @@ public class ReservationController {
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{code}/cancel")
+    public ResponseEntity<Void> cancelReservation(@PathVariable String code, @AuthenticationPrincipal Member member) {
+        reservationService.cancelReservation(code, member.getId());
+
+        return ResponseEntity.ok().build();
+    }
 }
