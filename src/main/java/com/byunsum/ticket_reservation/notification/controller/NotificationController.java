@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +30,8 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getUnreadNotifications(member));
     }
 
-    @PutMapping("/{notificationId}/read")
+    @Transactional
+    @PatchMapping("/{notificationId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId, @AuthenticationPrincipal Member member) {
         notificationService.markAsRead(notificationId, member);
         return ResponseEntity.ok().build();

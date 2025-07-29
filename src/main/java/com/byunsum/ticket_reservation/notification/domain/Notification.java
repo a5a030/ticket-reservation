@@ -17,7 +17,10 @@ public class Notification {
 
     private String message;
     private String link;
-    private boolean isRead = false;
+
+    @Column(name = "is_read")
+    private boolean isRead;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -68,7 +71,7 @@ public class Notification {
         return createdAt;
     }
 
-    public void markAsRead() {
-        this.isRead = true;
+    public void markAsRead(boolean read) {
+        this.isRead = read;
     }
 }

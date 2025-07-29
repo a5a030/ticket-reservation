@@ -5,11 +5,13 @@ import com.byunsum.ticket_reservation.notification.domain.Notification;
 import com.byunsum.ticket_reservation.notification.dto.NotificationResponseDto;
 import com.byunsum.ticket_reservation.notification.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class NotificationService {
     private final NotificationRepository notificationRepository;
 
@@ -34,7 +36,7 @@ public class NotificationService {
             throw new IllegalStateException("해당 사용자의 알림이 아닙니다.");
         }
 
-        notification.markAsRead();
+        notification.markAsRead(true);
     }
 
     public List<NotificationResponseDto> getAllNotifications(Member member) {
