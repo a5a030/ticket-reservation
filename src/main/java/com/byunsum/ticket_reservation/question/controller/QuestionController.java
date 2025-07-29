@@ -17,9 +17,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/questions")
 public class QuestionController {
-    @Autowired
-    private MemberRepository memberRepository;
-
     private final QuestionService questionService;
 
     public QuestionController(QuestionService questionService) {
@@ -29,7 +26,6 @@ public class QuestionController {
     @PostMapping
     public ResponseEntity<QuestionResponseDto> createQuestion(
             @RequestBody QuestionRequestDto dto,  @AuthenticationPrincipal Member member
-//            , @RequestAttribute("loginMember") Member loginMemer //jwt 인증 사용자 주입 방식
     ) {
         if(member == null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
