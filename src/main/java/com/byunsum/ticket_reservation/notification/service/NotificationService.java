@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.notification.service;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.notification.domain.Notification;
 import com.byunsum.ticket_reservation.notification.dto.NotificationResponseDto;
@@ -30,10 +32,10 @@ public class NotificationService {
 
     public void markAsRead(Long notiId, Member member) {
         Notification notification = notificationRepository.findById(notiId)
-                .orElseThrow(() -> new IllegalArgumentException("알림이 존재하지 않습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
 
         if(!notification.getMember().getId().equals(member.getId())) {
-            throw new IllegalStateException("해당 사용자의 알림이 아닙니다.");
+            throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
         notification.markAsRead(true);
