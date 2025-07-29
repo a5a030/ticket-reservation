@@ -11,7 +11,6 @@ import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +35,25 @@ public class ReservationService {
         return "seat:selected:" + seatId;
     }
 
+    private Reservation saveReservation(Performance performance, Seat seat, Member member) {
+        seat.setReserved(true);
+        Reservation reservation = new Reservation(performance, seat, member);
+        reservationRepository.save(reservation);
+
+        return reservation;
+    }
+
+    private ReservationResponse toResponse(Reservation reservation) {
+        Seat seat = reservation.getSeat();
+
+        return new ReservationResponse(
+                reservation.getReservationCode(),
+                seat.getSeatNo(),
+                seat.getPrice(),
+                reservation.getCreatedAt()
+        );
+    }
+
     public ReservationResponse createReservation(ReservationRequest request, Member member) {
         Performance performance = performanceRepository.findById(request.getPerformanceId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
@@ -48,17 +66,9 @@ public class ReservationService {
             throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
 
-        seat.setReserved(true);
+        Reservation reservation = saveReservation(performance, seat, member);
 
-        Reservation reservation = new Reservation(performance, seat, member);
-        reservationRepository.save(reservation);
-
-        return new ReservationResponse(
-                reservation.getReservationCode(),
-                seat.getSeatNo(),
-                seat.getPrice(),
-                reservation.getCreatedAt()
-        );
+        return toResponse(reservation);
     }
 
     public ReservationResponse getReservationByCode(String code) {
@@ -94,19 +104,11 @@ public class ReservationService {
             throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
 
-        seat.setReserved(true);
-
-        Reservation reservation = new Reservation(performance, seat, member);
-        reservationRepository.save(reservation);
+        Reservation reservation = saveReservation(performance, seat, member);
 
         redisTemplate.delete(key);
 
-        return new ReservationResponse(
-                reservation.getReservationCode(),
-                seat.getSeatNo(),
-                seat.getPrice(),
-                reservation.getCreatedAt()
-        );
+        return toResponse(reservation);
     }
 
     @Transactional
