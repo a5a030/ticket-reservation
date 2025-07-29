@@ -18,6 +18,7 @@ public enum ErrorCode {
     SEAT_ALREADY_SELECTED("이미 선택된 좌석입니다."),
     SEAT_NOT_FOUND("좌석을 찾을 수 없습니다."),
     ALREADY_CANCELED("이미 취소된 예매입니다."),
+    UNAUTHORIZED_CANCEL("본인의 예매만 취소할 수 있습니다."),
     NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다.");
 
     private final String message;

@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.reservation.domain;
 
+import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
@@ -23,6 +24,10 @@ public class Reservation {
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     private boolean isCanceled = false;
 
     //예매일시
@@ -31,9 +36,10 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(Performance performance, Seat seat) {
+    public Reservation(Performance performance, Seat seat, Member member) {
         this.performance = performance;
         this.seat = seat;
+        this.member = member;
         this.reservationCode = UUID.randomUUID().toString(); //예매번호 자동 생성
         this.createdAt = LocalDateTime.now();
     }
@@ -64,5 +70,13 @@ public class Reservation {
 
     public void cancel() {
         this.isCanceled = true;
+    }
+
+    public Member getMember() {
+        return member;
+    }
+
+    public void setMember(Member member) {
+        this.member = member;
     }
 }

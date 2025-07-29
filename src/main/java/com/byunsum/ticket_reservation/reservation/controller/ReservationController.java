@@ -19,8 +19,8 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> reservation(@RequestBody ReservationRequest request) {
-        ReservationResponse response = reservationService.createReservation(request);
+    public ResponseEntity<ReservationResponse> reservation(@RequestBody ReservationRequest request, @AuthenticationPrincipal Member member) {
+        ReservationResponse response = reservationService.createReservation(request, member);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -34,7 +34,7 @@ public class ReservationController {
 
     @PostMapping("/confirm")
     public ResponseEntity<ReservationResponse> confirmReservation(@RequestParam Long performanceId, @RequestParam Long seatId, @AuthenticationPrincipal Member member) {
-        ReservationResponse response = reservationService.confirmReservation(performanceId, seatId, member.getId());
+        ReservationResponse response = reservationService.confirmReservation(performanceId, seatId, member);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.reservation.service;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
+import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
@@ -14,6 +15,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 @Service
 public class ReservationService {
@@ -33,21 +36,21 @@ public class ReservationService {
         return "seat:selected:" + seatId;
     }
 
-    public ReservationResponse createReservation(ReservationRequest request) {
+    public ReservationResponse createReservation(ReservationRequest request, Member member) {
         Performance performance = performanceRepository.findById(request.getPerformanceId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공연입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
         Seat seat = seatRepository.findById(request.getSeatId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
 
 
         if(seat.isReserved()) {
-            throw new IllegalStateException("이미 예약된 좌석입니다.");
+            throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
 
         seat.setReserved(true);
 
-        Reservation reservation = new Reservation(performance, seat);
+        Reservation reservation = new Reservation(performance, seat, member);
         reservationRepository.save(reservation);
 
         return new ReservationResponse(
@@ -60,7 +63,7 @@ public class ReservationService {
 
     public ReservationResponse getReservationByCode(String code) {
         Reservation reservation = reservationRepository.findByReservationCode(code)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 예매번호입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
         Seat seat = reservation.getSeat();
 
@@ -73,7 +76,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse confirmReservation(Long performanceId, Long seatId, Long memberId) {
+    public ReservationResponse confirmReservation(Long performanceId, Long seatId, Member member) {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
@@ -83,7 +86,7 @@ public class ReservationService {
         String key = getKey(seatId);
         String selectedBy = redisTemplate.opsForValue().get(key);
 
-        if(selectedBy == null || !selectedBy.equals(memberId.toString())) {
+        if(selectedBy == null || !selectedBy.equals(member.getId().toString())) {
             throw new CustomException(ErrorCode.SEAT_ALREADY_SELECTED);
         }
 
@@ -93,7 +96,7 @@ public class ReservationService {
 
         seat.setReserved(true);
 
-        Reservation reservation = new Reservation(performance, seat);
+        Reservation reservation = new Reservation(performance, seat, member);
         reservationRepository.save(reservation);
 
         redisTemplate.delete(key);
@@ -115,12 +118,16 @@ public class ReservationService {
             throw new CustomException(ErrorCode.ALREADY_CANCELED);
         }
 
+        if(!reservation.getMember().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
+        }
+
         reservation.cancel();
 
         // Redis 상태 복구(재예매 가능하게)
         Long seatId = reservation.getSeat().getId();
         String key = getKey(seatId);
-        redisTemplate.delete(key);
+        redisTemplate.opsForValue().set(key, "available", Duration.ofMinutes(5));
 
         reservation.getSeat().setReserved(false);
     }
