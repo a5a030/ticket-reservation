@@ -16,7 +16,7 @@ public enum ErrorCode {
     RESERVATION_NOT_FOUND("예매 정보를 찾을 수 없습니다."),
     SEAT_ALREADY_RESERVED("이미 예매된 좌석입니다."),
     SEAT_ALREADY_SELECTED("이미 선택된 좌석입니다."),
-
+    SEAT_NOT_FOUND("좌석을 찾을 수 없습니다."),
     NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다.");
 
     private final String message;
