@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.performance.service;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
@@ -51,7 +53,7 @@ public class PerformanceService {
 
     public PerformanceResponse getPerformanceById(Long id) {
         Performance performance = performanceRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공연입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
         return new PerformanceResponse(
                 performance.getId(),
