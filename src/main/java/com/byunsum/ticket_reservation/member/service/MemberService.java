@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.member.service;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +37,7 @@ public class MemberService implements UserDetailsService {
     private void validateMember(Member member) {
         memberRepository.findByName(member.getName())
                 .ifPresent(m -> {
-                    throw new IllegalStateException("이미 존재하는 회원입니다.");
+                    throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
                 });
     }
 
@@ -51,12 +53,12 @@ public class MemberService implements UserDetailsService {
         Optional<Member> findMember = memberRepository.findByName(name);
 
         if (findMember.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
+            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
         Member member = findMember.get();
         if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
         return member;
@@ -65,7 +67,7 @@ public class MemberService implements UserDetailsService {
     @Transactional
     public void update(Long memberId, String newName, String newPassword) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         member.setName(newName);
         member.setPassword(passwordEncoder.encode(newPassword));
@@ -77,10 +79,10 @@ public class MemberService implements UserDetailsService {
 
     public Member authenticate(String name, String password) {
         Member member = memberRepository.findByName(name)
-                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
         return member;
@@ -90,7 +92,7 @@ public class MemberService implements UserDetailsService {
         Optional<Member> existing = memberRepository.findByName(name);
 
         if (existing.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 사용자입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
         }
 
         Member member = new Member();
@@ -108,10 +110,11 @@ public class MemberService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + name));
     }
 
+
     @Transactional
     public void updateRefreshToken(String name, String refreshToken) {
         Member member = memberRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다.: " + name));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         member.setRefreshToken(refreshToken);
         System.out.println("[DEBUG] 리프레시 토큰 저장: " + refreshToken);
@@ -119,6 +122,6 @@ public class MemberService implements UserDetailsService {
 
     public Member findByName(String name) {
         return memberRepository.findByName(name)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 덦습니다.: " + name));
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
     }
 }
