@@ -33,6 +33,9 @@ public class Reservation {
     //예매일시
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus status;
+
     public Reservation() {
     }
 
@@ -70,6 +73,10 @@ public class Reservation {
 
     public void cancel() {
         this.isCanceled = true;
+    }
+
+    public void confirm() {
+        this.status = ReservationStatus.CONFIRMED;
     }
 
     public Member getMember() {

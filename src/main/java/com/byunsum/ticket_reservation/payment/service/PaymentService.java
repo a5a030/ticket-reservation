@@ -27,6 +27,8 @@ public class PaymentService {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
+        reservation.confirm();
+
         Payment payment = new Payment(
                 request.getAmount(),
                 request.getPaymentMethod(),
