@@ -22,6 +22,15 @@ public class PaymentService {
         this.reservationRepository = reservationRepository;
     }
 
+    private PaymentResponse toPaymentResponse(Payment payment) {
+        return new PaymentResponse(
+                payment.getId(),
+                payment.getAmount(),
+                payment.getPaymentMethod(),
+                payment.getStatus(),
+                payment.getCreatedAt()
+        );
+    }
     @Transactional
     public PaymentResponse processPayment(PaymentRequest request) {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
@@ -64,12 +73,13 @@ public class PaymentService {
         Payment payment =  paymentRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        return new PaymentResponse(
-                payment.getId(),
-                payment.getAmount(),
-                payment.getPaymentMethod(),
-                payment.getStatus(),
-                payment.getCreatedAt()
-        );
+        return toPaymentResponse(payment);
+    }
+
+    public PaymentResponse getPaymentByReservationId(Long reservationId) {
+        Payment payment = paymentRepository.findByReservationId(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        return toPaymentResponse(payment);
     }
 }
