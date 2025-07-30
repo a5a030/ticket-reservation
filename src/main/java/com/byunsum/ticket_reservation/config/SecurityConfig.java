@@ -40,7 +40,9 @@ public class SecurityConfig {
                 .logout(logout -> logout.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/signup", "auth/login", "/auth/refresh","/members/new").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/signup", "auth/login", "/auth/refresh","/members/new",
+                                "/swagger-ui/**","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**") //Swagger 관련 허용 경로
+                        .permitAll().anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberService), UsernamePasswordAuthenticationFilter.class);
 //                .authorizeHttpRequests(authorize -> authorize
 //                        .requestMatchers("/members/new", "/login", "/logout", "/members/me").permitAll()
