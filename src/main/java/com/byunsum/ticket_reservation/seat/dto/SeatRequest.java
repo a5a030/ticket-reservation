@@ -1,10 +1,16 @@
 package com.byunsum.ticket_reservation.seat.dto;
 
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SeatRequest {
+    @Schema(description = "좌석 번호", example = "A10")
     private String seatNo;
+
+    @Schema(description = "좌석 가격")
     private int price;
+
+    @Schema(description = "연결할 공연 ID", example = "1")
     private Long performanceId;
 
     public SeatRequest() {
