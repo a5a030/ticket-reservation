@@ -1,16 +1,35 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDate;
 
 public class PerformanceResponse {
+    @Schema(description = "공연 ID", example = "1")
     private Long id;
+
+    @Schema(description = "공연 제목")
     private String title;
+
+    @Schema(description = "공연 설명")
     private String description;
+
+    @Schema(description = "공연장")
     private String venue;
+
+    @Schema(description = "공연 시작일")
     private LocalDate startDate;
+
+    @Schema(description = "공연 종료일")
     private LocalDate endDate;
+
+    @Schema(description = "공연 시간")
     private String time;
+
+    @Schema(description = "공연 장르")
     private String genre;
+
+    @Schema(description = "포스터 이미지 URL")
     private String posterUrl;
 
     public PerformanceResponse() {
