@@ -94,10 +94,18 @@ public class PaymentService {
                 .toList();
     }
 
-    public  List<PaymentResponse> getAllPayments(Optional<PaymentStatus> status) {
-        List<Payment> payments = status.map(paymentRepository::findByStatus)
+    public List<PaymentResponse> getAllPayments(Optional<PaymentStatus> status) {
+        List<Payment> payments = status
+                .map(paymentRepository::findRecentByStatus)
                 .orElseGet(paymentRepository::findAll);
 
+        return  payments.stream()
+                .map(this::toPaymentResponse)
+                .toList();
+    }
+
+    public List<PaymentResponse> getPaymentsUnsorted(Long memberId) {
+        List<Payment> payments = paymentRepository.findByReservationMemberId(memberId);
         return payments.stream()
                 .map(this::toPaymentResponse)
                 .toList();
