@@ -1,10 +1,14 @@
 package com.byunsum.ticket_reservation.payment.controller;
 
+import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
 import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
@@ -27,5 +31,12 @@ public class PaymentController {
         PaymentResponse response = paymentService.getPayment(id);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<PaymentResponse>> getMyPayments(@AuthenticationPrincipal Member member) {
+        List<PaymentResponse> responses = paymentService.getPaymentsByMember(member.getId());
+
+        return ResponseEntity.ok(responses);
     }
 }
