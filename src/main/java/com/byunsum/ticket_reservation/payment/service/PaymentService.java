@@ -12,6 +12,9 @@ import com.byunsum.ticket_reservation.reservation.repository.ReservationReposito
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class PaymentService {
     private final PaymentRepository paymentRepository;
@@ -81,5 +84,22 @@ public class PaymentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
         return toPaymentResponse(payment);
+    }
+
+    public List<PaymentResponse> getPaymentsByMember(Long memberId) {
+        List<Payment> payments = paymentRepository.findByReservationMemberId(memberId);
+
+        return payments.stream()
+                .map(this::toPaymentResponse)
+                .toList();
+    }
+
+    public  List<PaymentResponse> getAllPayments(Optional<PaymentStatus> status) {
+        List<Payment> payments = status.map(paymentRepository::findByStatus)
+                .orElseGet(paymentRepository::findAll);
+
+        return payments.stream()
+                .map(this::toPaymentResponse)
+                .toList();
     }
 }
