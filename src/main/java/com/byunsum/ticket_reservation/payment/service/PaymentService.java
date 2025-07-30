@@ -59,4 +59,17 @@ public class PaymentService {
         payment.markAsCancelled();
         payment.getReservation().cancel();
     }
+
+    public PaymentResponse getPayment(Long id) {
+        Payment payment =  paymentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        return new PaymentResponse(
+                payment.getId(),
+                payment.getAmount(),
+                payment.getPaymentMethod(),
+                payment.getStatus(),
+                payment.getCreatedAt()
+        );
+    }
 }
