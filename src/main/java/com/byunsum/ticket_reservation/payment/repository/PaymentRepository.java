@@ -3,12 +3,24 @@ package com.byunsum.ticket_reservation.payment.repository;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByReservationId(Long reservationId);
+
+    @Query("SELECT p FROM Payment p WHERE p.reservation.member.id = :memberId ORDER BY p.createdAt DESC")
+    List<Payment> findRecentByReservationMemberId(Long memberId);
+
     List<Payment> findByReservationMemberId(Long memberId);
+
     List<Payment> findByStatus(PaymentStatus status);
+
+    @Query("SELECT p FROM Payment p WHERE p.status = :status ORDER BY p.createdAt DESC")
+    List<Payment> findRecentByStatus(PaymentStatus status);
+
+    @Query("SELECT p FROM Payment p ORDER BY p.createdAt DESC")
+    List<Payment> findRecentAll();
 }
