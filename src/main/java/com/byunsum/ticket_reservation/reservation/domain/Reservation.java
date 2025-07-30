@@ -45,6 +45,7 @@ public class Reservation {
         this.member = member;
         this.reservationCode = UUID.randomUUID().toString(); //예매번호 자동 생성
         this.createdAt = LocalDateTime.now();
+        this.status = ReservationStatus.PENDING;
     }
 
     public Long getId() {
@@ -73,6 +74,7 @@ public class Reservation {
 
     public void cancel() {
         this.isCanceled = true;
+        this.status = ReservationStatus.CANCELLED;
     }
 
     public void confirm() {

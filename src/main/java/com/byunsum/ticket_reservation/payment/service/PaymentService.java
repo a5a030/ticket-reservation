@@ -46,4 +46,17 @@ public class PaymentService {
                 saved.getCreatedAt()
         );
     }
+
+    @Transactional
+    public void cancelPayment(Long id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if(payment.getStatus() != PaymentStatus.PAID) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        }
+
+        payment.markAsCancelled();
+        payment.getReservation().cancel();
+    }
 }
