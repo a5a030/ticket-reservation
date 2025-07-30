@@ -25,6 +25,9 @@ public class Payment {
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
+    private String reason;
+    private LocalDateTime cancelledAt;
+
     public Payment() {
     }
 
@@ -33,6 +36,7 @@ public class Payment {
         this.paymentMethod = paymentMethod;
         this.status = status;
         this.reservation = reservation;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -59,11 +63,25 @@ public class Payment {
         return reservation;
     }
 
+    public String getReason() {
+        return reason;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
     public void markAsPaid() {
         this.status = PaymentStatus.PAID;
     }
 
     public void markAsCancelled() {
+        markAsCancelled("사용자 요청에 의한 취소");
+    }
+
+    public void markAsCancelled(String reason) {
         this.status = PaymentStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.reason = reason;
     }
 }

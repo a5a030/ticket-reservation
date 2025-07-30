@@ -12,6 +12,7 @@ import com.byunsum.ticket_reservation.reservation.repository.ReservationReposito
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,9 +61,13 @@ public class PaymentService {
     }
 
     @Transactional
-    public void cancelPayment(Long id) {
+    public PaymentResponse cancelPayment(Long id, Long memberId) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if(!payment.getReservation().getMember().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
+        }
 
         if(payment.getStatus() != PaymentStatus.PAID) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
@@ -70,8 +75,11 @@ public class PaymentService {
 
         payment.markAsCancelled();
         payment.getReservation().cancel();
+
+        return toPaymentResponse(payment);
     }
 
+    @Transactional(readOnly = true)
     public PaymentResponse getPayment(Long id) {
         Payment payment =  paymentRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
