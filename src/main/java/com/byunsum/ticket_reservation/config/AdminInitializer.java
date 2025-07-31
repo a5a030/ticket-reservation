@@ -18,7 +18,7 @@ public class AdminInitializer {
 
             if(memberRepository.findByLoginId(loginId).isEmpty()) {
                 Member admin = new Member();
-                admin.setUsername(username);
+                admin.setLoginId(loginId);
                 admin.setEmail(adminEmail);
                 admin.setPassword(passwordEncoder.encode("admin"));
                 admin.setRole("ROLE_ADMIN");

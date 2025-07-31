@@ -34,14 +34,14 @@ public class AuthController {
     })
     @PostMapping("/signup")
     public ResponseEntity<LoginResponseDto> signup(@RequestBody SignupRequestDto requestDto) {
-        memberService.register(requestDto.getName(), requestDto.getPassword(), requestDto.getEmail());
+        memberService.register(requestDto.getLoginId(), requestDto.getUsername(), requestDto.getPassword(), requestDto.getEmail());
 
-        Member member = memberService.findByName(requestDto.getName());
+        Member member = memberService.findByLoginId(requestDto.getLoginId());
 
-        String accessToken = jwtTokenProvider.createToken(member.getName(),  member.getRole());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getName(),  member.getRole());
+        String accessToken = jwtTokenProvider.createToken(member.getLoginId(),  member.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getLoginId(),  member.getRole());
 
-        memberService.updateRefreshToken(member.getName(),  refreshToken);
+        memberService.updateRefreshToken(member.getLoginId(),  refreshToken);
 
         return ResponseEntity.ok(new LoginResponseDto(accessToken, refreshToken));
     }
@@ -53,11 +53,11 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto) {
-        Member member = memberService.login(requestDto.getName(), requestDto.getPassword());
-        String accessToken = jwtTokenProvider.createToken(member.getUsername(), member.getRole());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getUsername(), member.getRole());
+        Member member = memberService.login(requestDto.getLoginId(), requestDto.getPassword());
+        String accessToken = jwtTokenProvider.createToken(member.getLoginId(), member.getRole());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getLoginId(), member.getRole());
 
-        memberService.updateRefreshToken(member.getName(), refreshToken);
+        memberService.updateRefreshToken(member.getLoginId(), refreshToken);
         return ResponseEntity.ok(new LoginResponseDto(accessToken, refreshToken));
     }
 
@@ -74,14 +74,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
         }
 
-        String name = jwtTokenProvider.getName(refreshToken);
-        Member member = memberService.findByName(name);
+        String loginId = jwtTokenProvider.getName(refreshToken);
+        Member member = memberService.findByLoginId(loginId);
 
         if(member.getRefreshToken() == null || !refreshToken.equals(member.getRefreshToken())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
         }
 
-        String newAccessToken = jwtTokenProvider.createToken(member.getUsername(), member.getRole());
+        String newAccessToken = jwtTokenProvider.createToken(member.getLoginId(), member.getRole());
 
         return ResponseEntity.ok(new RefreshTokenResponseDto(newAccessToken, refreshToken));
     }

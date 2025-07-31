@@ -63,7 +63,7 @@ public class MemberController {
     public ResponseEntity<?> create(@RequestBody MemberForm form) {
         try {
             Member member = new Member();
-            member.setName(form.getName());
+            member.setLoginId(form.getLoginId());
             String encodedPassword = passwordEncoder.encode(form.getPassword());
             member.setPassword(encodedPassword); //비밀번호 암호화
 
@@ -105,7 +105,7 @@ public class MemberController {
          */
 
         Member loginMember = (Member) session.getAttribute("loginMember");
-        return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getName()));
+        return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getLoginId()));
     }
 
     @Operation(summary = "보호된 페이지 접근", description = "로그인한 사용자만 접근 가능한 페이지를 테스트합니다.")

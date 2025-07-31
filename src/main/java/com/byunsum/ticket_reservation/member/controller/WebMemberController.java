@@ -30,9 +30,9 @@ public class WebMemberController {
     }
 
     @PostMapping("/new")
-    public String create(@RequestParam String name, @RequestParam String password) {
+    public String create(@RequestParam String loginId, @RequestParam String password) {
         Member member = new Member();
-        member.setName(name);
+        member.setLoginId(loginId);
         member.setPassword(passwordEncoder.encode(password));
 
         try {
@@ -58,7 +58,7 @@ public class WebMemberController {
     }
 
     @PostMapping("/edit")
-    public String edit(@RequestParam String name, @RequestParam String password, HttpServletRequest request) {
+    public String edit(@RequestParam String loginId, @RequestParam String password, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         Member loginMember = (Member) session.getAttribute("loginMember");
 
@@ -66,8 +66,8 @@ public class WebMemberController {
             return "redirect:/web/members/login-form?error=unauthorized";
         }
 
-        memberService.update(loginMember.getId(),  name, password);
-        loginMember.setName(name);
+        memberService.update(loginMember.getId(),  loginId, password);
+        loginMember.setLoginId(loginId);
 
         return  "redirect:/web/members/me?updated";
     }
