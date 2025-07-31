@@ -37,6 +37,7 @@ public class Payment {
         this.status = status;
         this.reservation = reservation;
         this.createdAt = LocalDateTime.now();
+        this.cancelledAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -75,13 +76,9 @@ public class Payment {
         this.status = PaymentStatus.PAID;
     }
 
-    public void markAsCancelled() {
-        markAsCancelled("사용자 요청에 의한 취소");
-    }
 
-    public void markAsCancelled(String reason) {
+    public void markAsCancelled() {
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
-        this.reason = reason;
     }
 }

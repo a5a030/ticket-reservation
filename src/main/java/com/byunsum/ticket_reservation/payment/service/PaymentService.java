@@ -32,7 +32,8 @@ public class PaymentService {
                 payment.getAmount(),
                 payment.getPaymentMethod(),
                 payment.getStatus(),
-                payment.getCreatedAt()
+                payment.getCreatedAt(),
+                payment.getCancelledAt()
         );
     }
     @Transactional
@@ -56,7 +57,8 @@ public class PaymentService {
                 saved.getAmount(),
                 saved.getPaymentMethod(),
                 saved.getStatus(),
-                saved.getCreatedAt()
+                saved.getCreatedAt(),
+                saved.getCancelledAt()
         );
     }
 

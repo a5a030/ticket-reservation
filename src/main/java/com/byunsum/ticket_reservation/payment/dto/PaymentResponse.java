@@ -22,12 +22,16 @@ public class PaymentResponse {
     @Schema(description = "결제 생성 일시")
     private LocalDateTime createdAt;
 
-    public PaymentResponse(Long id, int amount, PaymentMethod paymentMethod, PaymentStatus paymentStatus, LocalDateTime createdAt) {
+    @Schema(description = "취소 일시")
+    private LocalDateTime cancelledAt;
+
+    public PaymentResponse(Long id, int amount, PaymentMethod paymentMethod, PaymentStatus paymentStatus, LocalDateTime createdAt, LocalDateTime cancelledAt) {
         this.id = id;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
         this.createdAt = createdAt;
+        this.cancelledAt = cancelledAt;
     }
 
     public Long getId() {
@@ -48,5 +52,9 @@ public class PaymentResponse {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
     }
 }
