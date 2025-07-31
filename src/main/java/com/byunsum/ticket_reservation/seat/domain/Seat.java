@@ -65,4 +65,8 @@ public class Seat {
     public void setPerformance(Performance performance) {
         this.performance = performance;
     }
+
+    public void release() {
+        this.isReserved = false;
+    }
 }

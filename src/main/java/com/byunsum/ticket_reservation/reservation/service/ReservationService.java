@@ -124,13 +124,15 @@ public class ReservationService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        reservation.cancel();
+        reservation.markAsCancelled();
 
-        // Redis 상태 복구(재예매 가능하게)
-        Long seatId = reservation.getSeat().getId();
-        String key = getKey(seatId);
-        redisTemplate.opsForValue().set(key, "available", Duration.ofMinutes(5));
-
-        reservation.getSeat().setReserved(false);
+        Seat seat = reservation.getSeat();
+        seat.release();
+//        // Redis 상태 복구(재예매 가능하게)
+//        Long seatId = reservation.getSeat().getId();
+//        String key = getKey(seatId);
+//        redisTemplate.opsForValue().set(key, "available", Duration.ofMinutes(5));
+//
+//        reservation.getSeat().setReserved(false);
     }
 }
