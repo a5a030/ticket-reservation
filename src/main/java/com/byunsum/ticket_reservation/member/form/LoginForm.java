@@ -1,7 +1,12 @@
 package com.byunsum.ticket_reservation.member.form;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class LoginForm {
+    @Schema(description = "아이디")
     private String loginId;
+
+    @Schema(description = "비밀번호")
     private String password;
 
     public String getLoginId() {

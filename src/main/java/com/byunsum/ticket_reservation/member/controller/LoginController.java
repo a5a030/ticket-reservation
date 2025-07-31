@@ -3,6 +3,10 @@ package com.byunsum.ticket_reservation.member.controller;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.form.LoginForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
+@Tag(name = "로그인 API", description = "로그인/로그아웃 관련 API")
 @RestController
 @RequestMapping("/login")
 public class LoginController {
@@ -30,6 +35,11 @@ public class LoginController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Operation(summary = "세션 로그인", description = "loginId(아이디)와 password로 세션 로그인합니다. 로그인 성공 시 세션과 쿠키가 생성됩니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인 실패: 잘못된 아이디 혹은 비밀번호")
+    })
     @PostMapping
     public ResponseEntity<?> login(@RequestBody LoginForm loginForm,
                                    HttpServletRequest request,
