@@ -4,6 +4,10 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.dto.SessionMemberDTO;
 import com.byunsum.ticket_reservation.member.form.MemberForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "회원 API", description = "회원 가입 및 정보 조회 관련 API")
 @RestController
 @RequestMapping("/members")
 public class MemberController {
@@ -49,6 +54,11 @@ public class MemberController {
     }
     */
 
+    @Operation(summary = "회원 가입", description = "회원 정보를 받아 새 사용자를 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원 가입 성공"),
+            @ApiResponse(responseCode = "409", description = "중복된 사용자 이름")
+    })
     @PostMapping("/new")
     public ResponseEntity<?> create(@RequestBody MemberForm form) {
         try {
@@ -76,11 +86,13 @@ public class MemberController {
     }
     */
 
+    @Operation(summary = "전체 회원 조회", description = "등록된 모든 회원 목록을 반환합니다. (관리자 전용)")
     @GetMapping
     public List<Member> list() {
         return memberService.findMembers(); //@RestController에서 json 배열로 반환
     }
 
+    @Operation(summary = "로그인한 회원 정보 조회", description = "세션을 기반으로 로그인한 사용자의 ID와 이름을 반환합니다.")
     @GetMapping("/me")
     public ResponseEntity<?> getLoginMember(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -96,6 +108,7 @@ public class MemberController {
         return ResponseEntity.ok(new SessionMemberDTO(loginMember.getId(), loginMember.getName()));
     }
 
+    @Operation(summary = "보호된 페이지 접근", description = "로그인한 사용자만 접근 가능한 페이지를 테스트합니다.")
     @GetMapping("/secret")
     public ResponseEntity<?> secretPage(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

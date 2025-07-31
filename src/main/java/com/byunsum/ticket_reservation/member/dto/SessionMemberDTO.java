@@ -1,16 +1,21 @@
 package com.byunsum.ticket_reservation.member.dto;
 
-public class SessionMemberDTO {
-    private Long id;
-    private String name;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-    public SessionMemberDTO(Long id, String name) {
+public class SessionMemberDTO {
+    @Schema(description = "회원 고유 ID (DB 식별자)")
+    private Long id;
+
+    @Schema(description = "회원 실명")
+    private String username;
+
+    public SessionMemberDTO(Long id, String username) {
         this.id = id;
-        this.name = name;
+        this.username = username;
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return username;
     }
 
     public Long getId() {
