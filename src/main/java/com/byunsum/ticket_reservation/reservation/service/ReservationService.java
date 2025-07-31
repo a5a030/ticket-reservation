@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class ReservationService {
@@ -128,11 +129,14 @@ public class ReservationService {
 
         Seat seat = reservation.getSeat();
         seat.release();
-//        // Redis 상태 복구(재예매 가능하게)
-//        Long seatId = reservation.getSeat().getId();
-//        String key = getKey(seatId);
-//        redisTemplate.opsForValue().set(key, "available", Duration.ofMinutes(5));
-//
-//        reservation.getSeat().setReserved(false);
+
+        // Redis에 취소된 좌석 잠금 처리
+        String cancelKey = "seat:cancelled:" + seat.getId();
+        redisTemplate.opsForValue().set(cancelKey, "LOCKED", Duration.ofMinutes(10));
+
+        // 좌석 선택 키도 일정 시간 후 사용 가능하게 등록
+        String seatKey = getKey(seat.getId());
+        long randomSeconds = ThreadLocalRandom.current().nextLong(300, 601);
+        redisTemplate.opsForValue().set(seatKey, "available", Duration.ofSeconds(randomSeconds));
     }
 }
