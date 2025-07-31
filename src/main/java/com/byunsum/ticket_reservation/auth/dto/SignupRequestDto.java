@@ -1,8 +1,15 @@
 package com.byunsum.ticket_reservation.auth.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class SignupRequestDto {
+    @Schema(description = "사용자 이름")
     private String name;
+
+    @Schema(name = "비밀번호")
     private String password;
+
+    @Schema(name = "이메일")
     private String email;
 
     public String getName() {
