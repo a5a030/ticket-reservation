@@ -3,10 +3,10 @@ package com.byunsum.ticket_reservation.auth.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class LoginRequestDto {
-    @Schema(name = "아이디")
+    @Schema(description = "아이디")
     private String loginId;
 
-    @Schema(name = "비밀번호")
+    @Schema(description = "비밀번호")
     private String password;
 
     public String getLoginId() {

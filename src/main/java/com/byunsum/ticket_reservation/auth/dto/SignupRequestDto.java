@@ -9,10 +9,10 @@ public class SignupRequestDto {
     @Schema(description = "이름")
     private String username;
 
-    @Schema(name = "비밀번호")
+    @Schema(description = "비밀번호")
     private String password;
 
-    @Schema(name = "이메일")
+    @Schema(description = "이메일")
     private String email;
 
     public String getLoginId() {
