@@ -25,8 +25,8 @@ public class JpaMemberRepository implements MemberRepository {
     }
 
     @Override
-    public Optional<Member> findByName(String name) {
-        return jpaRepository.findByName(name);
+    public Optional<Member> findByLoginId(String loginId) {
+        return jpaRepository.findByLoginId(loginId);
     }
 
     @Override

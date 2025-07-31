@@ -12,12 +12,13 @@ public class AdminInitializer {
     @Bean
     public CommandLineRunner initAdmin(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            String adminName = "admin";
+            String loginId = "admin";
+            String username = "관리자";
             String adminEmail = "admin@example.com";
 
-            if(memberRepository.findByName(adminName).isEmpty()) {
+            if(memberRepository.findByLoginId(loginId).isEmpty()) {
                 Member admin = new Member();
-                admin.setName(adminName);
+                admin.setUsername(username);
                 admin.setEmail(adminEmail);
                 admin.setPassword(passwordEncoder.encode("admin"));
                 admin.setRole("ROLE_ADMIN");

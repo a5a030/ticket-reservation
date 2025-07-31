@@ -35,7 +35,7 @@ public class MemberService implements UserDetailsService {
     }
 
     private void validateMember(Member member) {
-        memberRepository.findByName(member.getName())
+        memberRepository.findByLoginId(member.getLoginId())
                 .ifPresent(m -> {
                     throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
                 });
@@ -49,8 +49,8 @@ public class MemberService implements UserDetailsService {
         return memberRepository.findById(memberId);
     }
 
-    public Member login(String name, String rawPassword) {
-        Optional<Member> findMember = memberRepository.findByName(name);
+    public Member login(String loginId, String rawPassword) {
+        Optional<Member> findMember = memberRepository.findByLoginId(loginId);
 
         if (findMember.isEmpty()) {
             throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
@@ -65,11 +65,11 @@ public class MemberService implements UserDetailsService {
     }
 
     @Transactional
-    public void update(Long memberId, String newName, String newPassword) {
+    public void update(Long memberId, String username, String newPassword) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-        member.setName(newName);
+        member.setUsername(username);
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 
@@ -77,8 +77,8 @@ public class MemberService implements UserDetailsService {
         memberRepository.deleteById(id);
     }
 
-    public Member authenticate(String name, String password) {
-        Member member = memberRepository.findByName(name)
+    public Member authenticate(String loginId, String password) {
+        Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         if (!passwordEncoder.matches(password, member.getPassword())) {
@@ -88,15 +88,16 @@ public class MemberService implements UserDetailsService {
         return member;
     }
 
-    public void register(String name, String rawPassword, String email) {
-        Optional<Member> existing = memberRepository.findByName(name);
+    public void register(String loginId, String username, String rawPassword, String email) {
+        Optional<Member> existing = memberRepository.findByLoginId(loginId);
 
         if (existing.isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
         }
 
         Member member = new Member();
-        member.setName(name);
+        member.setLoginId(loginId);
+        member.setUsername(username);
         member.setPassword(passwordEncoder.encode(rawPassword));
         member.setEmail(email);
         member.setRole("ROLE_USER");
@@ -105,23 +106,23 @@ public class MemberService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        return memberRepository.findByName(name)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + name));
+    public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
+        return memberRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + loginId));
     }
 
 
     @Transactional
-    public void updateRefreshToken(String name, String refreshToken) {
-        Member member = memberRepository.findByName(name)
+    public void updateRefreshToken(String loginId, String refreshToken) {
+        Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         member.setRefreshToken(refreshToken);
         System.out.println("[DEBUG] 리프레시 토큰 저장: " + refreshToken);
     }
 
-    public Member findByName(String name) {
-        return memberRepository.findByName(name)
+    public Member findByLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
     }
 }

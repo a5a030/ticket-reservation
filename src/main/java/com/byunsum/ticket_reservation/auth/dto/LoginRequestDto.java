@@ -3,21 +3,18 @@ package com.byunsum.ticket_reservation.auth.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class LoginRequestDto {
-    @Schema(name = "이름")
-    private String name;
+    @Schema(name = "아이디")
+    private String loginId;
 
     @Schema(name = "비밀번호")
     private String password;
 
-    @Schema(name = "이메일")
-    private String email;
-
-    public String getName() {
-        return name;
+    public String getLoginId() {
+        return loginId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
     }
 
     public String getPassword() {
@@ -26,13 +23,5 @@ public class LoginRequestDto {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 }

@@ -14,7 +14,11 @@ public class Member implements UserDetails {
     @Id
     @GeneratedValue
     private Long id;
-    private  String name;
+
+    @Column(name = "login_id", unique = true, nullable = false)
+    private String loginId;
+
+    private String username;
     private String password;
     private String email;
     private String role; // ROLE_USER or ROLE_ADMIN
@@ -22,12 +26,20 @@ public class Member implements UserDetails {
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getLoginId() {
+        return loginId;
+    }
+
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
     }
 
     public Long getId() {
@@ -85,11 +97,6 @@ public class Member implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));
-    }
-
-    @Override
-    public String getUsername() {
-        return name;
     }
 
     public String getRefreshToken() {
