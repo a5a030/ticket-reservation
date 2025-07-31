@@ -1,15 +1,15 @@
 package com.byunsum.ticket_reservation.member.form;
 
 public class LoginForm {
-    private String name;
+    private String loginId;
     private String password;
 
-    public String getName() {
-        return name;
+    public String getLoginId() {
+        return loginId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
     }
 
     public String getPassword() {

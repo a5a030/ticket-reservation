@@ -42,7 +42,7 @@ public class LoginController {
             }
 
             // 로그인 검증
-            Member loginMember = memberService.login(loginForm.getName(), loginForm.getPassword());
+            Member loginMember = memberService.login(loginForm.getLoginId(), loginForm.getPassword());
 
             // 새 세션 생성
             HttpSession newSession = request.getSession(true);
