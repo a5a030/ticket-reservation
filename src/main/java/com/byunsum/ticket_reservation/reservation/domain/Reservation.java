@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.domain;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
@@ -30,11 +32,17 @@ public class Reservation {
 
     private boolean isCanceled = false;
 
+    private boolean wasReconfirmed = false; // 재확정 1회 한정 허용
+
     //예매일시
     private LocalDateTime createdAt;
 
     //취소일시
     private LocalDateTime cancelledAt;
+
+    public ReservationStatus getStatus() {
+        return status;
+    }
 
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
@@ -99,5 +107,18 @@ public class Reservation {
     public void markAsCancelled() {
         this.isCanceled = true;
         this.cancelledAt = LocalDateTime.now();
+    }
+
+    public boolean isWasReconfirmed() {
+        return wasReconfirmed;
+    }
+
+    public void reconfirm() {
+        if(this.status != ReservationStatus.CANCELLED || wasReconfirmed) {
+            throw new CustomException(ErrorCode.RECONFIRM_NOT_ALLOWED);
+        }
+
+        this.status = ReservationStatus.CONFIRMED;
+        this.wasReconfirmed = true;
     }
 }

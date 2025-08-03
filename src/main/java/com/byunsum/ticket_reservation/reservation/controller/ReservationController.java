@@ -72,4 +72,18 @@ public class ReservationController {
 
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "예매 재확정", description = "예매 취소 후 좌석이 아직 해제되지 않았다면 재확정을 1회에 한해 허용합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예매 재확정 성공"),
+            @ApiResponse(responseCode = "400", description = "재확정 불가 상태 또는 재확정 이미 수행됨"),
+            @ApiResponse(responseCode = "403", description = "본인의 예매가 아님"),
+            @ApiResponse(responseCode = "404", description = "예매 내역 없음")
+    })
+    @PatchMapping("/{id}/reconfirm")
+    public ResponseEntity<ReservationResponse> reconfirmReservation(@PathVariable Long id, @AuthenticationPrincipal Member member) {
+        ReservationResponse response = reservationService.reconfirmReservation(id, member.getId());
+
+        return ResponseEntity.ok(response);
+    }
 }

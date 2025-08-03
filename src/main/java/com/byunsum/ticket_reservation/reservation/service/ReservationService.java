@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
@@ -131,12 +132,37 @@ public class ReservationService {
         seat.release();
 
         // Redis에 취소된 좌석 잠금 처리
-        String cancelKey = "seat:cancelled:" + seat.getId();
-        redisTemplate.opsForValue().set(cancelKey, "LOCKED", Duration.ofMinutes(10));
+        String reconfirmKey = "seat:reconfirm:" + seat.getId();
+        redisTemplate.opsForValue().set(reconfirmKey, "LOCKED", Duration.ofMinutes(10));
 
         // 좌석 선택 키도 일정 시간 후 사용 가능하게 등록
         String seatKey = getKey(seat.getId());
         long randomSeconds = ThreadLocalRandom.current().nextLong(300, 601);
         redisTemplate.opsForValue().set(seatKey, "available", Duration.ofSeconds(randomSeconds));
+    }
+
+    @Transactional
+    public ReservationResponse reconfirmReservation(Long reservationId, Long memberId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if(!reservation.getMember().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
+        }
+
+        if(reservation.getStatus() != ReservationStatus.CANCELLED) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED);
+        }
+
+        String redisKey = "seat:reconfirm:" + reservation.getSeat().getId();
+        Boolean isLocked = redisTemplate.hasKey(redisKey);
+
+        if(Boolean.FALSE.equals(isLocked)) {
+            throw new CustomException(ErrorCode.SEAT_ALREADY_RELEASED);
+        }
+
+        reservation.reconfirm();
+
+        return toResponse(reservation);
     }
 }
