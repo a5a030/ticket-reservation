@@ -30,7 +30,9 @@ public class Reservation {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    private boolean isCanceled = false;
+    public boolean isCancelled() {
+        return this.status == ReservationStatus.CANCELLED;
+    }
 
     private boolean wasReconfirmed = false; // 재확정 1회 한정 허용
 
@@ -79,16 +81,16 @@ public class Reservation {
         return createdAt;
     }
 
-    public boolean isCanceled() {
-        return isCanceled;
-    }
-
     public LocalDateTime getCancelledAt() {
         return cancelledAt;
     }
 
     public void cancel() {
-        this.isCanceled = true;
+        if(this.status == ReservationStatus.CANCELLED) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED);
+        }
+
+        this.cancelledAt = LocalDateTime.now();
         this.status = ReservationStatus.CANCELLED;
     }
 
@@ -102,11 +104,6 @@ public class Reservation {
 
     public void setMember(Member member) {
         this.member = member;
-    }
-
-    public void markAsCancelled() {
-        this.isCanceled = true;
-        this.cancelledAt = LocalDateTime.now();
     }
 
     public boolean isWasReconfirmed() {

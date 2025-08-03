@@ -118,7 +118,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByReservationCode(reservationCode)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        if(reservation.isCanceled()) {
+        if(reservation.isCancelled()) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED);
         }
 
@@ -126,7 +126,7 @@ public class ReservationService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        reservation.markAsCancelled();
+        reservation.cancel();
 
         Seat seat = reservation.getSeat();
         seat.release();

@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.payment.domain;
 
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,10 @@ public class Payment {
     private Reservation reservation;
 
     private LocalDateTime cancelledAt;
+
+    private boolean isCancelled() {
+        return this.status == PaymentStatus.CANCELLED;
+    }
 
     public Payment() {
     }
