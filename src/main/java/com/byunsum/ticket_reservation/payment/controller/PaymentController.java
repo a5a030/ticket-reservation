@@ -54,7 +54,12 @@ public class PaymentController {
     }
 
     @Operation(summary = "결제 취소", description = "결제 ID를 기반으로 결제 상태를 취소로 변경합니다.")
-    @PostMapping("/{id}/cancel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "결제 취소 성공"),
+            @ApiResponse(responseCode = "400", description = "이미 취소된 결제 혹은 존재하지 않는 결제"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PatchMapping("/{id}/cancel")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long id, @AuthenticationPrincipal Member member) {
         PaymentResponse response = paymentService.cancelPayment(id, member.getId());
 
