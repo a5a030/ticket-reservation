@@ -25,7 +25,6 @@ public class Payment {
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
-    private String reason;
     private LocalDateTime cancelledAt;
 
     public Payment() {
@@ -37,7 +36,6 @@ public class Payment {
         this.status = status;
         this.reservation = reservation;
         this.createdAt = LocalDateTime.now();
-        this.cancelledAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -62,10 +60,6 @@ public class Payment {
 
     public Reservation getReservation() {
         return reservation;
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     public LocalDateTime getCancelledAt() {
