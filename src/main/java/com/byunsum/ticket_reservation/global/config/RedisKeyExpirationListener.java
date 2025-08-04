@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.config;
+package com.byunsum.ticket_reservation.global.config;
 
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
