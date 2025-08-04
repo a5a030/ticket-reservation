@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.payment.domain;
 
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -10,22 +11,29 @@ import java.time.LocalDateTime;
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "결제 ID")
     private Long id;
 
+    @Schema(description = "결제 금액")
     private int amount;
 
     @Enumerated(EnumType.STRING)
+    @Schema(description = "결제 수단", example = "BANK_TRANSFER")
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
+    @Schema(description = "결제 상태", example = "PENDING")
     private PaymentStatus status;
 
+    @Schema(description = "결제일시")
     private LocalDateTime createdAt;
 
     @OneToOne
     @JoinColumn(name = "reservation_id")
+    @Schema(description = "연결된 예매 정보")
     private Reservation reservation;
 
+    @Schema(description = "결제 취소 일시", nullable = true)
     private LocalDateTime cancelledAt;
 
     private boolean isCancelled() {
