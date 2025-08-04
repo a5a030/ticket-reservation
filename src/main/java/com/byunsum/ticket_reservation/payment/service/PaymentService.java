@@ -44,8 +44,12 @@ public class PaymentService {
 
         reservation.confirm();
 
+        int seatPrice = reservation.getSeat().getPrice();
+        int fee = 3000; //예매 수수료
+        int totalAmount = seatPrice + fee;
+
         Payment payment = new Payment(
-                request.getAmount(),
+                totalAmount,
                 request.getPaymentMethod(),
                 PaymentStatus.PAID,
                 reservation
