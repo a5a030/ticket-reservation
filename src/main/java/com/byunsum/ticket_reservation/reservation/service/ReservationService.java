@@ -69,12 +69,14 @@ public class ReservationService {
         Seat seat = seatRepository.findById(request.getSeatId())
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
 
-
         if(seat.isReserved()) {
             throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
 
         Reservation reservation = saveReservation(performance, seat, member);
+
+        String timeoutKey = "reservation:timeout:" + reservation.getId();
+        redisTemplate.opsForValue().set(timeoutKey, "PENDING", Duration.ofMinutes(10));
 
         return toResponse(reservation);
     }
