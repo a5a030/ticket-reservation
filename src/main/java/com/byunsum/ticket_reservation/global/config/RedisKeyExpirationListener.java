@@ -37,5 +37,20 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
                 }
             });
         }
+
+        if(expireKey.startsWith("payment:bank:timeout:")){
+            Long reservationId = Long.parseLong(expireKey.replace("payment:bank:timeout:",""));
+
+            reservationRepository.findById(reservationId).ifPresent(reservation -> {
+                if(!reservation.isCancelled()) {
+                    reservation.cancel();
+                    Seat seat = reservation.getSeat();
+                    seat.release();
+                    seatRepository.save(seat);
+
+                    System.out.println("[TTL] 무통장입금 미입금으로 예매 자동 취소됨: " + reservationId);
+                }
+            });
+        }
     }
 }

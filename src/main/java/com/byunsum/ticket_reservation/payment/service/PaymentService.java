@@ -60,8 +60,17 @@ public class PaymentService {
 
         Payment saved = paymentRepository.save(payment);
 
-        String timeoutKey =  "reservation:timeout:" + reservation.getId();
-        redisTemplate.delete(timeoutKey);
+        if(request.getPaymentMethod().name().equals("BANK_TRANSFER")) {
+            String bankKey = "payment:bank:timeout:" + reservation.getId();
+
+            long secondUntilMidnight = java.time.Duration.between(
+                    LocalDateTime.now(),
+                    LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay()
+            ).getSeconds();
+
+            redisTemplate.opsForValue().set(bankKey, "PENDING", java.time.Duration.ofSeconds(secondUntilMidnight));
+        }
+
 
         return new PaymentResponse(
                 saved.getId(),
