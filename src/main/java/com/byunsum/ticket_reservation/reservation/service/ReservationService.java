@@ -52,7 +52,9 @@ public class ReservationService {
                 reservation.getReservationCode(),
                 seat.getSeatNo(),
                 seat.getPrice(),
-                reservation.getCreatedAt()
+                reservation.getCreatedAt(),
+                reservation.getStatus().name(),
+                reservation.isReconfirmed()
         );
     }
 
@@ -83,7 +85,9 @@ public class ReservationService {
                 reservation.getReservationCode(),
                 seat.getSeatNo(),
                 seat.getPrice(),
-                reservation.getCreatedAt()
+                reservation.getCreatedAt(),
+                reservation.getStatus().name(),
+                reservation.isReconfirmed()
         );
     }
 

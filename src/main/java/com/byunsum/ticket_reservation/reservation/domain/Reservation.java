@@ -34,7 +34,7 @@ public class Reservation {
         return this.status == ReservationStatus.CANCELLED;
     }
 
-    private boolean wasReconfirmed = false; // 재확정 1회 한정 허용
+    private boolean reconfirmed = false; // 재확정 1회 한정 허용
 
     //예매일시
     private LocalDateTime createdAt;
@@ -106,16 +106,16 @@ public class Reservation {
         this.member = member;
     }
 
-    public boolean isWasReconfirmed() {
-        return wasReconfirmed;
+    public boolean isReconfirmed() {
+        return reconfirmed;
     }
 
     public void reconfirm() {
-        if(this.status != ReservationStatus.CANCELLED || wasReconfirmed) {
+        if(this.status != ReservationStatus.CANCELLED || reconfirmed) {
             throw new CustomException(ErrorCode.RECONFIRM_NOT_ALLOWED);
         }
 
         this.status = ReservationStatus.CONFIRMED;
-        this.wasReconfirmed = true;
+        this.reconfirmed = true;
     }
 }

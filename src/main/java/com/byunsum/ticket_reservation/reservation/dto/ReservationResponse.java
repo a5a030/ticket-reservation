@@ -17,11 +17,19 @@ public class ReservationResponse {
     @Schema(description = "예매 완료 일시")
     private LocalDateTime reservedAt;
 
-    public ReservationResponse(String reservationCode, String seatNo, int price, LocalDateTime reservedAt) {
+    @Schema(description = "예매 상태", example = "CONFIRMED")
+    private String status;
+
+    @Schema(description = "재확정 여부", example = "true")
+    private boolean reconfirmed;
+
+    public ReservationResponse(String reservationCode, String seatNo, int price, LocalDateTime reservedAt, String status, boolean reconfirmed) {
         this.reservationCode = reservationCode;
         this.seatNo  = seatNo;
         this.price = price;
         this.reservedAt = reservedAt;
+        this.status = status;
+        this.reconfirmed = reconfirmed;
     }
 
     public void setReservationCode(String reservationCode) {
@@ -42,5 +50,13 @@ public class ReservationResponse {
 
     public LocalDateTime getReservedAt() {
         return reservedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public boolean isReconfirmed() {
+        return reconfirmed;
     }
 }
