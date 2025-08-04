@@ -10,6 +10,7 @@ import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,12 @@ import java.util.Optional;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
+    private final StringRedisTemplate redisTemplate;
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {
@@ -56,6 +59,9 @@ public class PaymentService {
         );
 
         Payment saved = paymentRepository.save(payment);
+
+        String timeoutKey =  "reservation:timeout:" + reservation.getId();
+        redisTemplate.delete(timeoutKey);
 
         return new PaymentResponse(
                 saved.getId(),
