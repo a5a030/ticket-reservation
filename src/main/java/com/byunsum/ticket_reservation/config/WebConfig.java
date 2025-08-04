@@ -9,10 +9,10 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class webConfig implements WebMvcConfigurer {
+public class WebConfig implements WebMvcConfigurer {
     private final MemberService memberService;
 
-    public webConfig(MemberService memberService) {
+    public WebConfig(MemberService memberService) {
         this.memberService = memberService;
     }
 
