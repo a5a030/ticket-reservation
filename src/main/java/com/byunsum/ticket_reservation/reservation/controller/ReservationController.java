@@ -60,9 +60,10 @@ public class ReservationController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "예매 취소", description = "예매 코드를 통해 예매를 취소합니다.")
+    @Operation(summary = "예매 취소", description = "예매 코드를 통해 예매를 취소합니다. 예매가 취소되면 연동된 결제도 자동으로 취소됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예매 취소 성공"),
+            @ApiResponse(responseCode = "400", description = "이미 취소된 예매"),
             @ApiResponse(responseCode = "403", description = "본인의 예매가 아님"),
             @ApiResponse(responseCode = "404", description = "예매 내역 없음")
     })
