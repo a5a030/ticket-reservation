@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -172,5 +173,19 @@ public class ReservationService {
         reservation.reconfirm();
 
         return toResponse(reservation);
+    }
+
+    public List<ReservationResponse> getReservationsByMember(Long memberId, String sort) {
+        List<Reservation> reservations;
+
+        if("upcoming".equalsIgnoreCase(sort)) {
+            reservations = reservationRepository.findByMemberIdOrderByPerformanceStartDateAsc(memberId);
+        } else {
+            reservations = reservationRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
+        }
+
+        return reservations.stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

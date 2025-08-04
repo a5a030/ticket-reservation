@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "예매 API", description = "공연 예매 관련 API")
 @RestController
 @RequestMapping("/reservations")
@@ -86,5 +88,16 @@ public class ReservationController {
         ReservationResponse response = reservationService.reconfirmReservation(id, member.getId());
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "내 예매 목록 조회", description = "로그인한 사용자의 예매 목록을 정렬 기준에 따라 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예매 목록 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 필요")
+    })
+    @GetMapping("/my")
+    public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Member member, @RequestParam(defaultValue = "recent", name = "sort") String sort) {
+        List<ReservationResponse> responses = reservationService.getReservationsByMember(member.getId(), sort);
+        return ResponseEntity.ok(responses);
     }
 }
