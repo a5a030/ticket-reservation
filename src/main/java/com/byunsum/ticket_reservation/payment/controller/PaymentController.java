@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.payment.controller;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
+import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -65,4 +66,19 @@ public class PaymentController {
 
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "총 결제 금액 조회", description = "전체 결제된 금액의 합계를 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "총 결제 금액 조회 성공")
+    @GetMapping("/total")
+    public ResponseEntity<Long> getTotalPaymentAmount() {
+        return ResponseEntity.ok(paymentService.getTotalAmount());
+    }
+
+    @Operation(summary = "결제 수단별 통계", description = "결제 수단별 건수 및 총 결제 금액을 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "결제 통계 조회 성공")
+    @GetMapping("/statistics")
+    public ResponseEntity<List<PaymentStatistics>> getPaymentStatistics() {
+        return ResponseEntity.ok(paymentService.getStatisticsByMethod());
+    }
+
 }

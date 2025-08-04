@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
+import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
@@ -119,5 +120,13 @@ public class PaymentService {
         return payments.stream()
                 .map(this::toPaymentResponse)
                 .toList();
+    }
+
+    public Long getTotalAmount() {
+        return paymentRepository.getTotalPaymentAmount();
+    }
+
+    public List<PaymentStatistics> getStatisticsByMethod() {
+        return paymentRepository.getPaymentStatistics();
     }
 }
