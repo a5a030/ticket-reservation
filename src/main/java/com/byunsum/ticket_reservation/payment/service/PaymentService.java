@@ -133,4 +133,15 @@ public class PaymentService {
     public List<PaymentStatistics> getStatisticsByMethod() {
         return paymentRepository.getPaymentStatistics();
     }
+
+    @Transactional
+    public void cancelByReservation(Reservation reservation) {
+        Optional<Payment> optional = paymentRepository.findByReservationId(reservation.getId());
+        if(optional.isEmpty()) return;
+
+        Payment payment = optional.get();
+        if(payment.getStatus() == PaymentStatus.PAID) {
+            payment.markAsCancelled();
+        }
+    }
 }

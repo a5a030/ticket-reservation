@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.reservation.service;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
@@ -25,12 +26,14 @@ public class ReservationService {
     private final PerformanceRepository performanceRepository;
     private final SeatRepository seatRepository;
     private final StringRedisTemplate redisTemplate;
+    private final PaymentService paymentService;
 
-    public ReservationService(ReservationRepository reservationRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository, StringRedisTemplate redisTemplate) {
+    public ReservationService(ReservationRepository reservationRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository, StringRedisTemplate redisTemplate, PaymentService paymentService) {
         this.reservationRepository = reservationRepository;
         this.performanceRepository = performanceRepository;
         this.seatRepository = seatRepository;
         this.redisTemplate = redisTemplate;
+        this.paymentService = paymentService;
     }
 
     private String getKey(Long seatId) {
@@ -131,6 +134,7 @@ public class ReservationService {
         }
 
         reservation.cancel();
+        paymentService.cancelByReservation(reservation);
 
         Seat seat = reservation.getSeat();
         seat.release();
