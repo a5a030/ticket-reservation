@@ -1,0 +1,47 @@
+package com.byunsum.ticket_reservation.review.controller;
+
+import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
+import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
+import com.byunsum.ticket_reservation.review.service.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Tag(name = "리뷰 API", description = "공연 후기 작성 및 조회 API")
+@RestController
+@RequestMapping("/reviews")
+public class ReviewController {
+    private final ReviewService reviewService;
+
+    public ReviewController(ReviewService reviewService) {
+        this.reviewService = reviewService;
+    }
+
+    @Operation(summary = "리뷰 등록", description = "공연에 대한 후기를 작성합니다.")
+    @PostMapping
+    public ResponseEntity<ReviewResponse> createReview(@RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
+        ReviewResponse response = reviewService.createReview(request, member);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "공연별 리뷰 조회", description = "특정 공연에 등록된 모든 리뷰를 조회합니다.")
+    @GetMapping("/performance/{performanceId}")
+    public ResponseEntity<List<ReviewResponse>> getReviewsByPerformance(@PathVariable Long performanceId) {
+        List<ReviewResponse> responses = reviewService.getReviewsByPerformance(performanceId);
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @Operation(summary = "내가 쓴 리뷰 조회", description = "사용자가 작성한 모든 후기를 조회합니다.")
+    @GetMapping("/my")
+    public ResponseEntity<List<ReviewResponse>> getMyReviews(@AuthenticationPrincipal Member member) {
+        List<ReviewResponse> responses = reviewService.getReviewsByMember(member.getId());
+        return ResponseEntity.ok(responses);
+    }
+}
