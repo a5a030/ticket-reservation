@@ -8,6 +8,8 @@ import com.byunsum.ticket_reservation.reservation.repository.ReservationReposito
 import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
+import com.byunsum.ticket_reservation.review.external.SentimentClient;
+import com.byunsum.ticket_reservation.review.external.SentimentResponse;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +21,12 @@ import java.util.stream.Collectors;
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReservationRepository reservationRepository;
+    private final SentimentClient sentimentClient;
 
-    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository) {
+    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository, SentimentClient sentimentClient) {
         this.reviewRepository = reviewRepository;
         this.reservationRepository = reservationRepository;
+        this.sentimentClient = sentimentClient;
     }
 
     @Transactional
@@ -34,7 +38,11 @@ public class ReviewService {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
+        SentimentResponse sentiment = sentimentClient.analyzeSentiment(request.getContent());
+
         Review review = new Review(reservation, request.getContent(), request.getRating());
+        review.setSentiment(sentiment.getSentiment());
+        review.setSentimentScore(sentiment.getScore());
         Review saved = reviewRepository.save(review);
 
         return toResponse(saved);
@@ -74,6 +82,8 @@ public class ReviewService {
                 review.getReservation().getId(),
                 review.getContent(),
                 review.getRating(),
+                review.getSentiment(),
+                review.getSentimentScore(),
                 review.getCreatedAt()
         );
     }

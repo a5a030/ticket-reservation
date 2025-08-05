@@ -18,17 +18,25 @@ public class ReviewResponse {
     @Schema(description = "별점", example = "4")
     private int rating;
 
+    @Schema(description = "감정분석", example = "POSITIVE")
+    private String sentiment;
+
+    @Schema(description = "감정 신뢰도 점수", example = "0.508")
+    private double sentimentScore;
+
     @Schema(description = "작성일시")
     private LocalDateTime createdAt;
 
     public ReviewResponse() {
     }
 
-    public ReviewResponse(Long id, Long reservationId, String content, int rating, LocalDateTime createdAt) {
+    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, LocalDateTime createdAt) {
         this.id = id;
         this.reservationId = reservationId;
         this.content = content;
         this.rating = rating;
+        this.sentiment = sentiment;
+        this.sentimentScore = sentimentScore;
         this.createdAt = createdAt;
     }
 
@@ -50,5 +58,13 @@ public class ReviewResponse {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getSentiment() {
+        return sentiment;
+    }
+
+    public double getSentimentScore() {
+        return sentimentScore;
     }
 }

@@ -23,6 +23,7 @@ public class Review {
 
     private String summary; // ai 요약
     private String sentiment; // 감정 분석 결과
+    private double sentimentScore;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -87,5 +88,17 @@ public class Review {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public double getSentimentScore() {
+        return sentimentScore;
+    }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public void setSentimentScore(double sentimentScore) {
+        this.sentimentScore = sentimentScore;
     }
 }
