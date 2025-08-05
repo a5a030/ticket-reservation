@@ -56,6 +56,7 @@ public class Review {
     public void updateAI(String summary, String sentiment) {
         this.summary = summary;
         this.sentiment = sentiment;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
