@@ -13,6 +13,7 @@ import com.byunsum.ticket_reservation.review.external.SentimentResponse;
 import com.byunsum.ticket_reservation.review.external.SummaryClient;
 import com.byunsum.ticket_reservation.review.external.SummaryResponse;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,10 +82,10 @@ public class ReviewService {
 
 
     @Transactional(readOnly = true)
-    public List<ReviewResponse> getReviewsByPerformance(Long performanceId) {
-        List<Review> reviews = reviewRepository.findByReservationPerformanceId(performanceId);
+    public List<ReviewResponse> getReviewsByPerformance(Long performanceId, Pageable pageable) {
 
-        return reviews.stream()
+        return reviewRepository.findByReservationPerformanceId(performanceId, pageable)
+                .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
