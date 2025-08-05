@@ -13,7 +13,7 @@ import java.util.Map;
 @Component
 public class SummaryClient {
     private final RestTemplate restTemplate;
-    private final String summaryUrl = "http://localhost:5006/summary";
+    private final String summaryUrl = "http://localhost:5006/summarize";
 
     public SummaryClient() {
         this.restTemplate = new RestTemplate();
