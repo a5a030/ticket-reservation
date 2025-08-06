@@ -24,7 +24,7 @@ public class PerformanceService {
                 request.getTitle(),
                 request.getDescription(),
                 request.getVenue(),
-                request.getStarDate(),
+                request.getStartDate(),
                 request.getEndDate(),
                 request.getTime(),
                 request.getGenre(),

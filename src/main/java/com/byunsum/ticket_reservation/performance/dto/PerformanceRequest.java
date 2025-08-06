@@ -25,7 +25,7 @@ public class PerformanceRequest {
     private String time;
 
     @Schema(description = "공연 시작일")
-    private LocalDate starDate;
+    private LocalDate startDate;
 
     @Schema(description = "공연 종료일")
     private LocalDate endDate;
@@ -80,12 +80,12 @@ public class PerformanceRequest {
         this.time = time;
     }
 
-    public LocalDate getStarDate() {
-        return starDate;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public void setStarDate(LocalDate starDate) {
-        this.starDate = starDate;
+    public void setStartDate(LocalDate starDate) {
+        this.startDate = starDate;
     }
 
     public LocalDate getEndDate() {
