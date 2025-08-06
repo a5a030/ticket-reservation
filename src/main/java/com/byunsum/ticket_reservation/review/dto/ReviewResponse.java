@@ -25,7 +25,7 @@ public class ReviewResponse {
     private double sentimentScore;
 
     @Schema(description = "요약분석")
-    private final String summary;
+    private String summary;
 
     @Schema(description = "작성일시")
     private LocalDateTime createdAt;
@@ -70,5 +70,9 @@ public class ReviewResponse {
 
     public double getSentimentScore() {
         return sentimentScore;
+    }
+
+    public String getSummary() {
+        return summary;
     }
 }
