@@ -63,4 +63,20 @@ public class ReviewController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "리뷰 수정", description = "본인이 작성한 후기를 수정합니다.")
+    @PutMapping("/{id}")
+    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long id, @RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
+        return ResponseEntity.ok(reviewService.updateReview(id, request, member));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "리뷰 삭제", description = "본인이 작성한 후기를 삭제합니다.")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void>  deleteReview(@PathVariable Long id, @AuthenticationPrincipal Member member) {
+        reviewService.deleteReview(id, member);
+
+        return ResponseEntity.noContent().build();
+    }
 }

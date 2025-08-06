@@ -58,7 +58,7 @@ public class ReviewService {
         String summary = summaryResponse.getSummary();
 
         // 4. 리뷰에 분석 결과 반영
-        saved.updateAI(summary, sentiment);
+        saved.updateAI(summary, sentiment, score);
 
         return toResponse(saved);
     }
@@ -118,5 +118,36 @@ public class ReviewService {
                 .orElse(0.0);
 
         return new ReviewStatisticsResponse(performanceId, positiveCount, negativeCount, neutralCount, averageRating);
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(Long reviewId, ReviewRequest request, Member member) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if(!review.getReservation().getMember().getId().equals(member.getId())) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        review.update(request.getContent(), request.getRating());
+
+        SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
+        SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
+
+        review.updateAI(summaryResponse.getSummary(), sentimentResponse.getSentiment(), sentimentResponse.getScore());
+
+        return toResponse(review);
+    }
+
+    @Transactional
+    public void deleteReview(Long reviewId, Member member) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
+
+        if(!review.getReservation().getMember().getId().equals(member.getId())) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
+        }
+
+        reviewRepository.delete(review);
     }
 }

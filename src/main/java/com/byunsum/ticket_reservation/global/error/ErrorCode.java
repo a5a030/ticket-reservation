@@ -23,7 +23,10 @@ public enum ErrorCode {
     ALREADY_CANCELED_PAYMENT("이미 취소된 결제입니다."),
     UNAUTHORIZED_CANCEL("본인의 예매만 취소할 수 있습니다."),
     PAYMENT_NOT_FOUND("결제 내역을 찾을 수 없습니다."),
-    NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다.");
+    NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다."),
+
+    REVIEW_NOT_FOUND("리뷰를 찾을 수 없습니다."),
+    UNAUTHORIZED_REVIEW_ACCESS("본인의 리뷰만 수정/삭제할 수 있습니다.");
 
     private final String message;
 

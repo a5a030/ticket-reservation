@@ -53,9 +53,10 @@ public class Review {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateAI(String summary, String sentiment) {
+    public void updateAI(String summary, String sentiment, double score) {
         this.summary = summary;
         this.sentiment = sentiment;
+        this.sentimentScore = score;
         this.updatedAt = LocalDateTime.now();
     }
 
