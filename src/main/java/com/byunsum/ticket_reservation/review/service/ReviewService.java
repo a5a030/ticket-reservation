@@ -99,6 +99,7 @@ public class ReviewService {
                 review.getRating(),
                 review.getSentiment(),
                 review.getSentimentScore(),
+                review.getSummary(),
                 review.getCreatedAt()
         );
     }

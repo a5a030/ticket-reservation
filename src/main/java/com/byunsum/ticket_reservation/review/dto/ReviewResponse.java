@@ -24,19 +24,23 @@ public class ReviewResponse {
     @Schema(description = "감정 신뢰도 점수", example = "0.508")
     private double sentimentScore;
 
+    @Schema(description = "요약분석")
+    private final String summary;
+
     @Schema(description = "작성일시")
     private LocalDateTime createdAt;
 
     public ReviewResponse() {
     }
 
-    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, LocalDateTime createdAt) {
+    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, String summary, LocalDateTime createdAt) {
         this.id = id;
         this.reservationId = reservationId;
         this.content = content;
         this.rating = rating;
         this.sentiment = sentiment;
         this.sentimentScore = sentimentScore;
+        this.summary = summary;
         this.createdAt = createdAt;
     }
 
