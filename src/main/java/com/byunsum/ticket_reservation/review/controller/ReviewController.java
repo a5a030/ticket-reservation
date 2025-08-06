@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
+import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
 import com.byunsum.ticket_reservation.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,5 +54,13 @@ public class ReviewController {
 
         List<ReviewResponse> responses = reviewService.getReviewsByMember(member.getId());
         return ResponseEntity.ok(responses);
+    }
+
+    @Operation(summary = "공연별 감정 통계", description = "공연에 대한 전체 리뷰 감정 분포 및 평점 평균을 반환합니다.")
+    @GetMapping("/statistics/{performanceId}")
+    public ResponseEntity<ReviewStatisticsResponse> getStatistics(@PathVariable Long performanceId) {
+        ReviewStatisticsResponse response = reviewService.getReviewStatistics(performanceId);
+
+        return ResponseEntity.ok(response);
     }
 }

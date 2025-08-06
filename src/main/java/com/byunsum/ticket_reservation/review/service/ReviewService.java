@@ -8,6 +8,7 @@ import com.byunsum.ticket_reservation.reservation.repository.ReservationReposito
 import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
+import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
 import com.byunsum.ticket_reservation.review.external.SentimentClient;
 import com.byunsum.ticket_reservation.review.external.SentimentResponse;
 import com.byunsum.ticket_reservation.review.external.SummaryClient;
@@ -100,5 +101,21 @@ public class ReviewService {
                 review.getSentimentScore(),
                 review.getCreatedAt()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewStatisticsResponse getReviewStatistics(Long performanceId) {
+        List<Review> reviews = reviewRepository.findByReservationPerformanceId(performanceId);
+
+        long positiveCount = reviews.stream().filter(r -> "POSITIVE".equalsIgnoreCase(r.getSentiment())).count();
+        long negativeCount = reviews.stream().filter(r -> "NEGATIVE".equalsIgnoreCase(r.getSentiment())).count();
+        long neutralCount = reviews.stream().filter(r -> "NEUTRAL".equalsIgnoreCase(r.getSentiment())).count();
+
+        double averageRating = reviews.stream()
+                .mapToDouble(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        return new ReviewStatisticsResponse(performanceId, positiveCount, negativeCount, neutralCount, averageRating);
     }
 }
