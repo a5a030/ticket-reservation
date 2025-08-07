@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.review.domain.Review;
+import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
 import com.byunsum.ticket_reservation.review.dto.ReviewDashboardResponse;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
@@ -35,9 +36,9 @@ public class ReviewAdminService {
 
         int totalCount = reviews.size();
 
-        long positiveCount = reviews.stream().filter(r -> "POSITIVE".equalsIgnoreCase(r.getSentiment())).count();
-        long negativeCount = reviews.stream().filter(r -> "NEGATIVE".equalsIgnoreCase(r.getSentiment())).count();
-        long neutralCount = reviews.stream().filter(r -> "NEUTRAL".equalsIgnoreCase(r.getSentiment())).count();
+        long positiveCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.POSITIVE).count();
+        long negativeCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.NEGATIVE).count();
+        long neutralCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.NEUTRAL).count();
 
         double averageRating = reviews.stream()
                 .mapToDouble(Review::getRating)
@@ -91,22 +92,21 @@ public class ReviewAdminService {
     public Map<String, List<String>> extractRepresentativeExamples(List<Review> reviews, int perSentimentLimit) {
         Map<String, List<String>> exampleMap = new HashMap<>();
 
-        for(String sentiment : List.of("POSITIVE", "NEGATIVE", "NEUTRAL")) {
+        for(SentimentType sentiment : SentimentType.values()) {
             List<String> examples = reviews.stream()
-                    .filter(r -> sentiment.equalsIgnoreCase(r.getSentiment()))
+                    .filter(r -> {
+                        try {
+                            return SentimentType.from(r.getSentiment()) == sentiment;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
                     .map(Review::getContent)
                     .filter(c -> c != null && !c.isBlank())
                     .limit(perSentimentLimit)
                     .collect(Collectors.toList());
 
-            String localizedKey = switch (sentiment) {
-                case "POSITIVE" -> "긍정";
-                case "NEGATIVE" -> "부정";
-                case "NEUTRAL" -> "중립";
-                default -> "기타";
-            };
-
-            exampleMap.put(localizedKey, examples);
+            exampleMap.put(sentiment.getDisplayName(), examples);
         }
 
         return exampleMap;
