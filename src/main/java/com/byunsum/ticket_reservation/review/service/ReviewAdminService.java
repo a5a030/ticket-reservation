@@ -98,4 +98,35 @@ public class ReviewAdminService {
                 .map(e -> new KeywordSummary(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
     }
+
+    public Map<String, List<String>> extractRepresentativeExamples(List<Review> reviews, int perSentimentLimit) {
+        Map<String, List<String>> exampleMap = new HashMap<>();
+
+        List<String> positive = reviews.stream()
+                .filter(r -> "긍정".equals(r.getSentiment()))
+                .map(Review::getContent)
+                .filter(c -> c != null && !c.isBlank())
+                .limit(perSentimentLimit)
+                .collect(Collectors.toList());
+
+        List<String> negative = reviews.stream()
+                .filter(r -> "부정".equals(r.getSentiment()))
+                .map(Review::getContent)
+                .filter(c -> c != null && !c.isBlank())
+                .limit(perSentimentLimit)
+                .collect(Collectors.toList());
+
+        List<String> neutral = reviews.stream()
+                .filter(r -> "중립".equals(r.getSentiment()))
+                .map(Review::getContent)
+                .filter(c -> c != null && !c.isBlank())
+                .limit(perSentimentLimit)
+                .collect(Collectors.toList());
+
+        exampleMap.put("긍정", positive);
+        exampleMap.put("부정", negative);
+        exampleMap.put("중립", neutral);
+
+        return exampleMap;
+    }
 }
