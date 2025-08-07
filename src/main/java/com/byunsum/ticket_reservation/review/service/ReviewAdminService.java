@@ -47,10 +47,7 @@ public class ReviewAdminService {
         double positiveRatio = totalCount > 0 ? (positiveCount * 100.0 / totalCount) : 0.0;
 
         // 감정별 예시 추출
-        Map<String, List<String>> examples = new HashMap<>();
-        examples.put("positive", extraExamplesBySentiment(reviews, "POSITIVE"));
-        examples.put("negative", extraExamplesBySentiment(reviews, "NEGATIVE"));
-        examples.put("neutral", extraExamplesBySentiment(reviews, "NEUTRAL"));
+        Map<String, List<String>> examples = extractRepresentativeExamples(reviews, 3);
 
         // 키워드 요약(summary 필드 기준으로 명사 뽑기)
         List<KeywordSummary> keywordSummaries = extractTopKeywords(reviews, 5);
@@ -67,14 +64,6 @@ public class ReviewAdminService {
                 keywordSummaries,
                 examples
         );
-    }
-
-    private List<String> extraExamplesBySentiment(List<Review> reviews, String sentiment) {
-        return reviews.stream()
-                .filter(r -> sentiment.equalsIgnoreCase(r.getSentiment()))
-                .map(Review::getContent)
-                .limit(3)
-                .collect(Collectors.toList());
     }
 
     private List<KeywordSummary> extractTopKeywords(List<Review> reviews, int limit) {
@@ -102,30 +91,23 @@ public class ReviewAdminService {
     public Map<String, List<String>> extractRepresentativeExamples(List<Review> reviews, int perSentimentLimit) {
         Map<String, List<String>> exampleMap = new HashMap<>();
 
-        List<String> positive = reviews.stream()
-                .filter(r -> "긍정".equals(r.getSentiment()))
-                .map(Review::getContent)
-                .filter(c -> c != null && !c.isBlank())
-                .limit(perSentimentLimit)
-                .collect(Collectors.toList());
+        for(String sentiment : List.of("POSITIVE", "NEGATIVE", "NEUTRAL")) {
+            List<String> examples = reviews.stream()
+                    .filter(r -> sentiment.equalsIgnoreCase(r.getSentiment()))
+                    .map(Review::getContent)
+                    .filter(c -> c != null && !c.isBlank())
+                    .limit(perSentimentLimit)
+                    .collect(Collectors.toList());
 
-        List<String> negative = reviews.stream()
-                .filter(r -> "부정".equals(r.getSentiment()))
-                .map(Review::getContent)
-                .filter(c -> c != null && !c.isBlank())
-                .limit(perSentimentLimit)
-                .collect(Collectors.toList());
+            String localizedKey = switch (sentiment) {
+                case "POSITIVE" -> "긍정";
+                case "NEGATIVE" -> "부정";
+                case "NEUTRAL" -> "중립";
+                default -> "기타";
+            };
 
-        List<String> neutral = reviews.stream()
-                .filter(r -> "중립".equals(r.getSentiment()))
-                .map(Review::getContent)
-                .filter(c -> c != null && !c.isBlank())
-                .limit(perSentimentLimit)
-                .collect(Collectors.toList());
-
-        exampleMap.put("긍정", positive);
-        exampleMap.put("부정", negative);
-        exampleMap.put("중립", neutral);
+            exampleMap.put(localizedKey, examples);
+        }
 
         return exampleMap;
     }
