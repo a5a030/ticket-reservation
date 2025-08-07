@@ -27,12 +27,14 @@ public class ReviewService {
     private final ReservationRepository reservationRepository;
     private final SentimentClient sentimentClient;
     private final SummaryClient summaryClient;
+    private final ReviewAdminService reviewAdminService;
 
-    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository, SentimentClient sentimentClient, SummaryClient summaryClient) {
+    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository, SentimentClient sentimentClient, SummaryClient summaryClient, ReviewAdminService reviewAdminService) {
         this.reviewRepository = reviewRepository;
         this.reservationRepository = reservationRepository;
         this.sentimentClient = sentimentClient;
         this.summaryClient = summaryClient;
+        this.reviewAdminService = reviewAdminService;
     }
 
     @Transactional
@@ -47,6 +49,9 @@ public class ReviewService {
         // 1. 기본 리뷰 저장
         Review review = new Review(reservation, request.getContent(), request.getRating());
         Review saved = reviewRepository.save(review);
+
+        Long performanceId = reservation.getPerformance().getId();
+        reviewAdminService.evictDashboardCache(performanceId);
 
         // 2. 감정 분석
         SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
@@ -136,6 +141,9 @@ public class ReviewService {
 
         review.updateAI(summaryResponse.getSummary(), sentimentResponse.getSentiment(), sentimentResponse.getScore());
 
+        Long performanceId = review.getReservation().getPerformance().getId();
+        reviewAdminService.evictDashboardCache(performanceId);
+
         return toResponse(review);
     }
 
@@ -148,6 +156,9 @@ public class ReviewService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
         }
 
+        Long performanceId = review.getReservation().getPerformance().getId();
         reviewRepository.delete(review);
+
+        reviewAdminService.evictDashboardCache(performanceId);
     }
 }

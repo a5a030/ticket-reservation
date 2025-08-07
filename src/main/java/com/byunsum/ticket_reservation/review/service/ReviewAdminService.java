@@ -144,4 +144,10 @@ public class ReviewAdminService {
 
         return exampleMap;
     }
+
+
+    public void evictDashboardCache(Long performanceId) {
+        String cacheKey = "dashboard::" + performanceId;
+        stringRedisTemplate.delete(cacheKey);
+    }
 }
