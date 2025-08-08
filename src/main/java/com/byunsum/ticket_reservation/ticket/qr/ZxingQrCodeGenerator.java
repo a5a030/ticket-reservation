@@ -17,9 +17,9 @@ import java.util.Base64;
 @Component
 public class ZxingQrCodeGenerator implements QrCodeGenerator {
     @Override
-    public String generate(Reservation reservation) {
+    public String generate(String ticketCode) {
         try {
-            String qrContent = "Reservation:" + reservation.getId();
+            String qrContent = "ticket:" + ticketCode;
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrContent, BarcodeFormat.QR_CODE, 200, 200);
 
@@ -28,7 +28,7 @@ public class ZxingQrCodeGenerator implements QrCodeGenerator {
             ImageIO.write(image, "png", baos);
             byte[] bytes = baos.toByteArray();
 
-            return Base64.getEncoder().encodeToString(bytes);
+            return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (WriterException | IOException e) {
             throw new RuntimeException("QR 코드 생성 실패", e);
         }
