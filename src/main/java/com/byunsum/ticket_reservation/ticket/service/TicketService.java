@@ -63,4 +63,34 @@ public class TicketService {
         return ticketRepository.findByReservationId(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
     }
+
+    @Transactional
+    public Ticket refreshQrCode(Long reservationId) {
+        Ticket ticket = ticketRepository.findByReservationId(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+        LocalDateTime performanceStart = ticket.getReservation().getPerformance().getStartTime();
+
+        if(LocalDateTime.now().isBefore(performanceStart.minusHours(3))) {
+            throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
+        }
+
+        String newCode = UUID.randomUUID().toString();
+        String newQrImage =  qrCodeGenerator.generate(newCode);
+
+        ticket.updateQrCode(
+                newCode,
+                newQrImage,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(30)
+        );
+
+        stringRedisTemplate.opsForValue().set(
+                REDIS_KEY_PREFIX + newCode,
+                reservationId.toString(),
+                30, TimeUnit.MINUTES
+        );
+
+        return ticket;
+    }
 }

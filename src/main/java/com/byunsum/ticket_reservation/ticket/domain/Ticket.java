@@ -52,6 +52,13 @@ public class Ticket {
         );
     }
 
+    public void updateQrCode(String ticketCode, String qrImageUrl, LocalDateTime issuedAt, LocalDateTime expiresAt) {
+        this.ticketCode = ticketCode;
+        this.qrImageUrl = qrImageUrl;
+        this.issuedAt = issuedAt;
+        this.expiresAt = expiresAt;
+    }
+
     public Long getId() {
         return id;
     }

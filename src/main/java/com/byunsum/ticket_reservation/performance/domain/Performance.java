@@ -119,4 +119,8 @@ public class Performance {
     public List<Seat> getSeat() {
         return seat;
     }
+
+    public LocalDateTime getStartTime() {
+        return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
+    }
 }

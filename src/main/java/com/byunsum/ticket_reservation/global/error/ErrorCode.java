@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.global.error;
 
+
 public enum ErrorCode {
     UNAUTHORIZED("인증이 필요합니다."),
     FORBIDDEN("접근 권한이 없습니다."),
@@ -26,6 +27,11 @@ public enum ErrorCode {
 
     TICKET_ALREADY_ISSUED("티켓이 이미 발급되었습니다."),
     TICKET_NOT_FOUND("해당 티켓을 찾을 수 없습니다."),
+    QR_NOT_YET_AVAILABLE("QR 코드는 공연 시작 3시간 전부터 발급할 수 있습니다."),
+    QR_ALREADY_USED("이미 사용된 QR 코드입니다."),
+    QR_EXPIRED("QR 코드가 만료되었습니다."),
+    QR_INVALID("유효하지 않은 QR 코드입니다."),
+    QR_UNAUTHORIZED("해당 QR 코드에 대한 권한이 없습니다."),
 
     NOTIFICATION_NOT_FOUND("알림을 찾을 수 없습니다."),
 
