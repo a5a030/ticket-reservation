@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -42,7 +43,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            MemberService memberService,
-                                           CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                           CorsConfigurationSource corsConfigurationSource,
+                                           RateLimitFilter rateLimitFilter) throws Exception {
         http
                 .httpBasic(h -> h.disable())
                 .csrf(c -> c.disable())
@@ -61,7 +63,7 @@ public class SecurityConfig {
                                 .preload(true)
                                 .maxAgeInSeconds(31536000))
                         .referrerPolicy(r -> r.policy(
-                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
                                 // dev: Swagger 편의. prod에선 unsafe-inline 제거하고 도메인 화이트리스트 적용
                                 "default-src 'self'; " +
@@ -90,7 +92,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
                         .anyRequest().authenticated()
                 )
-
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberService),
                         UsernamePasswordAuthenticationFilter.class);
 
@@ -116,5 +118,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public RateLimitFilter rateLimitFilter() {
+        return new RateLimitFilter();
     }
 }
