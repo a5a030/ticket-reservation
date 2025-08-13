@@ -15,9 +15,10 @@ echo "✅ 로그인 성공. 토큰: $TOKEN"
 
 # 2. API 호출 70회
 for i in {1..70}; do
-  RESPONSE=$(curl -s -D - -o /dev/null \
+    RESPONSE=$(curl -s -D - -o /dev/null \
     -H "Authorization: Bearer $TOKEN" \
-    http://localhost:8080/reservations/my)
+    -H "X-Forwarded-For: 1.2.3.4" \
+   "http://localhost:8080/reservations/my")
 
   CODE=$(echo "$RESPONSE" | grep HTTP | awk '{print $2}')
   RETRY=$(echo "$RESPONSE" | grep -i "Retry-After" | awk '{print $2}')

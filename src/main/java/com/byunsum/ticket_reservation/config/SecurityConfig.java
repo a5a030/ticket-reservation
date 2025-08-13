@@ -4,8 +4,13 @@ import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationEntryPoint;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationFilter;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -44,7 +49,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            MemberService memberService,
                                            CorsConfigurationSource corsConfigurationSource,
-                                           RateLimitFilter rateLimitFilter) throws Exception {
+                                           RedisRateLimitFilter redisRateLimitFilter) throws Exception {
         http
                 .httpBasic(h -> h.disable())
                 .csrf(c -> c.disable())
@@ -92,7 +97,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(redisRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, memberService),
                         UsernamePasswordAuthenticationFilter.class);
 
@@ -121,7 +126,23 @@ public class SecurityConfig {
     }
 
     @Bean
-    public RateLimitFilter rateLimitFilter(JwtTokenProvider jwtTokenProvider) {
-        return new RateLimitFilter(jwtTokenProvider);
+    public RedisRateLimitFilter redisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String>  proxyManager) {
+        return new RedisRateLimitFilter(jwtTokenProvider, proxyManager);
+    }
+
+    @Bean
+    public StatefulRedisConnection<String, byte[]> connection(RedisClient redisClient) {
+        return redisClient.connect(new StringByteArrayCodec());
+    }
+
+    @Bean
+    public ProxyManager<String> proxyManager(StatefulRedisConnection<String, byte[]> connection) {
+        return LettuceBasedProxyManager.builderFor(connection)
+                .build();
+    }
+
+    @Bean
+    public RedisClient redisClient(RedisConnectionFactory factory) {
+        return RedisClient.create("redis://localhost:6379");
     }
 }
