@@ -1,6 +1,8 @@
 package com.byunsum.ticket_reservation.security.jwt;
 
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -12,14 +14,18 @@ import java.util.List;
 
 @Component
 public class JwtTokenProvider {
-    private final SecretKey secretKey;
-    private final long tokenValidityInMilliseconds = 1000 * 60 * 60  * 2; //2시간
-    private final long REFRESH_TOKEN_VALID_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
+    @Value("${jwt.secret}")
+    private String secret;
+    private SecretKey secretKey;
+
+    @Value("${jwt.access-token-validity}")
+    private long tokenValidityInMilliseconds;
+    @Value("${jwt.refrest-token-validity}")
+    private long refreshTokenValidTime;
 
 
-    public JwtTokenProvider() {
-        //시크릿키는 256비트 이상 권장(Basee64 인코딩)
-        String secret = "MySuperSecretKeyThatIsAtLeast32CharactersLong!";
+    @PostConstruct
+    public void init() {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
@@ -81,7 +87,7 @@ public class JwtTokenProvider {
 
     public String createRefreshToken(String name, String role) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + REFRESH_TOKEN_VALID_TIME);
+        Date expiry = new Date(now.getTime() + refreshTokenValidTime);
 
         return Jwts.builder()
                 .setSubject(name)
