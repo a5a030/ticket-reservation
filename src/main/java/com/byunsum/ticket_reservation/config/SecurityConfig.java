@@ -121,7 +121,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public RateLimitFilter rateLimitFilter() {
-        return new RateLimitFilter();
+    public RateLimitFilter rateLimitFilter(JwtTokenProvider jwtTokenProvider) {
+        return new RateLimitFilter(jwtTokenProvider);
     }
 }
