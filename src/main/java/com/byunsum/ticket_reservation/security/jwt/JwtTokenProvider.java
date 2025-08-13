@@ -20,7 +20,7 @@ public class JwtTokenProvider {
 
     @Value("${jwt.access-token-validity}")
     private long tokenValidityInMilliseconds;
-    @Value("${jwt.refrest-token-validity}")
+    @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidTime;
 
 
