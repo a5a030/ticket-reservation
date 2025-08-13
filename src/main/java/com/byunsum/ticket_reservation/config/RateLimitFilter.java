@@ -86,11 +86,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
             long remaining = bucket.getAvailableTokens();
             response.setHeader("X-RateLimit-Limit", String.valueOf(rule.getCapacity()));
             response.setHeader("X-RateLimit-Remaining", String.valueOf(remaining));
+
+            if(log.isDebugEnabled()) {
+                log.debug("RateLimit OK: key={}, path={}, remaining={}", compositeKey, path, remaining);
+            }
+
             filterChain.doFilter(request, response);
         } else {
             //3. 초과: 429 + Retry-After + JSON
             long waitForRefill = rule.getRefillPeriodNanos() / 1_000_000_000L;
-            log.warn("Rate limit exceeded: key={}, path={}", key, path);
+            log.warn("Rate limit exceeded: key={}, path={}, retryAfter={}s", key, path,waitForRefill);
             response.setStatus(429);
             response.setHeader("Retry-After", String.valueOf(waitForRefill));
             response.setContentType("application/json");
