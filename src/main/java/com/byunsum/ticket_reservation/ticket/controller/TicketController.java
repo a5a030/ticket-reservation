@@ -1,11 +1,14 @@
 package com.byunsum.ticket_reservation.ticket.controller;
 
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
+import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyRequest;
+import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyResponse;
 import com.byunsum.ticket_reservation.ticket.service.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,6 +43,15 @@ public class TicketController {
         Ticket updatedTicket = ticketService.refreshQrCode(reservationId);
 
         return ResponseEntity.ok(new QrResponse(reservationId, updatedTicket.getQrImageUrl()));
+    }
+
+    @PostMapping("/verify")
+    @Operation(summary = "QR 티켓 검증", description = "QR 코드(티켓 코드)로 티켓을 검증합니다. 관리자/검표 전용")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TicketVerifyResponse> verifyTicket(@RequestBody TicketVerifyRequest request) {
+        TicketVerifyResponse response = ticketService.verifyTicket(request.ticketCode());
+
+        return ResponseEntity.ok(response);
     }
 
     public record QrResponse(

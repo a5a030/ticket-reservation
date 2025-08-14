@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
+import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyResponse;
 import com.byunsum.ticket_reservation.ticket.qr.QrCodeGenerator;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -101,5 +102,32 @@ public class TicketService {
         );
 
         return ticket;
+    }
+
+    @Transactional
+    public TicketVerifyResponse verifyTicket(String ticketCode) {
+        String redisKey = REDIS_KEY_PREFIX + ticketCode;
+        String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
+
+        if(reservationId == null) {
+            return new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다. 재발급이 필요합니다.");
+        }
+
+        Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+        if(ticket.getStatus() == TicketStatus.USED) {
+            return new TicketVerifyResponse(false, "ALREADY_USED", "이미 사용된 티켓입니다.");
+        }
+
+        LocalDateTime now =  LocalDateTime.now();
+        if(ticket.getExpiresAt().isBefore(now)) {
+            return new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.");
+        }
+
+        ticket.setStatus(TicketStatus.USED);
+        ticketRepository.save(ticket);
+
+        return new TicketVerifyResponse(true, "USED", "입장 완료");
     }
 }

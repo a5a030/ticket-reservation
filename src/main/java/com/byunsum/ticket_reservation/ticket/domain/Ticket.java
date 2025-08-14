@@ -26,6 +26,10 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
+
     public Ticket() {
     }
 
