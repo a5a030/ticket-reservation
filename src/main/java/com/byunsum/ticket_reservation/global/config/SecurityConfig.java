@@ -143,6 +143,6 @@ public class SecurityConfig {
 
     @Bean
     public RedisClient redisClient(RedisConnectionFactory factory) {
-        return RedisClient.create("redis://localhost:6379");
+        return RedisClient.create("redis://trapp:very-strong-pass@localhost:6379");
     }
 }
