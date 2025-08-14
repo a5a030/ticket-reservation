@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.config;
+package com.byunsum.ticket_reservation.global.config;
 
 import io.lettuce.core.codec.RedisCodec;
 

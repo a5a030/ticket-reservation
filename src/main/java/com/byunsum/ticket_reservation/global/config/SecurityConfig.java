@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.config;
+package com.byunsum.ticket_reservation.global.config;
 
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationEntryPoint;
