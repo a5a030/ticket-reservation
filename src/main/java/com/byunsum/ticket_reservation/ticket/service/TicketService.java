@@ -9,6 +9,7 @@ import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
 import com.byunsum.ticket_reservation.ticket.qr.QrCodeGenerator;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final ReservationRepository reservationRepository;
@@ -42,10 +44,13 @@ public class TicketService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
         String ticketCode = UUID.randomUUID().toString();
+
+        reservation.setTicketCode(ticketCode);
+        reservationRepository.save(reservation);
+
         String qrImageUrl = qrCodeGenerator.generate(ticketCode);
 
         Ticket ticket = Ticket.create(reservation, qrImageUrl, TICKET_VALID_DURATION);
-
         Ticket saved = ticketRepository.save(ticket);
 
         stringRedisTemplate.opsForValue().set(
@@ -77,6 +82,10 @@ public class TicketService {
 
         String newCode = UUID.randomUUID().toString();
         String newQrImage =  qrCodeGenerator.generate(newCode);
+
+        Reservation reservation = ticket.getReservation();
+        reservation.setTicketCode(newCode);
+        reservationRepository.save(reservation);
 
         ticket.updateQrCode(
                 newCode,

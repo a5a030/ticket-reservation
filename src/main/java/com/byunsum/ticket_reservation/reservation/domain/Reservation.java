@@ -42,6 +42,16 @@ public class Reservation {
     //취소일시
     private LocalDateTime cancelledAt;
 
+    private String ticketCode;
+
+    public String getTicketCode() {
+        return ticketCode;
+    }
+
+    public void setTicketCode(String ticketCode) {
+        this.ticketCode = ticketCode;
+    }
+
     public ReservationStatus getStatus() {
         return status;
     }
