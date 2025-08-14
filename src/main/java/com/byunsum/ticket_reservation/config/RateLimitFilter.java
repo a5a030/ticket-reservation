@@ -33,6 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/")) return Bandwidth.classic(30, Refill.greedy(30, Duration.ofMinutes(1))); // L: 30/min
         if (path.startsWith("/payments/")) return Bandwidth.classic(40, Refill.greedy(40, Duration.ofMinutes(1))); // L: 40/min
         if (path.startsWith("/reservations/")) return Bandwidth.classic(60, Refill.greedy(60, Duration.ofMinutes(1))); // L: 60/min
+        if (path.startsWith("/tickets/verify")) return Bandwidth.classic(20, Refill.greedy(20, Duration.ofMinutes(1)));
 
         return Bandwidth.classic(120, Refill.greedy(120, Duration.ofMinutes(1)));
     }
@@ -42,6 +43,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/")) return "auth";
         if (path.startsWith("/payments/")) return "payments";
         if (path.startsWith("/reservations/")) return "reservations";
+        if (path.startsWith("/tickets/verify")) return "ticketVerify";
         return "default";
     }
 
@@ -52,7 +54,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return !(path.startsWith("/auth/") || path.startsWith("/reservations/") || path.startsWith("/payments/"));
+        return !(path.startsWith("/auth/")
+                || path.startsWith("/reservations/")
+                || path.startsWith("/payments/")
+                || path.startsWith("/tickets/verify"));
     }
 
     @Override
@@ -88,14 +93,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setHeader("X-RateLimit-Remaining", String.valueOf(remaining));
 
             if(log.isDebugEnabled()) {
-                log.debug("RateLimit OK: key={}, path={}, remaining={}", compositeKey, path, remaining);
+                log.debug("RateLimit OK: key={}, group={}, path={}, remaining={}", compositeKey, group, path, remaining);
             }
 
             filterChain.doFilter(request, response);
         } else {
             //3. 초과: 429 + Retry-After + JSON
             long waitForRefill = rule.getRefillPeriodNanos() / 1_000_000_000L;
-            log.warn("Rate limit exceeded: key={}, path={}, retryAfter={}s", key, path,waitForRefill);
+            log.warn("Rate limit exceeded: key={}, group={}, path={}, retryAfter={}s", key, group, path,waitForRefill);
             response.setStatus(429);
             response.setHeader("Retry-After", String.valueOf(waitForRefill));
             response.setContentType("application/json");
