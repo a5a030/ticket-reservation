@@ -6,10 +6,14 @@ import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
+import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
 import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyResponse;
 import com.byunsum.ticket_reservation.ticket.qr.QrCodeGenerator;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
+import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,12 +31,14 @@ public class TicketService {
 
     private static final Duration TICKET_VALID_DURATION = Duration.ofHours(4);
     private static final String REDIS_KEY_PREFIX = "ticket:";
+    private final TicketVerificationLogRepository ticketVerificationLogRepository;
 
-    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate) {
+    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository) {
         this.ticketRepository = ticketRepository;
         this.reservationRepository = reservationRepository;
         this.qrCodeGenerator = qrCodeGenerator;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.ticketVerificationLogRepository = ticketVerificationLogRepository;
     }
 
     @Transactional
@@ -105,29 +111,54 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketVerifyResponse verifyTicket(String ticketCode) {
+    public TicketVerifyResponse verifyTicket(String ticketCode, HttpServletRequest request) {
         String redisKey = REDIS_KEY_PREFIX + ticketCode;
         String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
 
+        String resultStatus;
+        TicketVerifyResponse responseDto;
+
         if(reservationId == null) {
-            return new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다. 재발급이 필요합니다.");
+            resultStatus = "EXPIRED";
+            responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.");
+        } else {
+            Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
+                    .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+            if(ticket.getStatus() == TicketStatus.USED) {
+                resultStatus = "ALREADY_USED";
+                responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.");
+            } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
+                resultStatus = "EXPIRED";
+                responseDto = new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.");
+            } else {
+                ticket.setStatus(TicketStatus.USED);
+                ticketRepository.save(ticket);
+
+                resultStatus = "USED";
+                responseDto = new TicketVerifyResponse(true, "USED", "입장 완료");
+            }
         }
 
-        Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
-                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+        String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
+        String deviceInfo = clientIp(request);
 
-        if(ticket.getStatus() == TicketStatus.USED) {
-            return new TicketVerifyResponse(false, "ALREADY_USED", "이미 사용된 티켓입니다.");
+        ticketVerificationLogRepository.save(
+                new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, LocalDateTime.now())
+        );
+
+        return responseDto;
+    }
+
+    private String clientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+
+        if(xff != null && !xff.isBlank()) {
+            int comma = xff.indexOf(',');
+
+            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
         }
 
-        LocalDateTime now =  LocalDateTime.now();
-        if(ticket.getExpiresAt().isBefore(now)) {
-            return new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.");
-        }
-
-        ticket.setStatus(TicketStatus.USED);
-        ticketRepository.save(ticket);
-
-        return new TicketVerifyResponse(true, "USED", "입장 완료");
+        return request.getRemoteAddr();
     }
 }
