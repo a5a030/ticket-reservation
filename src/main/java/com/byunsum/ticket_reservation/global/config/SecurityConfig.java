@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.global.config;
 
+import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationEntryPoint;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationFilter;
@@ -126,8 +127,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public RedisRateLimitFilter redisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String>  proxyManager) {
-        return new RedisRateLimitFilter(jwtTokenProvider, proxyManager);
+    public RedisRateLimitFilter redisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String>  proxyManager, SlackNotifier slackNotifier) {
+        return new RedisRateLimitFilter(jwtTokenProvider, proxyManager, slackNotifier);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.global.config;
 
+import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -24,16 +25,19 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ProxyManager<String> proxyManager;
+    private final SlackNotifier slackNotifier;
 
-    public RedisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String> proxyManager) {
+    public RedisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String> proxyManager, SlackNotifier slackNotifier) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.proxyManager = proxyManager;
+        this.slackNotifier = slackNotifier;
     }
 
     private Bandwidth ruleFor(String path) {
         if (path.startsWith("/auth/")) return Bandwidth.classic(30, Refill.greedy(30, Duration.ofMinutes(1)));
         if (path.startsWith("/payments/")) return Bandwidth.classic(40, Refill.greedy(40, Duration.ofMinutes(1)));
         if (path.startsWith("/reservations/")) return Bandwidth.classic(60, Refill.greedy(60, Duration.ofMinutes(1)));
+        if (path.startsWith("/tickets/verify")) return Bandwidth.classic(10, Refill.greedy(10, Duration.ofMinutes(1)));
         return Bandwidth.classic(120, Refill.greedy(120, Duration.ofMinutes(1)));
     }
 
@@ -41,6 +45,7 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/")) return "auth";
         if (path.startsWith("/payments/")) return "payments";
         if (path.startsWith("/reservations/")) return "reservations";
+        if (path.startsWith("/tickets/verify")) return "ticket_verify";
         return "default";
     }
 
@@ -48,7 +53,10 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
-        return !(path.startsWith("/auth/") || path.startsWith("/payments/") || path.startsWith("/reservations/"));
+        return !(path.startsWith("/auth/")
+                || path.startsWith("/payments/")
+                || path.startsWith("/reservations/")
+                || path.startsWith("/tickets/verify"));
     }
 
     @Override
@@ -100,6 +108,11 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
             response.setHeader("Retry-After", String.valueOf(waitForRefillSeconds > 0 ? waitForRefillSeconds : 1));
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"too_many_requests\",\"message\":\"Rate limit exceeded\"}");
+
+            slackNotifier.send(String.format(
+                    "🚨 RateLimit 초과\nIP: %s\nEndpoint: %s\nRetry After: %ds",
+                    key, path, waitForRefillSeconds
+            ));
         }
     }
 
