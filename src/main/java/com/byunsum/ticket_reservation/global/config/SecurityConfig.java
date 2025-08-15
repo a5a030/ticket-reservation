@@ -96,6 +96,7 @@ public class SecurityConfig {
                                 "/actuator/health"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(redisRateLimitFilter, UsernamePasswordAuthenticationFilter.class)

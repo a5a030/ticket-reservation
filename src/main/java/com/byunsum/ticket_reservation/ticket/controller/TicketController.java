@@ -59,6 +59,7 @@ public class TicketController {
             @Schema(description = "예약 ID")
             Long reservationId,
 
-            @Schema(description = "Base64 인코딩된 QR 이미지 URL", example = "data:image/png;base64,iVBORw0...")
-            String qrBase64) {}
+            @Schema(description = "QR 코드 이미지 URL (Base64 인코딩 또는 이미지 경로 URL)",
+                    example = "data:image/png;base64,iVBORw0... 또는 https://.../qr.png")
+            String qrImageUrl) {}
 }
