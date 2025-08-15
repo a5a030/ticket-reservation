@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.payment.service;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
+import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
@@ -23,11 +24,13 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
     private final StringRedisTemplate redisTemplate;
+    private final SlackNotifier slackNotifier;
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate, SlackNotifier slackNotifier) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
         this.redisTemplate = redisTemplate;
+        this.slackNotifier = slackNotifier;
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {
@@ -42,44 +45,62 @@ public class PaymentService {
     }
     @Transactional
     public PaymentResponse processPayment(PaymentRequest request) {
-        Reservation reservation = reservationRepository.findById(request.getReservationId())
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+        try {
+            Reservation reservation = reservationRepository.findById(request.getReservationId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        reservation.confirm();
+            reservation.confirm();
 
-        int seatPrice = reservation.getSeat().getPrice();
-        int fee = 3000; //예매 수수료
-        int totalAmount = seatPrice + fee;
+            int seatPrice = reservation.getSeat().getPrice();
+            int fee = 3000; //예매 수수료
+            int totalAmount = seatPrice + fee;
 
-        Payment payment = new Payment(
-                totalAmount,
-                request.getPaymentMethod(),
-                PaymentStatus.PAID,
-                reservation
-        );
+            Payment payment = new Payment(
+                    totalAmount,
+                    request.getPaymentMethod(),
+                    PaymentStatus.PAID,
+                    reservation
+            );
 
-        Payment saved = paymentRepository.save(payment);
+            Payment saved = paymentRepository.save(payment);
 
-        if(request.getPaymentMethod().name().equals("BANK_TRANSFER")) {
-            String bankKey = "payment:bank:timeout:" + reservation.getId();
+            if (request.getPaymentMethod().name().equals("BANK_TRANSFER")) {
+                String bankKey = "payment:bank:timeout:" + reservation.getId();
 
-            long secondUntilMidnight = java.time.Duration.between(
-                    LocalDateTime.now(),
-                    LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay()
-            ).getSeconds();
+                long secondUntilMidnight = java.time.Duration.between(
+                        LocalDateTime.now(),
+                        LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay()
+                ).getSeconds();
 
-            redisTemplate.opsForValue().set(bankKey, "PENDING", java.time.Duration.ofSeconds(secondUntilMidnight));
+                redisTemplate.opsForValue().set(bankKey, "PENDING", java.time.Duration.ofSeconds(secondUntilMidnight));
+            }
+
+
+            return new PaymentResponse(
+                    saved.getId(),
+                    saved.getAmount(),
+                    saved.getPaymentMethod(),
+                    saved.getStatus(),
+                    saved.getCreatedAt(),
+                    saved.getCancelledAt()
+            );
+        } catch (CustomException e) {
+            slackNotifier.send(String.format(
+                    "⚠\uFE0F결제 실패 발생\n사유: %s\n요청 데이터: %s",
+                    e.getErrorCode().name(),
+                    request.toString()
+            ));
+
+            throw e;
+        } catch (Exception e) {
+            slackNotifier.send(String.format(
+                    "\uD83D\uDEA8결제 처리 중 시스템 오류\n메시지: %s\n요청 데이터: %s",
+                    e.getMessage(),
+                    request.toString()
+            ));
+
+            throw e;
         }
-
-
-        return new PaymentResponse(
-                saved.getId(),
-                saved.getAmount(),
-                saved.getPaymentMethod(),
-                saved.getStatus(),
-                saved.getCreatedAt(),
-                saved.getCancelledAt()
-        );
     }
 
     @Transactional

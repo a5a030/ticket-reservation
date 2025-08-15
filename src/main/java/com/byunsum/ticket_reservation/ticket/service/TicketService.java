@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.ticket.service;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
+import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
@@ -32,13 +33,15 @@ public class TicketService {
     private static final Duration TICKET_VALID_DURATION = Duration.ofHours(4);
     private static final String REDIS_KEY_PREFIX = "ticket:";
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
+    private final SlackNotifier slackNotifier;
 
-    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository) {
+    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository, SlackNotifier slackNotifier) {
         this.ticketRepository = ticketRepository;
         this.reservationRepository = reservationRepository;
         this.qrCodeGenerator = qrCodeGenerator;
         this.stringRedisTemplate = stringRedisTemplate;
         this.ticketVerificationLogRepository = ticketVerificationLogRepository;
+        this.slackNotifier = slackNotifier;
     }
 
     @Transactional
@@ -123,6 +126,11 @@ public class TicketService {
         String blacklistKey = "blacklist:ticket:" + ticketCode;
 
         if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
+            slackNotifier.send(String.format(
+                    "\uD83D\uDEAB 취소 티켓 검증 시도 감지\\n검증자: %s\\n티켓코드: %s\\nIP: %s",
+                    verifier, ticketCode, deviceInfo
+            ));
+
             resultStatus = "CANCELLED";
             responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.");
             ticketVerificationLogRepository.save(
