@@ -127,7 +127,7 @@ public class TicketService {
 
         if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
             slackNotifier.send(String.format(
-                    "\uD83D\uDEAB 취소 티켓 검증 시도 감지\\n검증자: %s\\n티켓코드: %s\\nIP: %s",
+                    "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
                     verifier, ticketCode, deviceInfo
             ));
 
@@ -152,6 +152,14 @@ public class TicketService {
             if(ticket.getStatus() == TicketStatus.USED) {
                 resultStatus = "ALREADY_USED";
                 responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.");
+            } else if(ticket.getStatus() == TicketStatus.CANCELLED) {
+                slackNotifier.send(String.format(
+                        "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
+                        verifier, ticketCode, deviceInfo
+                ));
+
+                resultStatus = "CANCELLED";
+                responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.");
             } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
                 resultStatus = "EXPIRED";
                 responseDto = new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.");
