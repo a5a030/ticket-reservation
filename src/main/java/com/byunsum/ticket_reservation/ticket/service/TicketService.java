@@ -113,10 +113,26 @@ public class TicketService {
     @Transactional
     public TicketVerifyResponse verifyTicket(String ticketCode, HttpServletRequest request) {
         String redisKey = REDIS_KEY_PREFIX + ticketCode;
-        String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
 
+        String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
+        String deviceInfo = clientIp(request);
         String resultStatus;
         TicketVerifyResponse responseDto;
+
+        //1. 블랙리스트 조회
+        String blacklistKey = "blacklist:ticket:" + ticketCode;
+
+        if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
+            resultStatus = "CANCELLED";
+            responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.");
+            ticketVerificationLogRepository.save(
+                    new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, LocalDateTime.now())
+            );
+
+            return responseDto;
+        }
+
+        String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
 
         if(reservationId == null) {
             resultStatus = "EXPIRED";
@@ -140,9 +156,6 @@ public class TicketService {
             }
         }
 
-        String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
-        String deviceInfo = clientIp(request);
-
         ticketVerificationLogRepository.save(
                 new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, LocalDateTime.now())
         );
@@ -160,5 +173,24 @@ public class TicketService {
         }
 
         return request.getRemoteAddr();
+    }
+
+    @Transactional
+    public void cancelTicket(String ticketCode) {
+        Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+        ticket.setStatus(TicketStatus.CANCELLED);
+        ticketRepository.save(ticket);
+
+        //Redis TTl 삭제
+        stringRedisTemplate.delete(REDIS_KEY_PREFIX + ticketCode);
+
+        //블랙리스트 키 등록
+        stringRedisTemplate.opsForValue().set(
+                "blacklist:ticket:" + ticketCode,
+                "true",
+                Duration.ofHours(48)
+        );
     }
 }
