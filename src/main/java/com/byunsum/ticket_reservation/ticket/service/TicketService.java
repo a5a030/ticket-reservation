@@ -6,10 +6,12 @@ import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
+import com.byunsum.ticket_reservation.ticket.domain.TicketReissueLog;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
 import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
 import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyResponse;
 import com.byunsum.ticket_reservation.ticket.qr.QrCodeGenerator;
+import com.byunsum.ticket_reservation.ticket.repository.TicketReissueLogRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,14 +36,16 @@ public class TicketService {
     private static final String REDIS_KEY_PREFIX = "ticket:";
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
     private final SlackNotifier slackNotifier;
+    private final TicketReissueLogRepository ticketReissueLogRepository;
 
-    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository, SlackNotifier slackNotifier) {
+    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository, SlackNotifier slackNotifier, TicketReissueLogRepository ticketReissueLogRepository) {
         this.ticketRepository = ticketRepository;
         this.reservationRepository = reservationRepository;
         this.qrCodeGenerator = qrCodeGenerator;
         this.stringRedisTemplate = stringRedisTemplate;
         this.ticketVerificationLogRepository = ticketVerificationLogRepository;
         this.slackNotifier = slackNotifier;
+        this.ticketReissueLogRepository = ticketReissueLogRepository;
     }
 
     @Transactional
@@ -90,6 +94,8 @@ public class TicketService {
             throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
         }
 
+        String oldCode = ticket.getTicketCode();
+
         String newCode = UUID.randomUUID().toString();
         String newQrImage =  qrCodeGenerator.generate(newCode);
 
@@ -100,6 +106,20 @@ public class TicketService {
                 REDIS_KEY_PREFIX + newCode,
                 reservationId.toString(),
                 30, TimeUnit.MINUTES
+        );
+
+        //보안 강화 위해 기존 코드 블랙리스트 등록
+        stringRedisTemplate.opsForValue().set(
+                "blacklist:ticket:" + oldCode,
+                "true",
+                Duration.ofHours(48)
+        );
+
+        String loginId = ticket.getReservation().getMember().getLoginId();
+        String username = ticket.getReservation().getMember().getUsername();
+
+        ticketReissueLogRepository.save(
+                new TicketReissueLog(oldCode, newCode, loginId, username, LocalDateTime.now())
         );
 
         return ticket;
