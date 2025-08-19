@@ -93,16 +93,8 @@ public class TicketService {
         String newCode = UUID.randomUUID().toString();
         String newQrImage =  qrCodeGenerator.generate(newCode);
 
-        Reservation reservation = ticket.getReservation();
-        reservation.setTicketCode(newCode);
-        reservationRepository.save(reservation);
-
-        ticket.updateQrCode(
-                newCode,
-                newQrImage,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(30)
-        );
+        ticket.refresh(newCode, newQrImage, Duration.ofMinutes(30));
+        ticketRepository.save(ticket);
 
         stringRedisTemplate.opsForValue().set(
                 REDIS_KEY_PREFIX + newCode,

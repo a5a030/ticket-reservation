@@ -56,11 +56,16 @@ public class Ticket {
         );
     }
 
-    public void updateQrCode(String ticketCode, String qrImageUrl, LocalDateTime issuedAt, LocalDateTime expiresAt) {
-        this.ticketCode = ticketCode;
-        this.qrImageUrl = qrImageUrl;
-        this.issuedAt = issuedAt;
-        this.expiresAt = expiresAt;
+    public void refresh(String newTicketCode, String newQrImageUrl, Duration validDuration) {
+        //기존 티켓 무효화
+        this.status = TicketStatus.CANCELLED;
+
+        //새로 갱신
+        this.ticketCode = newTicketCode;
+        this.qrImageUrl = newQrImageUrl;
+        this.issuedAt = LocalDateTime.now();
+        this.expiresAt = LocalDateTime.now().plus(validDuration);
+        this.status = TicketStatus.ACTIVE;
     }
 
     public Long getId() {
