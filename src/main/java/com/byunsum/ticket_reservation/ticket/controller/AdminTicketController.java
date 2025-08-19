@@ -33,7 +33,7 @@ public class AdminTicketController {
                                                            @RequestParam(required = false) String status,
                                                            Pageable pageable) {
         if(status != null && !status.isBlank()) {
-            return ticketVerificationLogRepository.findByVerifiedAtBetweenAndStatus(from, to, status, pageable);
+            return ticketVerificationLogRepository.findByVerifiedAtBetweenAndResult(from, to, status, pageable);
         }
 
         return  ticketVerificationLogRepository.findByVerifiedAtBetween(from, to, pageable);

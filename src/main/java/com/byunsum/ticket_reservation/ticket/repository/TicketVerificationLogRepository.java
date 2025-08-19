@@ -9,5 +9,5 @@ import java.time.LocalDateTime;
 
 public interface TicketVerificationLogRepository extends JpaRepository<TicketVerificationLog, Long> {
     Page<TicketVerificationLog> findByVerifiedAtBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
-    Page<TicketVerificationLog> findByVerifiedAtBetweenAndStatus(LocalDateTime from, LocalDateTime to, String status, Pageable pageable);
+    Page<TicketVerificationLog> findByVerifiedAtBetweenAndResult(LocalDateTime from, LocalDateTime to, String status, Pageable pageable);
 }
