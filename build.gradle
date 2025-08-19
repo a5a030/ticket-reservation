@@ -38,6 +38,8 @@ dependencies {
 	implementation 'com.bucket4j:bucket4j-core:8.10.1'
 	implementation 'com.bucket4j:bucket4j-redis:8.10.1' // Bucket4j Redis 확장
 	implementation 'org.redisson:redisson-spring-boot-starter:3.31.0' // Redis 클라이언트
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

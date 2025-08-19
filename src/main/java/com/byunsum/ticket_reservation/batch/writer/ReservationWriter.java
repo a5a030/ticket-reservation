@@ -1,0 +1,23 @@
+package com.byunsum.ticket_reservation.batch.writer;
+
+import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import org.springframework.batch.item.Chunk;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ReservationWriter implements ItemWriter<Reservation> {
+    private final ReservationRepository reservationRepository;
+
+    public ReservationWriter(ReservationRepository reservationRepository) {
+        this.reservationRepository = reservationRepository;
+    }
+
+    @Override
+    public void write(Chunk<? extends Reservation> chunk){
+        for (Reservation reservation : chunk) {
+            reservationRepository.save(reservation);
+        }
+    }
+}
