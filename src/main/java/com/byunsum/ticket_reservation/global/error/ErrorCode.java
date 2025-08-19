@@ -38,6 +38,8 @@ public enum ErrorCode {
     REVIEW_NOT_FOUND("리뷰를 찾을 수 없습니다."),
     UNAUTHORIZED_REVIEW_ACCESS("본인의 리뷰만 수정/삭제할 수 있습니다."),
 
+    RATE_LIMIT_EXCEEDED("요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
+
     INVALID_SENTIMENT("해당 감정 유형은 지원하지 않습니다.");
 
     private final String message;
