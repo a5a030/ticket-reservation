@@ -24,4 +24,6 @@ public interface TicketVerificationLogRepository extends JpaRepository<TicketVer
                                       @Param("end") LocalDateTime end);
 
     long countByResultAndVerifiedAtBetween(String result, LocalDateTime start, LocalDateTime end);
+
+    long countByVerifiedAtBetween(LocalDateTime start, LocalDateTime end);
 }

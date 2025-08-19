@@ -29,7 +29,7 @@ public class TicketDashboardService {
         }
 
         Map<Integer, Long> hourlyCounts = new HashMap<>();
-        for(Object[] row : logRepository.countByResultBetween(start, end)) {
+        for(Object[] row : logRepository.countByHourBetween(start, end)) {
             hourlyCounts.put((Integer) row[0], (Long) row[1]);
         }
 
