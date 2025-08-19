@@ -37,7 +37,7 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/")) return Bandwidth.classic(30, Refill.greedy(30, Duration.ofMinutes(1)));
         if (path.startsWith("/payments/")) return Bandwidth.classic(40, Refill.greedy(40, Duration.ofMinutes(1)));
         if (path.startsWith("/reservations/")) return Bandwidth.classic(60, Refill.greedy(60, Duration.ofMinutes(1)));
-        if (path.startsWith("/tickets/verify")) return Bandwidth.classic(10, Refill.greedy(10, Duration.ofMinutes(1)));
+        if (path.startsWith("/tickets/verify")) return Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
         return Bandwidth.classic(120, Refill.greedy(120, Duration.ofMinutes(1)));
     }
 

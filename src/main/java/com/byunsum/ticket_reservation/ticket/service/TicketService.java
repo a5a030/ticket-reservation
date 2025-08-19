@@ -134,20 +134,26 @@ public class TicketService {
         String resultStatus;
         TicketVerifyResponse responseDto;
 
+        LocalDateTime verifiedAt = LocalDateTime.now();
+
         //1. 블랙리스트 조회
         String blacklistKey = "blacklist:ticket:" + ticketCode;
 
         if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
+            resultStatus = "CANCELLED";
+            responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
+                    null, null, null,
+                    verifier, deviceInfo, verifiedAt);
+            ticketVerificationLogRepository.save(
+                    new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+            );
+
             slackNotifier.send(String.format(
                     "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
                     verifier, ticketCode, deviceInfo
             ));
 
-            resultStatus = "CANCELLED";
-            responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.", null, null, null);
-            ticketVerificationLogRepository.save(
-                    new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, LocalDateTime.now())
-            );
+
 
             return responseDto;
         }
@@ -156,18 +162,22 @@ public class TicketService {
 
         if(reservationId == null) {
             resultStatus = "EXPIRED";
-            responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.", null, null, null);
+            responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.",
+                    null, null, null,
+                    verifier, deviceInfo, verifiedAt);
         } else {
             Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
                     .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
             String performanceTitle = ticket.getReservation().getPerformance().getTitle();
             String seatNo = ticket.getReservation().getSeat().getSeatNo();
-            LocalDateTime expriesAt = ticket.getExpiresAt();
+            LocalDateTime expiresAt = ticket.getExpiresAt();
 
             if(ticket.getStatus() == TicketStatus.USED) {
                 resultStatus = "ALREADY_USED";
-                responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.", performanceTitle, seatNo, expriesAt);
+                responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.",
+                        performanceTitle, seatNo, expiresAt,
+                        verifier, deviceInfo, verifiedAt);
             } else if(ticket.getStatus() == TicketStatus.CANCELLED) {
                 slackNotifier.send(String.format(
                         "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
@@ -175,21 +185,27 @@ public class TicketService {
                 ));
 
                 resultStatus = "CANCELLED";
-                responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.", performanceTitle, seatNo, expriesAt);
+                responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
+                        performanceTitle, seatNo, expiresAt,
+                        verifier, deviceInfo, verifiedAt);
             } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
                 resultStatus = "EXPIRED";
-                responseDto = new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.", performanceTitle, seatNo, expriesAt);
+                responseDto = new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.",
+                        performanceTitle, seatNo, expiresAt,
+                        verifier, deviceInfo, verifiedAt);
             } else {
                 ticket.setStatus(TicketStatus.USED);
                 ticketRepository.save(ticket);
 
                 resultStatus = "USED";
-                responseDto = new TicketVerifyResponse(true, "USED", "입장 완료", performanceTitle, seatNo, expriesAt);
+                responseDto = new TicketVerifyResponse(true, "USED", "입장 완료",
+                        performanceTitle, seatNo, expiresAt,
+                        verifier, deviceInfo, verifiedAt);
             }
         }
 
         ticketVerificationLogRepository.save(
-                new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, LocalDateTime.now())
+                new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
         );
 
         return responseDto;
