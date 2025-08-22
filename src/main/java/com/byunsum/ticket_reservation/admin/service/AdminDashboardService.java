@@ -16,8 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,7 +71,19 @@ public class AdminDashboardService {
         Map<String, Integer> topKeywords = keywordSummaries.stream()
                 .collect(Collectors.toMap(KeywordSummary::getKeyword, KeywordSummary::getCount));
 
-        return new  ReviewStatsResponse(totalReviews, sentimentCount, topKeywords);
+        double averageScore = reviews.stream()
+                .mapToDouble(Review::getSentimentScore)
+                .average()
+                .orElse(0.0);
+
+        List<String> recentSummaries = reviews.stream()
+                .filter(r -> r.getSummary() != null)
+                .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
+                .limit(3)
+                .map(Review::getSummary)
+                .toList();
+
+        return new  ReviewStatsResponse(totalReviews, sentimentCount, topKeywords, averageScore, recentSummaries);
     }
 
     public VerificationStatsResponse getTicketStats(LocalDateTime start, LocalDateTime end) {
