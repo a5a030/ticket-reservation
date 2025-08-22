@@ -14,6 +14,7 @@ import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRep
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -70,11 +71,27 @@ public class AdminDashboardService {
         return new  ReviewStatsResponse(totalReviews, sentimentCount, topKeywords);
     }
 
-    public VerificationStatsResponse getTicketStats() {
-        return new  VerificationStatsResponse(
-                0.92,
-                Map.of("SUCCESS", 120L, "FAIL", 15L),
-                Map.of(10,12L,11,20L,12,5L)
-        );
+    public VerificationStatsResponse getTicketStats(LocalDateTime start, LocalDateTime end) {
+        long total = ticketVerificationLogRepository.countByVerifiedAtBetween(start, end);
+        long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("SUCCESS", start, end);
+        long fail = ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("FAIL", start, end);
+
+        double successRate = total > 0 ? (double) success / total : 0.0;
+
+        Map<String, Long> resultCounts = ticketVerificationLogRepository.countByResultBetween(start, end)
+                .stream()
+                .collect(Collectors.toMap(
+                        r -> (String) r[0],
+                        r -> (Long) r[1]
+                ));
+
+        Map<Integer, Long> hourlyCounts = ticketVerificationLogRepository.countByHourBetween(start, end)
+                .stream()
+                .collect(Collectors.toMap(
+                        r -> ((Integer) r[0]),
+                        r -> (Long) r[1]
+                ));
+
+        return new  VerificationStatsResponse(successRate, resultCounts, hourlyCounts);
     }
 }

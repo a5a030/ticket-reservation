@@ -6,12 +6,15 @@ import com.byunsum.ticket_reservation.admin.service.AdminDashboardService;
 import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -38,8 +41,11 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/tickets")
-    @Operation(summary = "티켓 검증 통계 조회", description = "검표 로그 기반 통계를 조회합니다.")
-    public ResponseEntity<VerificationStatsResponse> getTicketStats() {
-        return ResponseEntity.ok(adminDashboardService.getTicketStats());
+    @Operation(summary = "티켓 검증 통계 조회", description = "기간 내 검표 로그 기반 통계를 조회합니다.")
+    public ResponseEntity<VerificationStatsResponse> getTicketStats(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
+    ) {
+        return ResponseEntity.ok(adminDashboardService.getTicketStats(start, end));
     }
 }
