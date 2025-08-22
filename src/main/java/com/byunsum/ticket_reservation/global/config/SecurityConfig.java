@@ -97,6 +97,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/pre-reservations/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(redisRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
