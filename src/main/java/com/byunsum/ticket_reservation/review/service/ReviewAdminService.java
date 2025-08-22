@@ -29,12 +29,14 @@ public class ReviewAdminService {
     private final PerformanceRepository performanceRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final KeywordService keywordService;
 
-    public ReviewAdminService(ReviewRepository reviewRepository, PerformanceRepository performanceRepository, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper) {
+    public ReviewAdminService(ReviewRepository reviewRepository, PerformanceRepository performanceRepository, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper, KeywordService keywordService) {
         this.reviewRepository = reviewRepository;
         this.performanceRepository = performanceRepository;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.keywordService = keywordService;
     }
 
     @Transactional(readOnly = true)
@@ -68,11 +70,14 @@ public class ReviewAdminService {
 
         double positiveRatio = totalCount > 0 ? (positiveCount * 100.0 / totalCount) : 0.0;
 
-        // 감정별 예시 추출
-        Map<String, List<String>> examples = extractRepresentativeExamples(reviews, 3);
+        //형태소 분석 기반 키워드 추출
+        List<String> summaries = reviews.stream()
+                .map(Review::getSummary)
+                .filter(s -> s != null && !s.isBlank())
+                .toList();
 
         // 키워드 요약(summary 필드 기준으로 명사 뽑기)
-        List<KeywordSummary> keywordSummaries = extractTopKeywords(reviews, 5);
+        List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCOunt(summaries, 2, 5);
 
         ReviewDashboardResponse response = new ReviewDashboardResponse(
                 performanceId,
@@ -83,8 +88,7 @@ public class ReviewAdminService {
                 (int) neutralCount,
                 positiveRatio,
                 averageRating,
-                keywordSummaries,
-                examples
+                keywordSummaries
         );
 
         try {
@@ -121,30 +125,6 @@ public class ReviewAdminService {
                 .map(e -> new KeywordSummary(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
     }
-
-    public Map<String, List<String>> extractRepresentativeExamples(List<Review> reviews, int perSentimentLimit) {
-        Map<String, List<String>> exampleMap = new HashMap<>();
-
-        for(SentimentType sentiment : SentimentType.values()) {
-            List<String> examples = reviews.stream()
-                    .filter(r -> {
-                        try {
-                            return SentimentType.from(r.getSentiment()) == sentiment;
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    })
-                    .map(Review::getContent)
-                    .filter(c -> c != null && !c.isBlank())
-                    .limit(perSentimentLimit)
-                    .collect(Collectors.toList());
-
-            exampleMap.put(sentiment.getDisplayName(), examples);
-        }
-
-        return exampleMap;
-    }
-
 
     public void evictDashboardCache(Long performanceId) {
         String cacheKey = "dashboard::" + performanceId;

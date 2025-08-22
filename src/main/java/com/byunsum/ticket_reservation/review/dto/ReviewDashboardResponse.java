@@ -15,12 +15,10 @@ public class ReviewDashboardResponse {
 
     private List<KeywordSummary> topKeywords;
 
-    private Map<String, List<String>> examples;
-
     public ReviewDashboardResponse() {
     }
 
-    public ReviewDashboardResponse(Long performanceId, String performanceTitle, int totalCount, int positiveCount, int negativeCount, int neutralCount, double positiveRatio, double averageRating, List<KeywordSummary> topKeywords, Map<String, List<String>> examples) {
+    public ReviewDashboardResponse(Long performanceId, String performanceTitle, int totalCount, int positiveCount, int negativeCount, int neutralCount, double positiveRatio, double averageRating, List<KeywordSummary> topKeywords) {
         this.performanceId = performanceId;
         this.performanceTitle = performanceTitle;
         this.totalCount = totalCount;
@@ -30,7 +28,6 @@ public class ReviewDashboardResponse {
         this.positiveRatio = positiveRatio;
         this.averageRating = averageRating;
         this.topKeywords = topKeywords;
-        this.examples = examples;
     }
 
     public Long getPerformanceId() {
@@ -67,9 +64,5 @@ public class ReviewDashboardResponse {
 
     public List<KeywordSummary> getTopKeywords() {
         return topKeywords;
-    }
-
-    public Map<String, List<String>> getExamples() {
-        return examples;
     }
 }
