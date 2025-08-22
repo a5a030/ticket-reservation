@@ -1,6 +1,9 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
+import com.byunsum.ticket_reservation.admin.dto.ReviewStatsResponse;
+import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
 import com.byunsum.ticket_reservation.admin.service.AdminDashboardService;
+import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +27,19 @@ public class AdminDashboardController {
 
     @GetMapping("/sales")
     @Operation(summary = "매출 통계 조회", description = "결제 내역 기반 매출 통계를 조회합니다.")
-    public ResponseEntity<String> getSalesStats() {
-        return ResponseEntity.ok("Sales Stats stub");
+    public ResponseEntity<SalesStatsResponse> getSalesStats() {
+        return ResponseEntity.ok(adminDashboardService.getSalesStats());
     }
 
     @GetMapping("/review")
     @Operation(summary = "리뷰 통계 조회", description = "리뷰 요약 및 키워드 통계를 조회합니다.")
-    public ResponseEntity<String> getReviewStats() {
-        return ResponseEntity.ok("Review Stats stub");
+    public ResponseEntity<ReviewStatsResponse> getReviewStats() {
+        return ResponseEntity.ok(adminDashboardService.getReviewStats());
     }
 
     @GetMapping("/tickets")
     @Operation(summary = "티켓 검증 통계 조회", description = "검표 로그 기반 통계를 조회합니다.")
-    public ResponseEntity<String> getTicketStats() {
-        return ResponseEntity.ok("Ticket Stats stub");
+    public ResponseEntity<VerificationStatsResponse> getTicketStats() {
+        return ResponseEntity.ok(adminDashboardService.getTicketStats());
     }
 }
