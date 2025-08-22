@@ -25,7 +25,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT p FROM Payment p ORDER BY p.createdAt DESC")
     List<Payment> findRecentAll();
 
-    @Query("SELECT SUM(p.amount) FROM Payment p WHERE p.status = 'PAID'")
+    //COALESCE 적용: null일 경우 0 반환
+    @Query("SELECT coalesce(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'PAID'")
     Long getTotalPaymentAmount();
 
     @Query("SELECT p.paymentMethod AS paymentMethod, COUNT(p) AS count, SUM(p.amount) AS total " +
