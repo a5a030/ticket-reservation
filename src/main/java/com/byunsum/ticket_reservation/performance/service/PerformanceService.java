@@ -67,4 +67,30 @@ public class PerformanceService {
                 performance.getPosterUrl()
         );
     }
+
+    public List<PerformanceResponse> getPerformanceSorted(String sort) {
+        List<Performance> performances;
+
+        if("imminent".equalsIgnoreCase(sort)) {
+            performances = performanceRepository.findAllOrderByStartDateAsc();
+        } else if("popular".equalsIgnoreCase(sort)) {
+            performances = performanceRepository.findAllOrderByReservationsCountDesc();
+        } else {
+            performances = performanceRepository.findAll();
+        }
+
+        return performances.stream()
+                .map(p -> new PerformanceResponse(
+                        p.getId(),
+                        p.getTitle(),
+                        p.getDescription(),
+                        p.getVenue(),
+                        p.getStartDate(),
+                        p.getEndDate(),
+                        p.getTime(),
+                        p.getGenre(),
+                        p.getPosterUrl()
+                ))
+                .collect(Collectors.toList());
+    }
 }

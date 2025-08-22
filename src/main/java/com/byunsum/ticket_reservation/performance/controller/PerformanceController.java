@@ -54,4 +54,16 @@ public class PerformanceController {
         PerformanceResponse response = performanceService.getPerformanceById(id);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "공연 목록 조회 (정렬 옵션)",
+            description = "정렬 기준에 따라 공연 목록을 조회합니다. (all=전체, imminent=임박순, popular=인기순)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
+    })
+    @GetMapping("/public/sorted")
+    public ResponseEntity<List<PerformanceResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort) {
+        List<PerformanceResponse> performances = performanceService.getPerformanceSorted(sort);
+
+        return ResponseEntity.ok(performances);
+    }
 }
