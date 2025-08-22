@@ -11,5 +11,5 @@ public record ReviewStatsResponse(@Schema(description = "리뷰 총 개수")
                                   Map<String, Long> sentimentCount,
 
                                   @Schema(description = "자주 언급된 키워드")
-                                  Map<String, Long> topKeywords) {
+                                  Map<String, Integer> topKeywords) {
 }

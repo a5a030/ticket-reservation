@@ -64,7 +64,7 @@ public class AdminDashboardService {
 
         List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCOunt(reviewTexts, 2, 5);
 
-        Map<String, Long> topKeywords = keywordSummaries.stream()
+        Map<String, Integer> topKeywords = keywordSummaries.stream()
                 .collect(Collectors.toMap(KeywordSummary::getKeyword, KeywordSummary::getCount));
 
         return new  ReviewStatsResponse(totalReviews, sentimentCount, topKeywords);
