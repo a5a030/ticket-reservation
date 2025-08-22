@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.admin.service;
 
+import com.byunsum.ticket_reservation.admin.dto.DashboardResponse;
 import com.byunsum.ticket_reservation.admin.dto.ReviewStatsResponse;
 import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
@@ -93,5 +94,13 @@ public class AdminDashboardService {
                 ));
 
         return new  VerificationStatsResponse(successRate, resultCounts, hourlyCounts);
+    }
+
+    public DashboardResponse getDashboard(LocalDateTime start, LocalDateTime end) {
+        SalesStatsResponse sales = getSalesStats();
+        ReviewStatsResponse reviews = getReviewStats();
+        VerificationStatsResponse tickets = getTicketStats(start, end);
+
+        return new DashboardResponse(sales, reviews, tickets);
     }
 }

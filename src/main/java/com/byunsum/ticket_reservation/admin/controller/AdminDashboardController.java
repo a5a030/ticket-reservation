@@ -1,10 +1,12 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
+import com.byunsum.ticket_reservation.admin.dto.DashboardResponse;
 import com.byunsum.ticket_reservation.admin.dto.ReviewStatsResponse;
 import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
 import com.byunsum.ticket_reservation.admin.service.AdminDashboardService;
 import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -43,9 +45,21 @@ public class AdminDashboardController {
     @GetMapping("/tickets")
     @Operation(summary = "티켓 검증 통계 조회", description = "기간 내 검표 로그 기반 통계를 조회합니다.")
     public ResponseEntity<VerificationStatsResponse> getTicketStats(
+            @Parameter(description = "조회 시작 시간", example = "2025-08-01T00:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @Parameter(description = "조회 종료 시간", example = "2025-08-22T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
         return ResponseEntity.ok(adminDashboardService.getTicketStats(start, end));
+    }
+
+    @GetMapping
+    @Operation(summary = "대시보드 전체 통계 조회", description = "매출, 리뷰, 티켓 검증 통계를 한 번에 조회합니다.")
+    public ResponseEntity<DashboardResponse> getDashboard(
+            @Parameter(description = "조회 시작 시간", example = "2025-08-01T00:00:00")
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @Parameter(description = "조회 종료 시간", example = "2025-08-22T23:59:59")
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        return ResponseEntity.ok().body(adminDashboardService.getDashboard(start, end));
     }
 }
