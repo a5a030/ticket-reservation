@@ -4,14 +4,14 @@ import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
 import org.openkoreantext.processor.KoreanTokenJava;
 import org.openkoreantext.processor.OpenKoreanTextProcessorJava;
 import org.openkoreantext.processor.tokenizer.KoreanTokenizer;
+import org.springframework.stereotype.Service;
 import scala.collection.Seq;
-
-import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Service
 public class KeywordService {
     public List<String> extractTopNouns(List<String> reviews, int minLength, int keywordLimit) {
         Map<String, Integer> freqMap = new HashMap<>();
