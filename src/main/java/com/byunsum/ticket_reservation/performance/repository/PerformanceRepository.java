@@ -12,6 +12,6 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
     @Query("select p from Performance p order by p.startDate asc")
     List<Performance> findAllOrderByStartDateAsc();
 
-    @Query("select p from Performance p left join p.reservations r " + "group by p.id + order by count(r) desc")
+    @Query("select p from Performance p left join p.reservations r " + "group by p " + "order by count(r) desc")
     List<Performance> findAllOrderByReservationsCountDesc();
 }

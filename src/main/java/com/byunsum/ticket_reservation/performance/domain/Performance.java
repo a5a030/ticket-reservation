@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
 import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
+import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
 
@@ -122,5 +123,12 @@ public class Performance {
 
     public LocalDateTime getStartTime() {
         return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
+    }
+
+    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
+    private List<Reservation> reservations = new ArrayList<>();
+
+    public List<Reservation> getReservations() {
+        return reservations;
     }
 }
