@@ -72,16 +72,7 @@ public class ReservationService {
         Performance performance = performanceRepository.findById(request.getPerformanceId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
-
-        if(now.isAfter(performance.getPreReservationOpenDate()) && now.isBefore(performance.getGeneralOpenDate())) {
-            PreReservation pre = preReservationRepository.findByMemberAndPerformance(member, performance)
-                    .orElseThrow(() -> new CustomException(ErrorCode.PRE_RESERVATION_REQUIRED));
-
-            if(pre.getStatus() != PreReservationStatus.WINNER) {
-                throw new CustomException(ErrorCode.NOT_PRE_RESERVATION_WINNER);
-            }
-        }
+        validateReservationPeriod(performance, member);
 
         Seat seat = seatRepository.findById(request.getSeatId())
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
@@ -119,16 +110,8 @@ public class ReservationService {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
+        validateReservationPeriod(performance, member);
 
-        if(now.isAfter(performance.getPreReservationOpenDate()) && now.isBefore(performance.getGeneralOpenDate())) {
-            PreReservation pre = preReservationRepository.findByMemberAndPerformance(member, performance)
-                    .orElseThrow(() -> new CustomException(ErrorCode.PRE_RESERVATION_REQUIRED));
-
-            if(pre.getStatus() != PreReservationStatus.WINNER) {
-                throw new CustomException(ErrorCode.NOT_PRE_RESERVATION_WINNER);
-            }
-        }
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
 
@@ -216,5 +199,32 @@ public class ReservationService {
         return reservations.stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private void validateReservationPeriod(Performance performance, Member member) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime preStart = performance.getPreReservationOpenDateTime();
+        LocalDateTime preEnd = preStart.toLocalDate().atTime(23,59,59);
+
+        if(now.isAfter(preStart) && now.isBefore(preEnd)) {
+            PreReservation pre = preReservationRepository.findByMemberAndPerformance(member, performance)
+                    .orElseThrow(() -> new CustomException(ErrorCode.PRE_RESERVATION_REQUIRED));
+
+            if(pre.getStatus() != PreReservationStatus.WINNER) {
+                throw new CustomException(ErrorCode.NOT_PRE_RESERVATION_WINNER);
+            }
+        } else if(now.isBefore(performance.getGeneralReservationOpenDateTime())) {
+            throw new CustomException(ErrorCode.RESERVATION_NOT_OPEN);
+        } else {
+            int maxTicketsPerPerson = performance.getMaxTicketsPerPerson();
+
+            if(maxTicketsPerPerson > 0) {
+                int reservedCount = reservationRepository.countByMemberAndPerformance(member, performance);
+
+                if(reservedCount >= maxTicketsPerPerson) {
+                    throw new CustomException(ErrorCode.EXCEED_MAX_TICKETS);
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
-import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
@@ -25,15 +24,15 @@ public class Performance {
     private String time;
     private String genre;
     private String posterUrl;
-    private LocalDateTime preReservationOpenDate;
-    private LocalDateTime generalOpenDate;
+    private LocalDateTime preReservationOpenDateTime;
+    private LocalDateTime generalReservationOpenDateTime;
     private int maxTicketsPerPerson;
     //출연진, 가격 등 확장 예정
 
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson) {
+    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson) {
         this.title = title;
         this.description = description;
         this.venue = venue;
@@ -42,9 +41,9 @@ public class Performance {
         this.time = time;
         this.genre = genre;
         this.posterUrl = posterUrl;
-        this.preReservationOpenDate = preReservationOpenDate;
-        this.generalOpenDate = generalOpenDate;
-        this.maxTicketsPerPerson = 0;
+        this.preReservationOpenDateTime = preReservationOpenDateTime;
+        this.generalReservationOpenDateTime = generalReservationOpenDateTime;
+        this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 
     public Long getId() {
@@ -137,20 +136,20 @@ public class Performance {
         return reservations;
     }
 
-    public LocalDateTime getPreReservationOpenDate() {
-        return preReservationOpenDate;
+    public LocalDateTime getPreReservationOpenDateTime() {
+        return preReservationOpenDateTime;
     }
 
-    public LocalDateTime getGeneralOpenDate() {
-        return generalOpenDate;
+    public LocalDateTime getGeneralReservationOpenDateTime() {
+        return generalReservationOpenDateTime;
     }
 
-    public void setGeneralOpenDate(LocalDateTime generalOpenDate) {
-        this.generalOpenDate = generalOpenDate;
+    public void setGeneralReservationOpenDateTime(LocalDateTime generalReservationOpenDateTime) {
+        this.generalReservationOpenDateTime = generalReservationOpenDateTime;
     }
 
-    public void setPreReservationOpenDate(LocalDateTime preReservationOpenDate) {
-        this.preReservationOpenDate = preReservationOpenDate;
+    public void setPreReservationOpenDateTime(LocalDateTime preReservationOpenDateTime) {
+        this.preReservationOpenDateTime = preReservationOpenDateTime;
     }
 
     public LocalDateTime getStartDateTime() {
