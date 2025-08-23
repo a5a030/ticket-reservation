@@ -16,6 +16,8 @@ public enum ErrorCode {
     DUPLICATE_PRE_RESERVATION("이미 선예매에 응모하셨습니다."),
     ROUND_NOT_FOUND("회차 정보를 찾을 수 없습니다."),
     NO_PRE_RESERVATION_APPLICANTS("해당 회차의 선예매 응모자가 없습니다."),
+    PRE_RESERVATION_REQUIRED("선예매 대상자만 예매할 수 있습니다."),
+    NOT_PRE_RESERVATION_WINNER("선예매 당첨자가 아닙니다."),
 
     PERFORMANCE_NOT_FOUND("공연 정보를 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND("예매 정보를 찾을 수 없습니다."),

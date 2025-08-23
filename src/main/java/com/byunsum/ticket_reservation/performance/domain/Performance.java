@@ -25,13 +25,14 @@ public class Performance {
     private String time;
     private String genre;
     private String posterUrl;
-
-    //출연진, 예매오픈일, 가격 등 확장 예정
+    private LocalDateTime preReservationOpenDate;
+    private LocalDateTime generalOpenDate;
+    //출연진, 가격 등 확장 예정
 
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl) {
+    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate) {
         this.title = title;
         this.description = description;
         this.venue = venue;
@@ -40,6 +41,8 @@ public class Performance {
         this.time = time;
         this.genre = genre;
         this.posterUrl = posterUrl;
+        this.preReservationOpenDate = preReservationOpenDate;
+        this.generalOpenDate = generalOpenDate;
     }
 
     public Long getId() {
@@ -115,10 +118,10 @@ public class Performance {
     }
 
     @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
-    private List<Seat> seat = new ArrayList<>();
+    private List<Seat> seats = new ArrayList<>();
 
-    public List<Seat> getSeat() {
-        return seat;
+    public List<Seat> getSeats() {
+        return seats;
     }
 
     public LocalDateTime getStartTime() {
@@ -130,5 +133,25 @@ public class Performance {
 
     public List<Reservation> getReservations() {
         return reservations;
+    }
+
+    public LocalDateTime getPreReservationOpenDate() {
+        return preReservationOpenDate;
+    }
+
+    public LocalDateTime getGeneralOpenDate() {
+        return generalOpenDate;
+    }
+
+    public void setGeneralOpenDate(LocalDateTime generalOpenDate) {
+        this.generalOpenDate = generalOpenDate;
+    }
+
+    public void setPreReservationOpenDate(LocalDateTime preReservationOpenDate) {
+        this.preReservationOpenDate = preReservationOpenDate;
+    }
+
+    public LocalDateTime getStartDateTime() {
+        return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
     }
 }

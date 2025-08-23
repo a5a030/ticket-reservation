@@ -14,6 +14,7 @@ import com.byunsum.ticket_reservation.reservation.dto.PreReservationMyResponse;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.PreReservationRepository;
+import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +27,14 @@ public class PreReservationService {
     private final PreReservationRepository preReservationRepository;
     private final PerformanceRoundRepository performanceRoundRepository;
     private final PerformanceRepository performanceRepository;
+    private final SeatRepository seatRepository;
 
-    public PreReservationService(MemberRepository memberRepository, PreReservationRepository preReservationRepository, PerformanceRoundRepository performanceRoundRepository, PerformanceRepository performanceRepository) {
+    public PreReservationService(MemberRepository memberRepository, PreReservationRepository preReservationRepository, PerformanceRoundRepository performanceRoundRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository) {
         this.memberRepository = memberRepository;
         this.preReservationRepository = preReservationRepository;
         this.performanceRoundRepository = performanceRoundRepository;
         this.performanceRepository = performanceRepository;
+        this.seatRepository = seatRepository;
     }
 
     @Transactional
@@ -58,9 +61,17 @@ public class PreReservationService {
     }
 
     @Transactional
-    public void drawWinners(Long performanceId, int winnerCount) {
+    public void drawWinners(Long performanceId) {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
+
+        int totalSeats = seatRepository.countByPerformance(performance);
+
+        if(totalSeats <= 0) {
+            throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
+        }
+
+        int winnerCount = (int) Math.floor(totalSeats * 0.9);
 
         List<PreReservation> applicants = preReservationRepository.findByPerformance(performance);
 

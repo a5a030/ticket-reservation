@@ -6,10 +6,13 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
+import com.byunsum.ticket_reservation.reservation.domain.PreReservation;
+import com.byunsum.ticket_reservation.reservation.domain.PreReservationStatus;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
+import com.byunsum.ticket_reservation.reservation.repository.PreReservationRepository;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,13 +32,15 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final StringRedisTemplate redisTemplate;
     private final PaymentService paymentService;
+    private final PreReservationRepository preReservationRepository;
 
-    public ReservationService(ReservationRepository reservationRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository, StringRedisTemplate redisTemplate, PaymentService paymentService) {
+    public ReservationService(ReservationRepository reservationRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository, StringRedisTemplate redisTemplate, PaymentService paymentService, PreReservationRepository preReservationRepository) {
         this.reservationRepository = reservationRepository;
         this.performanceRepository = performanceRepository;
         this.seatRepository = seatRepository;
         this.redisTemplate = redisTemplate;
         this.paymentService = paymentService;
+        this.preReservationRepository = preReservationRepository;
     }
 
     private String getKey(Long seatId) {
@@ -65,6 +71,17 @@ public class ReservationService {
     public ReservationResponse createReservation(ReservationRequest request, Member member) {
         Performance performance = performanceRepository.findById(request.getPerformanceId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if(now.isAfter(performance.getPreReservationOpenDate()) && now.isBefore(performance.getGeneralOpenDate())) {
+            PreReservation pre = preReservationRepository.findByMemberAndPerformance(member, performance)
+                    .orElseThrow(() -> new CustomException(ErrorCode.PRE_RESERVATION_REQUIRED));
+
+            if(pre.getStatus() != PreReservationStatus.WINNER) {
+                throw new CustomException(ErrorCode.NOT_PRE_RESERVATION_WINNER);
+            }
+        }
 
         Seat seat = seatRepository.findById(request.getSeatId())
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
@@ -102,6 +119,16 @@ public class ReservationService {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
+        LocalDateTime now = LocalDateTime.now();
+
+        if(now.isAfter(performance.getPreReservationOpenDate()) && now.isBefore(performance.getGeneralOpenDate())) {
+            PreReservation pre = preReservationRepository.findByMemberAndPerformance(member, performance)
+                    .orElseThrow(() -> new CustomException(ErrorCode.PRE_RESERVATION_REQUIRED));
+
+            if(pre.getStatus() != PreReservationStatus.WINNER) {
+                throw new CustomException(ErrorCode.NOT_PRE_RESERVATION_WINNER);
+            }
+        }
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
 

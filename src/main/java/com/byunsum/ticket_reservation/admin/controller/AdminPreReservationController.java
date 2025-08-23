@@ -20,10 +20,9 @@ public class AdminPreReservationController {
     @PostMapping("/draw")
     @Operation(summary = "선예매 당첨자 추첨", description = "관리자가 공연 단위로 선예매 당첨자를 추첨합니다.")
     public ResponseEntity<String> drawWinners(
-            @RequestParam Long performanceId,
-            @RequestParam int winnerCount
+            @RequestParam Long performanceId
     ) {
-        preReservationService.drawWinners(performanceId, winnerCount);
+        preReservationService.drawWinners(performanceId);
         return ResponseEntity.ok("추첨 완료");
     }
 }

@@ -30,6 +30,12 @@ public class PerformanceRequest {
     @Schema(description = "공연 종료일")
     private LocalDate endDate;
 
+    @Schema(description = "선예매 오픈")
+    private LocalDateTime preReservationOpenDate;
+
+    @Schema(description = "일반예매 오픈")
+    private LocalDateTime generalOpenDate;
+
     public PerformanceRequest() {}
 
     public String getTitle() {
@@ -94,5 +100,21 @@ public class PerformanceRequest {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public LocalDateTime getPreReservationOpenDate() {
+        return preReservationOpenDate;
+    }
+
+    public void setPreReservationOpenDate(LocalDateTime preReservationOpenDate) {
+        this.preReservationOpenDate = preReservationOpenDate;
+    }
+
+    public LocalDateTime getGeneralOpenDate() {
+        return generalOpenDate;
+    }
+
+    public void setGeneralOpenDate(LocalDateTime generalOpenDate) {
+        this.generalOpenDate = generalOpenDate;
     }
 }

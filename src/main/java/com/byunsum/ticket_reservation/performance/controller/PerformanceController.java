@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "공연 API", description = "공연 등록 및 조회 관련 API")
+@Tag(name = "공연 API(사용자)", description = "사용자용 공연 조회 API")
 @RestController
-@RequestMapping("/admin/performances")
+@RequestMapping("/performances")
 public class PerformanceController {
     private final PerformanceService performanceService;
 
@@ -23,22 +23,11 @@ public class PerformanceController {
         this.performanceService = performanceService;
     }
 
-    @Operation(summary = "공연 등록 (관리자)", description = "공연 정보를 등록합니다. (관리자 전용)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "공연 등록 성공"),
-            @ApiResponse(responseCode = "400", description = "입력 값 오류")
-    })
-    @PostMapping
-    public ResponseEntity<Void> savePerformance(@RequestBody PerformanceRequest request) {
-        performanceService.createPerformance(request);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
     @Operation(summary = "전체 공연 목록 조회", description = "사용자에게 공개되는 공연 전체 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
     })
-    @GetMapping("/public")
+    @GetMapping()
     public ResponseEntity<List<PerformanceResponse>> getAllPerformance() {
         List<PerformanceResponse> performances = performanceService.getAllPerformances();
         return ResponseEntity.ok(performances);
@@ -49,7 +38,7 @@ public class PerformanceController {
             @ApiResponse(responseCode = "200", description = "공연 조회 성공"),
             @ApiResponse(responseCode = "404", description = "해당 공연 없음")
     })
-    @GetMapping("/public/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<PerformanceResponse> getPerformanceById(@PathVariable Long id) {
         PerformanceResponse response = performanceService.getPerformanceById(id);
         return ResponseEntity.ok(response);
@@ -60,7 +49,7 @@ public class PerformanceController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
     })
-    @GetMapping("/public/sorted")
+    @GetMapping("/sorted")
     public ResponseEntity<List<PerformanceResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort) {
         List<PerformanceResponse> performances = performanceService.getPerformanceSorted(sort);
 

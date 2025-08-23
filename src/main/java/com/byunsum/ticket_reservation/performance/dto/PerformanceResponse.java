@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.performance.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class PerformanceResponse {
     @Schema(description = "공연 ID", example = "1")
@@ -32,10 +33,16 @@ public class PerformanceResponse {
     @Schema(description = "포스터 이미지 URL")
     private String posterUrl;
 
+    @Schema(description = "선예매 오픈")
+    private LocalDateTime preReservationOpenDate;
+
+    @Schema(description = "일반예매 오픈")
+    private LocalDateTime generalOpenDate;
+
     public PerformanceResponse() {
     }
 
-    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl) {
+    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -45,6 +52,8 @@ public class PerformanceResponse {
         this.time = time;
         this.genre = genre;
         this.posterUrl = posterUrl;
+        this.preReservationOpenDate = preReservationOpenDate;
+        this.generalOpenDate = generalOpenDate;
     }
 
     //불변객체
@@ -82,5 +91,13 @@ public class PerformanceResponse {
 
     public String getPosterUrl() {
         return posterUrl;
+    }
+
+    public LocalDateTime getPreReservationOpenDate() {
+        return preReservationOpenDate;
+    }
+
+    public LocalDateTime getGeneralOpenDate() {
+        return generalOpenDate;
     }
 }
