@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.reservation.repository;
 
+import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("select r.performance from Reservation r group by r.performance order by count(r) desc")
     List<Performance> findPopularPerformances();
+
+    int countByMemberAndPerformance(Member member, Performance performance);
 }

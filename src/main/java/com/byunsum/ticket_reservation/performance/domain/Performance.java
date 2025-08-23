@@ -27,12 +27,13 @@ public class Performance {
     private String posterUrl;
     private LocalDateTime preReservationOpenDate;
     private LocalDateTime generalOpenDate;
+    private int maxTicketsPerPerson;
     //출연진, 가격 등 확장 예정
 
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate) {
+    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson) {
         this.title = title;
         this.description = description;
         this.venue = venue;
@@ -43,6 +44,7 @@ public class Performance {
         this.posterUrl = posterUrl;
         this.preReservationOpenDate = preReservationOpenDate;
         this.generalOpenDate = generalOpenDate;
+        this.maxTicketsPerPerson = 0;
     }
 
     public Long getId() {
@@ -153,5 +155,13 @@ public class Performance {
 
     public LocalDateTime getStartDateTime() {
         return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
+    }
+
+    public int getMaxTicketsPerPerson() {
+        return maxTicketsPerPerson;
+    }
+
+    public void setMaxTicketsPerPerson(int maxTicketsPerPerson) {
+        this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 }

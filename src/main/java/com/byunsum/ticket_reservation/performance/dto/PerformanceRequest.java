@@ -36,6 +36,9 @@ public class PerformanceRequest {
     @Schema(description = "일반예매 오픈")
     private LocalDateTime generalOpenDate;
 
+    @Schema(description = "회차당 1인 최대 예매 수량")
+    private int maxTicketsPerPerson;
+
     public PerformanceRequest() {}
 
     public String getTitle() {
@@ -116,5 +119,13 @@ public class PerformanceRequest {
 
     public void setGeneralOpenDate(LocalDateTime generalOpenDate) {
         this.generalOpenDate = generalOpenDate;
+    }
+
+    public int getMaxTicketsPerPerson() {
+        return maxTicketsPerPerson;
+    }
+
+    public void setMaxTicketPerPerson(int maxTicketsPerPerson) {
+        this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 }

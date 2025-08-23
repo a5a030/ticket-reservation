@@ -39,10 +39,13 @@ public class PerformanceResponse {
     @Schema(description = "일반예매 오픈")
     private LocalDateTime generalOpenDate;
 
+    @Schema(description = "회차별 1인당 최대 예매수")
+    private int maxTicketsPerPerson;
+
     public PerformanceResponse() {
     }
 
-    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate) {
+    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -54,6 +57,7 @@ public class PerformanceResponse {
         this.posterUrl = posterUrl;
         this.preReservationOpenDate = preReservationOpenDate;
         this.generalOpenDate = generalOpenDate;
+        this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 
     //불변객체
@@ -99,5 +103,9 @@ public class PerformanceResponse {
 
     public LocalDateTime getGeneralOpenDate() {
         return generalOpenDate;
+    }
+
+    public int getMaxTicketsPerPerson() {
+        return maxTicketsPerPerson;
     }
 }
