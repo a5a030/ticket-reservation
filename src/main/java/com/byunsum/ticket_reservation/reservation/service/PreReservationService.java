@@ -10,6 +10,7 @@ import com.byunsum.ticket_reservation.performance.repository.PerformanceReposito
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.reservation.domain.PreReservation;
 import com.byunsum.ticket_reservation.reservation.domain.PreReservationStatus;
+import com.byunsum.ticket_reservation.reservation.dto.PreReservationAdminResponse;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationMyResponse;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationResponse;
@@ -107,6 +108,25 @@ public class PreReservationService {
                         p.getPerformance().getTitle(),
                         p.getStatus().name(),
                         p.getAppliedAt()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PreReservationAdminResponse> getPreReservationsByPerformance(Long performanceId) {
+        Performance performance = performanceRepository.findById(performanceId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
+
+        List<PreReservation> preReservations = preReservationRepository.findByPerformance(performance);
+
+        return preReservations.stream()
+                .map(pre -> new PreReservationAdminResponse(
+                        pre.getId(),
+                        pre.getMember().getId(),
+                        pre.getMember().getEmail(),
+                        performance.getId(),
+                        pre.getStatus().name(),
+                        pre.getAppliedAt()
                 ))
                 .toList();
     }
