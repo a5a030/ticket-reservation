@@ -42,6 +42,10 @@ public class PreReservation {
         return member;
     }
 
+    public Performance getPerformance() {
+        return performance;
+    }
+
     public PreReservationStatus getStatus() {
         return status;
     }

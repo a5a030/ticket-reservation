@@ -10,6 +10,7 @@ import com.byunsum.ticket_reservation.performance.repository.PerformanceReposito
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.reservation.domain.PreReservation;
 import com.byunsum.ticket_reservation.reservation.domain.PreReservationStatus;
+import com.byunsum.ticket_reservation.reservation.dto.PreReservationMyResponse;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.PreReservationRepository;
@@ -80,5 +81,22 @@ public class PreReservationService {
         }
 
         preReservationRepository.saveAll(applicants);
+    }
+
+    @Transactional
+    public List<PreReservationMyResponse> getMyPreReservations(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<PreReservation> list = preReservationRepository.findByMember(member);
+
+        return list.stream()
+                .map(p -> new PreReservationMyResponse(
+                        p.getPerformance().getId(),
+                        p.getPerformance().getTitle(),
+                        p.getStatus().name(),
+                        p.getAppliedAt()
+                ))
+                .toList();
     }
 }

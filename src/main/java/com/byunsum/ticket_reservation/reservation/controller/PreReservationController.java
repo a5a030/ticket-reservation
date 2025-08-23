@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.reservation.dto.PreReservationMyResponse;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.PreReservationResponse;
 import com.byunsum.ticket_reservation.reservation.service.PreReservationService;
@@ -8,10 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/pre-reservations")
@@ -32,5 +32,13 @@ public class PreReservationController {
         PreReservationResponse response = preReservationService.apply(member.getId(),  request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "", description = "")
+    public ResponseEntity<List<PreReservationMyResponse>> getMyPreReservations(@AuthenticationPrincipal Member member) {
+        List<PreReservationMyResponse> responses = preReservationService.getMyPreReservations(member.getId());
+
+        return ResponseEntity.ok(responses);
     }
 }
