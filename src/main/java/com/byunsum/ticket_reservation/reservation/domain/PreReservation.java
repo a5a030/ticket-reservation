@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.domain;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import jakarta.persistence.*;
 
@@ -16,7 +17,7 @@ public class PreReservation {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private PerformanceRound round;
+    private Performance performance;
 
     @Enumerated(EnumType.STRING)
     private PreReservationStatus status;
@@ -26,9 +27,9 @@ public class PreReservation {
     public PreReservation() {
     }
 
-    public PreReservation(Member member, PerformanceRound round, PreReservationStatus status) {
+    public PreReservation(Member member, Performance performance, PreReservationStatus status) {
         this.member = member;
-        this.round = round;
+        this.performance = performance;
         this.status = status;
         this.appliedAt = appliedAt;
     }
@@ -41,15 +42,15 @@ public class PreReservation {
         return member;
     }
 
-    public PerformanceRound getRound() {
-        return round;
-    }
-
     public PreReservationStatus getStatus() {
         return status;
     }
 
     public LocalDateTime getAppliedAt() {
         return appliedAt;
+    }
+
+    public void setStatus(PreReservationStatus status) {
+        this.status = status;
     }
 }
