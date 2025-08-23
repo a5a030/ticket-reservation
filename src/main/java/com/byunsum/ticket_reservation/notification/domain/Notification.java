@@ -23,6 +23,9 @@ public class Notification {
 
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -31,18 +34,20 @@ public class Notification {
     public Notification() {
     }
 
-    public Notification(String message, Member member) {
+    public Notification(String message, Member member, NotificationType type) {
         this.message = message;
         this.member = member;
+        this.type = type;
         this.link = null;
         this.isRead = false;
         this.createdAt = LocalDateTime.now();
     }
 
-    public Notification(String message, Member member, String link, boolean isRead, LocalDateTime createdAt) {
+    public Notification(String message, Member member, String link, NotificationType type, boolean isRead, LocalDateTime createdAt) {
         this.message = message;
         this.member = member;
         this.link = link;
+        this.type = type;
         this.isRead = isRead;
         this.createdAt = createdAt;
     }
@@ -61,6 +66,10 @@ public class Notification {
 
     public String getLink() {
         return link;
+    }
+
+    public NotificationType getType() {
+        return type;
     }
 
     public boolean isRead() {

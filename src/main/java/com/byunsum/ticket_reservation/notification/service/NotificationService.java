@@ -4,6 +4,7 @@ import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.notification.domain.Notification;
+import com.byunsum.ticket_reservation.notification.domain.NotificationType;
 import com.byunsum.ticket_reservation.notification.dto.NotificationResponseDto;
 import com.byunsum.ticket_reservation.notification.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,8 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
-    public void createNotification(String message, Member member) {
-        Notification notification = new Notification(message, member);
+    public void createNotification(String message, Member member, NotificationType type) {
+        Notification notification = new Notification(message, member, type);
         notificationRepository.save(notification);
     }
 

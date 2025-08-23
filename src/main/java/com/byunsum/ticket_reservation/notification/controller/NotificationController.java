@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.notification.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.notification.domain.NotificationType;
 import com.byunsum.ticket_reservation.notification.dto.NotificationResponseDto;
 import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,7 +57,7 @@ public class NotificationController {
         }
 
         String message = "테스트 알림입니다!";
-        notificationService.createNotification(message, member);
+        notificationService.createNotification(message, member, NotificationType.SYSTEM);
 
         return ResponseEntity.ok("알림 전송 성공!");
     }

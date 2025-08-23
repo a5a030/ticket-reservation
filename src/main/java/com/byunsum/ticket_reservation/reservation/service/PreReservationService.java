@@ -4,6 +4,8 @@ import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
+import com.byunsum.ticket_reservation.notification.domain.NotificationType;
+import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
@@ -26,16 +28,16 @@ import java.util.List;
 public class PreReservationService {
     private final MemberRepository memberRepository;
     private final PreReservationRepository preReservationRepository;
-    private final PerformanceRoundRepository performanceRoundRepository;
     private final PerformanceRepository performanceRepository;
     private final SeatRepository seatRepository;
+    private final NotificationService notificationService;
 
-    public PreReservationService(MemberRepository memberRepository, PreReservationRepository preReservationRepository, PerformanceRoundRepository performanceRoundRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository) {
+    public PreReservationService(MemberRepository memberRepository, PreReservationRepository preReservationRepository, PerformanceRepository performanceRepository, SeatRepository seatRepository, NotificationService notificationService) {
         this.memberRepository = memberRepository;
         this.preReservationRepository = preReservationRepository;
-        this.performanceRoundRepository = performanceRoundRepository;
         this.performanceRepository = performanceRepository;
         this.seatRepository = seatRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -87,8 +89,20 @@ public class PreReservationService {
 
             if(i<winnerCount) {
                 pre.setStatus(PreReservationStatus.WINNER);
+
+                notificationService.createNotification(
+                        "[선예매 당첨] " + performance.getTitle() + "공연에 당첨되셨습니다. 예매일정을 확인하세요.",
+                        pre.getMember(),
+                        NotificationType.PRE_RESERVATION
+                );
             } else {
                 pre.setStatus(PreReservationStatus.LOSER);
+
+                notificationService.createNotification(
+                        "[선예매 탈락] 아쉽지만" + performance.getTitle() + "공연에 당첨되지 못했습니다.",
+                        pre.getMember(),
+                        NotificationType.PRE_RESERVATION
+                );
             }
         }
 
