@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.notification.dto;
 
 import com.byunsum.ticket_reservation.notification.domain.Notification;
+import com.byunsum.ticket_reservation.notification.domain.NotificationType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -21,12 +22,16 @@ public class NotificationResponseDto {
     @Schema(description = "알림 생성 일시")
     private LocalDateTime createdAt;
 
+    @Schema(description = "알림 유형")
+    private NotificationType type;
+
     public NotificationResponseDto(Notification notification) {
         this.id = notification.getId();
         this.message = notification.getMessage();
         this.link = notification.getLink();
         this.isRead = notification.isRead();
         this.createdAt = notification.getCreatedAt();
+        this.type = notification.getType();
     }
 
     public Long getId() {
@@ -47,5 +52,9 @@ public class NotificationResponseDto {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public NotificationType getType() {
+        return type;
     }
 }
