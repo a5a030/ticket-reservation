@@ -14,14 +14,16 @@ public class GlobalExceptionHandler {
         ErrorCode code = e.getErrorCode();
 
         return new ResponseEntity<>(
-                new ErrorResponse(code.name(), code.getMessage()), HttpStatus.BAD_REQUEST
+                new ErrorResponse(code), code.getStatus()
         );
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse>  handleAccessDenied(AccessDeniedException e) {
+        ErrorCode code = ErrorCode.FORBIDDEN;
+
         return new ResponseEntity<>(
-                new ErrorResponse(ErrorCode.FORBIDDEN.name(), ErrorCode.FORBIDDEN.getMessage()), HttpStatus.FORBIDDEN
+                new ErrorResponse(code), code.getStatus()
         );
     }
 
@@ -29,10 +31,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse>  handleValidation(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getFieldErrors()
                 .stream().findFirst().map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .orElse("잘못된 요청입니다.");
+                .orElse(ErrorCode.INVALID_INPUT_VALUE.getMessage());
+
+        ErrorCode code = ErrorCode.INVALID_INPUT_VALUE;
 
         return new ResponseEntity<>(
-                new ErrorResponse(ErrorCode.INVALID_INPUT_VALUE.name(), message), HttpStatus.BAD_REQUEST
+                new ErrorResponse(ErrorCode.INVALID_INPUT_VALUE, message), ErrorCode.INVALID_INPUT_VALUE.getStatus()
         );
     }
 
@@ -40,8 +44,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse>  handleException(Exception e) {
         e.printStackTrace();
 
+        ErrorCode code = ErrorCode.INTERNAL_SERVER_ERROR;
+
         return new ResponseEntity<>(
-                new ErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR.name(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR
+                new ErrorResponse(code), code.getStatus()
         );
     }
 }
