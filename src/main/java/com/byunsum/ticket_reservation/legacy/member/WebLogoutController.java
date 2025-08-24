@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.member.controller;
+package com.byunsum.ticket_reservation.legacy.member;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;

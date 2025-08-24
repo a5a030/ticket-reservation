@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.member.dto;
+package com.byunsum.ticket_reservation.legacy.member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

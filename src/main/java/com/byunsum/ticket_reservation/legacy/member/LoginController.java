@@ -1,7 +1,7 @@
-package com.byunsum.ticket_reservation.member.controller;
+package com.byunsum.ticket_reservation.legacy.member;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
-import com.byunsum.ticket_reservation.member.form.LoginForm;
+import com.byunsum.ticket_reservation.legacy.member.form.LoginForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 @Tag(name = "로그인 API", description = "로그인/로그아웃 관련 API")
 @RestController

@@ -1,7 +1,7 @@
 package com.byunsum.ticket_reservation.config;
 
 
-import com.byunsum.ticket_reservation.member.interceptor.LoginCheckInterceptor;
+import com.byunsum.ticket_reservation.legacy.member.interceptor.LoginCheckInterceptor;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

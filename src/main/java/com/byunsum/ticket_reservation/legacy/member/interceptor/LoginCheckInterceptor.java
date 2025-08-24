@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.member.interceptor;
+package com.byunsum.ticket_reservation.legacy.member.interceptor;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.service.MemberService;

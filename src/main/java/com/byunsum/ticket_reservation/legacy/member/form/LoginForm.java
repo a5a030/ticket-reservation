@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.member.form;
+package com.byunsum.ticket_reservation.legacy.member.form;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
