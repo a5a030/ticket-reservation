@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,14 +46,14 @@ public class PerformanceController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "공연 목록 조회 (정렬 옵션)",
+    @Operation(summary = "공연 목록 조회 (정렬 옵션 + 페이징)",
             description = "정렬 기준에 따라 공연 목록을 조회합니다. (all=전체, imminent=임박순, popular=인기순)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
     })
     @GetMapping("/sorted")
-    public ResponseEntity<List<PerformanceResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort) {
-        List<PerformanceResponse> performances = performanceService.getPerformanceSorted(sort);
+    public ResponseEntity<Page<PerformanceResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort, Pageable pageable) {
+        Page<PerformanceResponse> performances = performanceService.getPerformanceSorted(sort, pageable);
 
         return ResponseEntity.ok(performances);
     }

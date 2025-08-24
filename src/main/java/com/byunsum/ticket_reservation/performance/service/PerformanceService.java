@@ -6,6 +6,8 @@ import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -77,19 +79,18 @@ public class PerformanceService {
         );
     }
 
-    public List<PerformanceResponse> getPerformanceSorted(String sort) {
-        List<Performance> performances;
+    public Page<PerformanceResponse> getPerformanceSorted(String sort, Pageable pageable) {
+        Page<Performance> performances;
 
         if("imminent".equalsIgnoreCase(sort)) {
-            performances = performanceRepository.findAllOrderByStartDateAsc();
+            performances = performanceRepository.findAllByOrderByStartDateAscTimeAsc(pageable);
         } else if("popular".equalsIgnoreCase(sort)) {
-            performances = performanceRepository.findAllOrderByReservationsCountDesc();
+            performances = performanceRepository.findAllOrderByReservationsCountDesc(pageable);
         } else {
-            performances = performanceRepository.findAll();
+            performances = performanceRepository.findAll(pageable);
         }
 
-        return performances.stream()
-                .map(p -> new PerformanceResponse(
+        return performances.map(p -> new PerformanceResponse(
                         p.getId(),
                         p.getTitle(),
                         p.getDescription(),
@@ -102,7 +103,6 @@ public class PerformanceService {
                         p.getPreReservationOpenDateTime(),
                         p.getGeneralReservationOpenDateTime(),
                         p.getMaxTicketsPerPerson()
-                ))
-                .collect(Collectors.toList());
+                ));
     }
 }
