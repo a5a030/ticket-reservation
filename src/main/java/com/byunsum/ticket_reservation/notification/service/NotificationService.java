@@ -27,6 +27,16 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    public void send(Member member, String message, String link) {
+        Notification notification = new Notification();
+        notification.setMember(member);
+        notification.setMessage(message);
+        notification.setLink(link);
+        notification.setType(NotificationType.PAYMENT);
+
+        notificationRepository.save(notification);
+    }
+
     public List<Notification> getNotificationsForMember(Member member) {
         return notificationRepository.findByMemberOrderByCreatedAtDesc(member);
     }

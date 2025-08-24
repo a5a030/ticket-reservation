@@ -36,6 +36,18 @@ public class Payment {
     @Schema(description = "결제 취소 일시", nullable = true)
     private LocalDateTime cancelledAt;
 
+    @Schema(description = "계좌번호")
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
     private boolean isCancelled() {
         return this.status == PaymentStatus.CANCELLED;
     }

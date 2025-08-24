@@ -83,4 +83,32 @@ public class Notification {
     public void markAsRead(boolean read) {
         this.isRead = read;
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public void setType(NotificationType type) {
+        this.type = type;
+    }
 }

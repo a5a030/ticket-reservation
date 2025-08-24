@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.payment.service;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
+import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class PaymentService {
@@ -25,12 +27,14 @@ public class PaymentService {
     private final ReservationRepository reservationRepository;
     private final StringRedisTemplate redisTemplate;
     private final SlackNotifier slackNotifier;
+    private final NotificationService notificationService;
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate, SlackNotifier slackNotifier) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate, SlackNotifier slackNotifier, NotificationService notificationService) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
         this.redisTemplate = redisTemplate;
         this.slackNotifier = slackNotifier;
+        this.notificationService = notificationService;
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {
@@ -40,9 +44,11 @@ public class PaymentService {
                 payment.getPaymentMethod(),
                 payment.getStatus(),
                 payment.getCreatedAt(),
-                payment.getCancelledAt()
+                payment.getCancelledAt(),
+                payment.getAccountNumber()
         );
     }
+
     @Transactional
     public PaymentResponse processPayment(PaymentRequest request) {
         try {
@@ -62,9 +68,10 @@ public class PaymentService {
                     reservation
             );
 
-            Payment saved = paymentRepository.save(payment);
-
             if (request.getPaymentMethod().name().equals("BANK_TRANSFER")) {
+                String accountNumber = generateAccountNumber();
+                payment.setAccountNumber(accountNumber);
+
                 String bankKey = "payment:bank:timeout:" + reservation.getId();
 
                 long secondUntilMidnight = java.time.Duration.between(
@@ -73,8 +80,15 @@ public class PaymentService {
                 ).getSeconds();
 
                 redisTemplate.opsForValue().set(bankKey, "PENDING", java.time.Duration.ofSeconds(secondUntilMidnight));
+
+                notificationService.send(
+                        reservation.getMember(),
+                        "무통장입금 계좌번호: " + accountNumber,
+                        "/payments/" + payment.getId()
+                );
             }
 
+            Payment saved = paymentRepository.save(payment);
 
             return new PaymentResponse(
                     saved.getId(),
@@ -82,22 +96,15 @@ public class PaymentService {
                     saved.getPaymentMethod(),
                     saved.getStatus(),
                     saved.getCreatedAt(),
-                    saved.getCancelledAt()
+                    saved.getCancelledAt(),
+                    saved.getAccountNumber()
             );
         } catch (CustomException e) {
-            slackNotifier.send(String.format(
-                    "⚠\uFE0F결제 실패 발생\n사유: %s\n요청 데이터: %s",
-                    e.getErrorCode().name(),
-                    request.toString()
-            ));
+            slackNotifier.send("⚠️ 결제 실패: " + e.getErrorCode().name() + " / 요청: " + request);
 
             throw e;
         } catch (Exception e) {
-            slackNotifier.send(String.format(
-                    "\uD83D\uDEA8결제 처리 중 시스템 오류\n메시지: %s\n요청 데이터: %s",
-                    e.getMessage(),
-                    request.toString()
-            ));
+            slackNotifier.send("🚨 시스템 오류: " + e.getMessage() + " / 요청: " + request);
 
             throw e;
         }
@@ -179,5 +186,16 @@ public class PaymentService {
         if(payment.getStatus() == PaymentStatus.PAID) {
             payment.markAsCancelled();
         }
+    }
+
+    private String generateAccountNumber() {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+
+        for(int i=0; i<10; i++) {
+            sb.append(random.nextInt(10));
+        }
+
+        return sb.toString();
     }
 }
