@@ -6,10 +6,7 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
-import com.byunsum.ticket_reservation.reservation.domain.PreReservation;
-import com.byunsum.ticket_reservation.reservation.domain.PreReservationStatus;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
+import com.byunsum.ticket_reservation.reservation.domain.*;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.PreReservationRepository;
@@ -187,13 +184,20 @@ public class ReservationService {
         return toResponse(reservation);
     }
 
-    public List<ReservationResponse> getReservationsByMember(Long memberId, String sort) {
+    public List<ReservationResponse> getReservationsByMember(Long memberId, ReservationSortOption sort) {
         List<Reservation> reservations;
 
-        if("upcoming".equalsIgnoreCase(sort)) {
-            reservations = reservationRepository.findByMemberIdOrderByPerformanceStartDateAsc(memberId);
-        } else {
-            reservations = reservationRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
+        switch (sort) {
+            case IMMINENT:
+                reservations = reservationRepository.findByMemberIdOrderByPerformanceImminent(memberId);
+                break;
+            case OLDEST:
+                reservations = reservationRepository.findByMemberIdOrderByCreatedAtAsc(memberId);
+                break;
+            case RECENT:
+            default:
+                reservations = reservationRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
+                break;
         }
 
         return reservations.stream()

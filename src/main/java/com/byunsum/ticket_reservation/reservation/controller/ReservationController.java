@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.reservation.domain.ReservationSortOption;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.service.ReservationService;
@@ -90,14 +91,16 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "내 예매 목록 조회", description = "로그인한 사용자의 예매 목록을 정렬 기준에 따라 조회합니다.")
+    @Operation(summary = "내 예매 목록 조회", description = "로그인한 사용자의 예매 목록을 정렬 기준(recent,oldest, imminent)에 따라 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예매 목록 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 필요")
     })
     @GetMapping("/my")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Member member, @RequestParam(defaultValue = "recent", name = "sort") String sort) {
-        List<ReservationResponse> responses = reservationService.getReservationsByMember(member.getId(), sort);
+        ReservationSortOption sortOption = ReservationSortOption.valueOf(sort.toUpperCase());
+        List<ReservationResponse> responses = reservationService.getReservationsByMember(member.getId(), sortOption);
+
         return ResponseEntity.ok(responses);
     }
 }

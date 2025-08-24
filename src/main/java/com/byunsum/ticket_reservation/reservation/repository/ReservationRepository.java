@@ -29,4 +29,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Performance> findPopularPerformances();
 
     int countByMemberAndPerformance(Member member, Performance performance);
+
+    @Query("select r from Reservation r " +
+            "where r.member.id = :memberId " +
+            "order by r.createdAt asc")
+    List<Reservation> findByMemberIdOrderByCreatedAtAsc(@Param("memberId") Long memberId);
 }
