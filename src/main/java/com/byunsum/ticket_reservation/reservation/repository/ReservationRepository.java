@@ -20,6 +20,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("select r from Reservation r where r.member.id = :memberId order by r.performance.startDate asc")
     List<Reservation> findByMemberIdOrderByPerformanceStartDateAsc(@Param("memberId") Long memberId);
 
+    @Query("select r from Reservation r " +
+            "where r.member.id = :memberId " +
+            "order by r.performance.startDate asc, r.performance.time asc")
+    List<Reservation> findByMemberIdOrderByPerformanceImminent(@Param("memberId") Long memberId);
+
     @Query("select r.performance from Reservation r group by r.performance order by count(r) desc")
     List<Performance> findPopularPerformances();
 

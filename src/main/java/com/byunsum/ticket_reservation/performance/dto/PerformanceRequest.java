@@ -1,9 +1,11 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class PerformanceRequest {
     @Schema(description = "공연 제목")
@@ -22,7 +24,8 @@ public class PerformanceRequest {
     private String venue;
 
     @Schema(description = "공연 시간")
-    private String time;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime time;
 
     @Schema(description = "공연 시작일")
     private LocalDate startDate;
@@ -81,11 +84,11 @@ public class PerformanceRequest {
         this.venue = venue;
     }
 
-    public String getTime() {
+    public LocalTime getTime() {
         return time;
     }
 
-    public void setTime(String time) {
+    public void setTime(LocalTime time) {
         this.time = time;
     }
 

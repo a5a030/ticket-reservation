@@ -1,6 +1,5 @@
 package com.byunsum.ticket_reservation.performance.controller;
 
-import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
 import com.byunsum.ticket_reservation.performance.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

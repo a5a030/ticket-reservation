@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class Performance {
     private String venue; //공연장
     private LocalDate startDate;
     private LocalDate endDate;
-    private String time;
+    private LocalTime time;
     private String genre;
     private String posterUrl;
     private LocalDateTime preReservationOpenDateTime;
@@ -32,7 +33,7 @@ public class Performance {
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, String time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson) {
+    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson) {
         this.title = title;
         this.description = description;
         this.venue = venue;
@@ -94,11 +95,11 @@ public class Performance {
         this.endDate = endDate;
     }
 
-    public String getTime() {
+    public LocalTime getTime() {
         return time;
     }
 
-    public void setTime(String time) {
+    public void setTime(LocalTime time) {
         this.time = time;
     }
 
@@ -126,7 +127,7 @@ public class Performance {
     }
 
     public LocalDateTime getStartTime() {
-        return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
+        return LocalDateTime.of(this.startDate, this.time);
     }
 
     @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
@@ -153,7 +154,7 @@ public class Performance {
     }
 
     public LocalDateTime getStartDateTime() {
-        return LocalDateTime.of(this.startDate, java.time.LocalTime.parse(this.time));
+        return LocalDateTime.of(this.startDate, this.time);
     }
 
     public int getMaxTicketsPerPerson() {
