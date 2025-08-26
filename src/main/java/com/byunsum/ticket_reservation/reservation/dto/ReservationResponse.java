@@ -1,12 +1,19 @@
 package com.byunsum.ticket_reservation.reservation.dto;
 
+import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
 public class ReservationResponse {
+    @Schema(description = "예매 ID", example = "1")
+    private Long id;
+
     @Schema(description = "예매 고유 코드", example = "ABC123XYZ")
     private String reservationCode;
+
+    @Schema(description = "공연 제목", example = "뮤지컬 햄릿")
+    private String performanceTitle;
 
     @Schema(description = "좌석 번호", example = "A10")
     private String seatNo;
@@ -23,13 +30,19 @@ public class ReservationResponse {
     @Schema(description = "재확정 여부", example = "true")
     private boolean reconfirmed;
 
-    public ReservationResponse(String reservationCode, String seatNo, int price, LocalDateTime reservedAt, String status, boolean reconfirmed) {
+    @Schema(description = "재확정 가능 TTL (초 단위)", example = "280")
+    private Long ttlSeconds;
+
+    public ReservationResponse(Reservation reservation, Long ttlSeconds) {
+        this.id = reservation.getId();
         this.reservationCode = reservationCode;
+        this.performanceTitle = performanceTitle;
         this.seatNo  = seatNo;
         this.price = price;
         this.reservedAt = reservedAt;
         this.status = status;
         this.reconfirmed = reconfirmed;
+        this.ttlSeconds = ttlSeconds;
     }
 
     public void setReservationCode(String reservationCode) {
@@ -58,5 +71,17 @@ public class ReservationResponse {
 
     public boolean isReconfirmed() {
         return reconfirmed;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getPerformanceTitle() {
+        return performanceTitle;
+    }
+
+    public Long getTtlSeconds() {
+        return ttlSeconds;
     }
 }

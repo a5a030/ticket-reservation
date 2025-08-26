@@ -116,13 +116,21 @@ public class Reservation {
         this.member = member;
     }
 
+    public void setStatus(ReservationStatus status) {
+        this.status = status;
+    }
+
     public boolean isReconfirmed() {
         return reconfirmed;
     }
 
     public void reconfirm() {
-        if(this.status != ReservationStatus.CANCELLED || reconfirmed) {
-            throw new CustomException(ErrorCode.RECONFIRM_NOT_ALLOWED);
+        if(this.status != ReservationStatus.CANCELLED) {
+            throw new CustomException(ErrorCode.INVALID_RECONFIRM_STATUS);
+        }
+
+        if(this.reconfirmed) {
+            throw new CustomException(ErrorCode.ALREADY_RECONFIRMED);
         }
 
         this.status = ReservationStatus.CONFIRMED;

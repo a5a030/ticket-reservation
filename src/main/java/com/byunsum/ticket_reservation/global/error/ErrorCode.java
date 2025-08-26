@@ -22,6 +22,9 @@ public enum ErrorCode {
     NOT_PRE_RESERVATION_WINNER(HttpStatus.FORBIDDEN, "선예매 당첨자가 아닙니다."),
     RESERVATION_NOT_OPEN(HttpStatus.BAD_REQUEST, "아직 예매가 오픈되지 않았습니다."),
     EXCEED_MAX_TICKETS(HttpStatus.BAD_REQUEST, "회차당 1인 최대 예매 수량을 초과했습니다."),
+    INVALID_RECONFIRM_STATUS(HttpStatus.BAD_REQUEST, "재확정 가능한 상태가 아닙니다."),
+    ALREADY_RECONFIRMED(HttpStatus.CONFLICT, "이미 재확정된 예매입니다."),
+    UNAUTHORIZED_RECONFIRM(HttpStatus.FORBIDDEN, "본인의 예매만 재확정할 수 있습니다."),
 
     PERFORMANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "공연 정보를 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예매 정보를 찾을 수 없습니다."),

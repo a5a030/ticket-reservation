@@ -53,15 +53,12 @@ public class ReservationService {
     }
 
     private ReservationResponse toResponse(Reservation reservation) {
-        Seat seat = reservation.getSeat();
+        String redisKey = "seat:reconfirm:" + reservation.getSeat().getId();
+        Long ttl = redisTemplate.getExpire(redisKey);
 
         return new ReservationResponse(
-                reservation.getReservationCode(),
-                seat.getSeatNo(),
-                seat.getPrice(),
-                reservation.getCreatedAt(),
-                reservation.getStatus().name(),
-                reservation.isReconfirmed()
+                reservation,
+                ttl != null & ttl > 0 ? ttl : 0
         );
     }
 
@@ -92,14 +89,7 @@ public class ReservationService {
 
         Seat seat = reservation.getSeat();
 
-        return new ReservationResponse(
-                reservation.getReservationCode(),
-                seat.getSeatNo(),
-                seat.getPrice(),
-                reservation.getCreatedAt(),
-                reservation.getStatus().name(),
-                reservation.isReconfirmed()
-        );
+        return toResponse(reservation);
     }
 
     @Transactional
@@ -165,17 +155,21 @@ public class ReservationService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
         if(!reservation.getMember().getId().equals(memberId)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
+            throw new CustomException(ErrorCode.UNAUTHORIZED_RECONFIRM);
         }
 
         if(reservation.getStatus() != ReservationStatus.CANCELLED) {
-            throw new CustomException(ErrorCode.ALREADY_CANCELED);
+            throw new CustomException(ErrorCode.INVALID_RECONFIRM_STATUS);
+        }
+
+        if(reservation.isReconfirmed()) {
+            throw new CustomException(ErrorCode.ALREADY_RECONFIRMED);
         }
 
         String redisKey = "seat:reconfirm:" + reservation.getSeat().getId();
-        Boolean isLocked = redisTemplate.hasKey(redisKey);
+        String lockValue = redisTemplate.opsForValue().get(redisKey);
 
-        if(Boolean.FALSE.equals(isLocked)) {
+        if(lockValue == null || !"LOCKED".equals(lockValue)) {
             throw new CustomException(ErrorCode.SEAT_ALREADY_RELEASED);
         }
 
