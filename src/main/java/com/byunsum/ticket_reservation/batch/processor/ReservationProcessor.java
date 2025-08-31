@@ -24,10 +24,23 @@ public class ReservationProcessor implements ItemProcessor<ReservationRequest, R
 
     @Override
     public Reservation process(ReservationRequest request){
-        return new Reservation(
-                performanceRepository.findById(request.getPerformanceId()).orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND)),
-                seatRepository.findById(request.getSeatId()).orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND)),
-                memberRepository.findById(request.getMemberId()).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND))
-        );
+        var performance = performanceRepository.findById(request.getPerformanceId())
+                .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
+
+        var member = memberRepository.findById(request.getMemberId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Reservation reservation = new Reservation();
+        reservation.setPerformance(performance);
+        reservation.setMember(member);
+
+        request.getSeatIds().forEach(seatId -> {
+            var seat = seatRepository.findById(seatId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
+
+            reservation.addSeat(seat);
+        });
+
+        return reservation;
     }
 }

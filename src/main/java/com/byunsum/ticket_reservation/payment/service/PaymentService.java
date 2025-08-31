@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -57,9 +58,12 @@ public class PaymentService {
 
             reservation.confirm();
 
-            int seatPrice = reservation.getSeat().getPrice();
-            int fee = 3000; //예매 수수료
-            int totalAmount = seatPrice + fee;
+            int seatTotal = reservation.getSeats().stream()
+                    .mapToInt(seat -> seat.getPrice())
+                    .sum();
+            int bookingFee = 2000 * reservation.getQuantity();
+            int deliveryFee = reservation.getDeliveryFee();
+            int totalAmount = seatTotal + bookingFee + deliveryFee;
 
             Payment payment = new Payment(
                     totalAmount,
@@ -90,15 +94,7 @@ public class PaymentService {
 
             Payment saved = paymentRepository.save(payment);
 
-            return new PaymentResponse(
-                    saved.getId(),
-                    saved.getAmount(),
-                    saved.getPaymentMethod(),
-                    saved.getStatus(),
-                    saved.getCreatedAt(),
-                    saved.getCancelledAt(),
-                    saved.getAccountNumber()
-            );
+            return toPaymentResponse(saved);
         } catch (CustomException e) {
             slackNotifier.send("⚠️ 결제 실패: " + e.getErrorCode().name() + " / 요청: " + request);
 
@@ -123,8 +119,23 @@ public class PaymentService {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
         }
 
-        payment.markAsCancelled();
-        payment.getReservation().cancel();
+        Reservation reservation = payment.getReservation();
+        int ticketCount = reservation.getQuantity();
+        int seatTotal = reservation.getSeats().stream()
+                .mapToInt(seat -> seat.getPrice())
+                .sum();
+        int bookingFee = 2000 * ticketCount;
+        int deliveryFee = reservation.getDeliveryFee();
+        int cancelFee = calculateCancelFee(reservation, seatTotal/ticketCount, ticketCount);
+
+        // 예매 당일이면 bookingFee 환불
+        boolean isSameDayBooking = reservation.getCreatedAt().toLocalDate().isEqual(LocalDateTime.now().toLocalDate());
+        int refundableBookingFee = isSameDayBooking ? bookingFee : 0;
+
+        // 배송비는 환불 불가 (정책상 배송 전 취소만 예외 처리 가능)
+        int refundAmount = seatTotal - cancelFee + refundableBookingFee;
+
+        payment.markAsCancelled(cancelFee, refundAmount);
 
         return toPaymentResponse(payment);
     }
@@ -197,5 +208,24 @@ public class PaymentService {
         }
 
         return sb.toString();
+    }
+
+    private int calculateCancelFee(Reservation reservation, int ticketPrice, int ticketCount) {
+        long dayBeforeShow = ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), reservation.getPerformance().getStartDate());
+        long daySinceBooking = ChronoUnit.DAYS.between(reservation.getCreatedAt().toLocalDate(), LocalDateTime.now().toLocalDate());
+
+        if(dayBeforeShow >= 10) {
+            if(daySinceBooking <= 7) return 0;
+            int feePerTicket = Math.min(4000, (int) (ticketPrice * 0.1));
+            return feePerTicket * ticketCount;
+        } else if(dayBeforeShow >= 7) {
+            return (int) (ticketPrice * 0.1) * ticketCount;
+        } else if(dayBeforeShow >= 3) {
+            return (int) (ticketPrice * 0.2) * ticketCount;
+        } else if(dayBeforeShow >= 1) {
+            return (int) (ticketPrice * 0.3) * ticketCount;
+        } else {
+            throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
+        }
     }
 }

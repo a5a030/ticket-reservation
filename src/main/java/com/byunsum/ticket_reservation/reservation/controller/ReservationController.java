@@ -36,7 +36,7 @@ public class ReservationController {
     public ResponseEntity<ReservationResponse> reservation(@RequestBody ReservationRequest request, @AuthenticationPrincipal Member member) {
         ReservationResponse response = reservationService.createReservation(request, member);
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "예매 조회", description = "예매 코드로 예매 정보를 조회합니다.")
@@ -51,16 +51,18 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "예매 확정", description = "공연 ID와 좌석 ID를 통해 예매를 확정합니다.")
+    @Operation(summary = "예매 확정", description = "공연 ID와 좌석 ID 리스트를 통해 예매를 확정합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "예매 확정 성공"),
             @ApiResponse(responseCode = "400", description = "좌석 정보가 잘못되었거나 이미 예매됨")
     })
     @PostMapping("/confirm")
-    public ResponseEntity<ReservationResponse> confirmReservation(@RequestParam Long performanceId, @RequestParam Long seatId, @AuthenticationPrincipal Member member) {
-        ReservationResponse response = reservationService.confirmReservation(performanceId, seatId, member);
+    public ResponseEntity<ReservationResponse> confirmReservation(@RequestBody ReservationRequest request, @AuthenticationPrincipal Member member) {
+        ReservationResponse response = reservationService.confirmReservation(
+                request.getPerformanceId(), request.getSeatIds(), member
+        );
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "예매 취소", description = "예매 코드를 통해 예매를 취소합니다. 예매가 취소되면 연동된 결제도 자동으로 취소됩니다.")

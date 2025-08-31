@@ -4,7 +4,9 @@ import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import com.byunsum.ticket_reservation.reservation.repository.ReservationSeatRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.domain.TicketReissueLog;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final ReservationRepository reservationRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final QrCodeGenerator qrCodeGenerator;
 
@@ -41,9 +46,10 @@ public class TicketService {
 
     private final ObjectMapper objectMapper;
 
-    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository, SlackNotifier slackNotifier, TicketReissueLogRepository ticketReissueLogRepository, ObjectMapper objectMapper) {
+    public TicketService(TicketRepository ticketRepository, ReservationRepository reservationRepository, ReservationSeatRepository reservationSeatRepository, QrCodeGenerator qrCodeGenerator, StringRedisTemplate stringRedisTemplate, TicketVerificationLogRepository ticketVerificationLogRepository, SlackNotifier slackNotifier, TicketReissueLogRepository ticketReissueLogRepository, ObjectMapper objectMapper) {
         this.ticketRepository = ticketRepository;
         this.reservationRepository = reservationRepository;
+        this.reservationSeatRepository = reservationSeatRepository;
         this.qrCodeGenerator = qrCodeGenerator;
         this.stringRedisTemplate = stringRedisTemplate;
         this.ticketVerificationLogRepository = ticketVerificationLogRepository;
@@ -53,53 +59,63 @@ public class TicketService {
     }
 
     @Transactional
-    public Ticket issueTicket(Long reservationId) {
-        if(ticketRepository.existsByReservationId(reservationId)) {
-            throw new CustomException(ErrorCode.TICKET_ALREADY_ISSUED);
-        }
-
+    public List<Ticket> issueTickets(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        String ticketCode = UUID.randomUUID().toString();
+        List<Ticket> tickets = new ArrayList<>();
 
-        reservation.setTicketCode(ticketCode);
-        reservationRepository.save(reservation);
+        for(ReservationSeat rs : reservation.getReservationSeats()) {
+            if(ticketRepository.existsByReservationSeatId(rs.getId())) {
+                throw new CustomException(ErrorCode.TICKET_ALREADY_ISSUED);
+            }
 
-        String qrImageUrl = qrCodeGenerator.generate(ticketCode);
+            String ticketCode = UUID.randomUUID().toString();
+            String qrImageUrl = qrCodeGenerator.generate(ticketCode);
 
-        Ticket ticket = Ticket.create(reservation, qrImageUrl, TICKET_VALID_DURATION);
-        Ticket saved = ticketRepository.save(ticket);
+            Ticket ticket = Ticket.create(rs, qrImageUrl, TICKET_VALID_DURATION);
+            ticketRepository.save(ticket);
 
-        stringRedisTemplate.opsForValue().set(
-                REDIS_KEY_PREFIX + ticketCode,
-                reservationId.toString(),
-                TICKET_VALID_DURATION.toMinutes(),
-                TimeUnit.MINUTES
-        );
+            stringRedisTemplate.opsForValue().set(
+                    REDIS_KEY_PREFIX + ticketCode,
+                    rs.getId().toString(),
+                    TICKET_VALID_DURATION.toMinutes(),
+                    TimeUnit.MINUTES
+            );
 
-        return saved;
+            tickets.add(ticket);
+        }
+
+        return tickets;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Ticket> getTicketsByReservationId(Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        List<Ticket> tickets = new ArrayList<>();
+
+        for(ReservationSeat rs : reservation.getReservationSeats()) {
+            ticketRepository.findByReservationSeatId(rs.getId()).ifPresent(tickets::add);
+        }
+
+        return tickets;
     }
 
     @Transactional
-    public Ticket getTicketByReservationId(Long reservationId) {
-        return ticketRepository.findByReservationId(reservationId)
-                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
-    }
-
-    @Transactional
-    public Ticket refreshQrCode(Long reservationId) {
-        Ticket ticket = ticketRepository.findByReservationId(reservationId)
+    public Ticket refreshQrCode(Long reservationSeatId) {
+        Ticket ticket = ticketRepository.findByReservationSeatId(reservationSeatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-        LocalDateTime performanceStart = ticket.getReservation().getPerformance().getStartTime();
+        LocalDateTime performanceStart = ticket.getReservationSeat()
+                .getReservation().getPerformance().getStartTime();
 
         if(LocalDateTime.now().isBefore(performanceStart.minusHours(3))) {
             throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
         }
 
         String oldCode = ticket.getTicketCode();
-
         String newCode = UUID.randomUUID().toString();
         String newQrImage =  qrCodeGenerator.generate(newCode);
 
@@ -108,7 +124,7 @@ public class TicketService {
 
         stringRedisTemplate.opsForValue().set(
                 REDIS_KEY_PREFIX + newCode,
-                reservationId.toString(),
+                reservationSeatId.toString(),
                 30, TimeUnit.MINUTES
         );
 
@@ -119,11 +135,13 @@ public class TicketService {
                 Duration.ofHours(48)
         );
 
-        String loginId = ticket.getReservation().getMember().getLoginId();
-        String username = ticket.getReservation().getMember().getUsername();
+        String loginId = ticket.getReservationSeat()
+                .getReservation().getMember().getLoginId();
+        String username = ticket.getReservationSeat()
+                .getReservation().getMember().getUsername();
 
         ticketReissueLogRepository.save(
-                new TicketReissueLog(oldCode, newCode, loginId, username, LocalDateTime.now())
+                new TicketReissueLog(ticket.getReservationSeat(), oldCode, newCode, loginId, username, LocalDateTime.now())
         );
 
         return ticket;
@@ -182,8 +200,9 @@ public class TicketService {
             Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
                     .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-            String performanceTitle = ticket.getReservation().getPerformance().getTitle();
-            String seatNo = ticket.getReservation().getSeat().getSeatNo();
+            String performanceTitle = ticket.getReservationSeat()
+                    .getReservation().getPerformance().getTitle();
+            String seatNo = ticket.getReservationSeat().getSeat().getSeatNo();
             LocalDateTime expiresAt = ticket.getExpiresAt();
 
             if(ticket.getStatus() == TicketStatus.USED) {

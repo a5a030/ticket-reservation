@@ -40,6 +40,28 @@ public class Payment {
     @Column(name = "account_number")
     private String accountNumber;
 
+    @Schema(description = "취소 수수료")
+    private Integer cancelFee;
+
+    @Schema(description = "실제 환불금액")
+    private Integer refundAmount;
+
+    public Integer getCancelFee() {
+        return cancelFee;
+    }
+
+    public void setCancelFee(Integer cancelFee) {
+        this.cancelFee = cancelFee;
+    }
+
+    public Integer getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(Integer refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
     public String getAccountNumber() {
         return accountNumber;
     }
@@ -95,9 +117,21 @@ public class Payment {
         this.status = PaymentStatus.PAID;
     }
 
-
     public void markAsCancelled() {
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
+        this.cancelFee = 0;
+        this.refundAmount = 0;
+    }
+
+    public void markAsCancelled(int cancelFee, int refundAmount) {
+        this.status = PaymentStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.cancelFee = cancelFee;
+        this.refundAmount = refundAmount;
+
+        if(this.reservation != null) {
+            this.reservation.cancel();
+        }
     }
 }

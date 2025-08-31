@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
 import jakarta.persistence.*;
 
 import java.time.Duration;
@@ -14,8 +15,8 @@ public class Ticket {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id")
-    private Reservation reservation;
+    @JoinColumn(name = "reservation_seat_id", nullable = false)
+    private ReservationSeat reservationSeat;
 
     private String ticketCode;
     private String qrImageUrl;
@@ -33,8 +34,8 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(Reservation reservation, String ticketCode, String qrImageUrl, LocalDateTime issuedAt, LocalDateTime expiresAt, TicketStatus status) {
-        this.reservation = reservation;
+    public Ticket(ReservationSeat reservationSeat, String ticketCode, String qrImageUrl, LocalDateTime issuedAt, LocalDateTime expiresAt, TicketStatus status) {
+        this.reservationSeat = reservationSeat;
         this.ticketCode = ticketCode;
         this.qrImageUrl = qrImageUrl;
         this.issuedAt = issuedAt;
@@ -42,12 +43,12 @@ public class Ticket {
         this.status = status;
     }
 
-    public static Ticket create(Reservation reservation, String  qrImageUrl, Duration validDuration) {
+    public static Ticket create(ReservationSeat reservationSeat, String  qrImageUrl, Duration validDuration) {
         String ticketCode = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
 
         return  new Ticket(
-                reservation,
+                reservationSeat,
                 ticketCode,
                 qrImageUrl,
                 now,
@@ -72,8 +73,8 @@ public class Ticket {
         return id;
     }
 
-    public Reservation getReservation() {
-        return reservation;
+    public ReservationSeat getReservationSeat() {
+        return reservationSeat;
     }
 
     public String getTicketCode() {

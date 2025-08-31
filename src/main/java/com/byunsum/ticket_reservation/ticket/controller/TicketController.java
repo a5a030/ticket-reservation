@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/tickets")
 @Tag(name = "티켓 발급 및 조회", description = "티켓 발급, 조회 및 QR 코드 재발급 API")
@@ -23,27 +25,27 @@ public class TicketController {
     }
 
     @PostMapping("/{reservationId}")
-    @Operation(summary = "티켓 발급", description = "예약 ID를 기반으로 티켓을 발급합니다.")
-    public ResponseEntity<Ticket> issueTicket(@PathVariable Long reservationId) {
-        Ticket ticket = ticketService.issueTicket(reservationId);
+    @Operation(summary = "티켓 발급", description = "예약 ID를 기반으로 좌석별 티켓을 발급합니다.")
+    public ResponseEntity<List<Ticket>> issueTickets(@PathVariable Long reservationId) {
+        List<Ticket> tickets = ticketService.issueTickets(reservationId);
 
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(tickets);
     }
 
     @GetMapping("/{reservationId}")
-    @Operation(summary = "티켓 조회", description = "예약 ID를 기반으로 티켓 정보를 조회합니다.")
-    public ResponseEntity<Ticket> getTicket(@PathVariable Long reservationId) {
-        Ticket ticket = ticketService.getTicketByReservationId(reservationId);
+    @Operation(summary = "티켓 조회", description = "예약 ID를 기반으로 발급된 모든 티켓 정보를 조회합니다.")
+    public ResponseEntity<List<Ticket>> getTickets(@PathVariable Long reservationId) {
+        List<Ticket> tickets = ticketService.getTicketsByReservationId(reservationId);
 
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(tickets);
     }
 
-    @PutMapping("/{reservationId}/qr")
-    @Operation(summary = "QR 코드 재발급", description = "예약 ID 기반으로 QR 코드를 재발급합니다. (공연 시작 3시간 전부터 가능)")
-    public ResponseEntity<QrResponse> refreshQR(@PathVariable Long reservationId) {
-        Ticket updatedTicket = ticketService.refreshQrCode(reservationId);
+    @PutMapping("/{reservationSeatId}/qr")
+    @Operation(summary = "QR 코드 재발급", description = "좌석 단위로 QR 코드를 재발급합니다. (공연 시작 3시간 전부터 가능)")
+    public ResponseEntity<QrResponse> refreshQR(@PathVariable Long reservationSeatId) {
+        Ticket updatedTicket = ticketService.refreshQrCode(reservationSeatId);
 
-        return ResponseEntity.ok(new QrResponse(reservationId, updatedTicket.getQrImageUrl()));
+        return ResponseEntity.ok(new QrResponse(reservationSeatId, updatedTicket.getQrImageUrl()));
     }
 
     @PostMapping("/verify")
@@ -56,8 +58,8 @@ public class TicketController {
     }
 
     public record QrResponse(
-            @Schema(description = "예약 ID")
-            Long reservationId,
+            @Schema(description = "예약 좌석 ID")
+            Long reservationSeatId,
 
             @Schema(description = "QR 코드 이미지 URL (Base64 인코딩 또는 이미지 경로 URL)",
                     example = "data:image/png;base64,iVBORw0... 또는 https://.../qr.png")

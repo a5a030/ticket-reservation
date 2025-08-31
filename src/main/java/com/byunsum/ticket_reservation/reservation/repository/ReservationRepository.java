@@ -12,9 +12,9 @@ import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     Optional<Reservation> findByReservationCode(String reservationCode);
-    Optional<Reservation> findBySeatId(Long seatId);
 
-    Long id(Long id);
+    @Query("select r from Reservation r join r.seats rs where rs.seat.id = :seatId")
+    Optional<Reservation> findBySeatId(@Param("seatId") Long seatId);
 
     List<Reservation> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 

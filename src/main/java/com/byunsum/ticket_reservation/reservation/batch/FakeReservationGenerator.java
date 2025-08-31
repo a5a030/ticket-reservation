@@ -23,9 +23,16 @@ public class FakeReservationGenerator {
         for (int i = 0; i < count; i++) {
             Long memberId = (long) ThreadLocalRandom.current().nextInt(1, userCount+1);
             Long performanceId = (long) ThreadLocalRandom.current().nextInt(1, performanceCount+1);
-            Long seatId = (long) ThreadLocalRandom.current().nextInt(1, seatPerPerformance+1);
 
-            requests.add(new ReservationRequest(memberId, performanceId, seatId));
+            int seatCount = ThreadLocalRandom.current().nextInt(1, 4);
+            List<Long> seatIds = new ArrayList<>();
+
+            for(int j=0; j<seatCount; j++){
+                Long seatId = (long) ThreadLocalRandom.current().nextInt(1, seatPerPerformance+1);
+                seatIds.add(seatId);
+            }
+
+            requests.add(new ReservationRequest(memberId, performanceId, seatIds));
         }
 
         return requests;
