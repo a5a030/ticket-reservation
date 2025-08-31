@@ -130,9 +130,11 @@ public class PaymentService {
 
         // 예매 당일이면 bookingFee 환불
         boolean isSameDayBooking = reservation.getCreatedAt().toLocalDate().isEqual(LocalDateTime.now().toLocalDate());
-        int refundableBookingFee = isSameDayBooking ? bookingFee : 0;
+        boolean beforeMidnight = LocalDateTime.now().isBefore(
+                reservation.getCreatedAt().toLocalDate().atTime(23,59,59)
+        );
+        int refundableBookingFee = (isSameDayBooking && beforeMidnight) ? bookingFee : 0;
 
-        // 배송비는 환불 불가 (정책상 배송 전 취소만 예외 처리 가능)
         int refundAmount = seatTotal - cancelFee + refundableBookingFee;
 
         payment.markAsCancelled(cancelFee, refundAmount);
