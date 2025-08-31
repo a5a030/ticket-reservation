@@ -228,4 +228,16 @@ public class PaymentService {
             throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
         }
     }
+
+    @Transactional
+    public void restorePayment(Long reservationId) {
+        Payment payment = paymentRepository.findByReservationId(reservationId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if(payment.getStatus() != PaymentStatus.PAID) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
+        payment.markAsCancelled();
+    }
 }

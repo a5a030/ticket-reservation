@@ -36,6 +36,10 @@ public class Payment {
     @Schema(description = "결제 취소 일시", nullable = true)
     private LocalDateTime cancelledAt;
 
+
+    @Schema(description = "재확정일시")
+    private LocalDateTime reconfirmedAt;
+
     @Schema(description = "계좌번호")
     @Column(name = "account_number")
     private String accountNumber;
@@ -133,5 +137,10 @@ public class Payment {
         if(this.reservation != null) {
             this.reservation.cancel();
         }
+    }
+
+    public void markAsReconfirmed() {
+        this.reconfirmedAt = LocalDateTime.now();
+        this.status = PaymentStatus.PAID;
     }
 }

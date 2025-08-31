@@ -180,6 +180,14 @@ public class ReservationService {
             throw new CustomException(ErrorCode.ALREADY_RECONFIRMED);
         }
 
+        if(reservation.getCancelledAt() == null) {
+            throw new CustomException(ErrorCode.RECONFIRM_NOT_ALLOWED);
+        }
+
+        if(reservation.getCancelledAt().plusMinutes(30).isBefore(LocalDateTime.now())) {
+            throw new CustomException(ErrorCode.RECONFIRM_EXPIRED);
+        }
+
         for(Seat seat : reservation.getSeats()) {
             String redisKey = "seat:reconfirm:" + seat.getId();
             String lockValue = redisTemplate.opsForValue().get(redisKey);
@@ -190,6 +198,7 @@ public class ReservationService {
         }
 
         reservation.reconfirm();
+        paymentService.restorePayment(reservation.getId());
 
         return toResponse(reservation);
     }

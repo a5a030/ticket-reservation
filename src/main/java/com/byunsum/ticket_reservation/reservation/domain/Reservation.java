@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.reservation.domain;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -57,6 +58,8 @@ public class Reservation {
     @Schema(description = "배송 방법 (DELIVERY / PICKUP)")
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
+
+
 
     public void addSeat(Seat seat) {
         if(seat.isReserved()) {
