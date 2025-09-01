@@ -59,7 +59,8 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
 
-
+    @Schema(description = "배송시작여부")
+    private boolean shipped = false;
 
     public void addSeat(Seat seat) {
         if(seat.isReserved()) {
@@ -199,5 +200,13 @@ public class Reservation {
 
     public List<ReservationSeat> getReservationSeats() {
         return seats;
+    }
+
+    public boolean isShipped() {
+        return shipped;
+    }
+
+    public void markAsShipped() {
+        this.shipped = true;
     }
 }

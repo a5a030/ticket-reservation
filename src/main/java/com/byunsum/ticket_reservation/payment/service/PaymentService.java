@@ -140,6 +140,11 @@ public class PaymentService {
         }
 
         Reservation reservation = payment.getReservation();
+
+        if(reservation.isShipped()) {
+            throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED_AFTER_SHIPMENT);
+        }
+
         Performance performance = reservation.getPerformance();
 
         if(reservation.getPerformance().getType() != PerformanceType.SPORTS) {
