@@ -10,9 +10,12 @@ import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
+import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
+import com.byunsum.ticket_reservation.reservation.domain.DeliveryMethod;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import com.byunsum.ticket_reservation.seat.domain.Seat;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,10 +62,24 @@ public class PaymentService {
             Reservation reservation = reservationRepository.findById(request.getReservationId())
                     .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
+            Performance performance = reservation.getPerformance();
+
+            if(reservation.getPerformance().getType() == PerformanceType.SPORTS) {
+                LocalDateTime gameStart = performance.getStartDateTime();
+                LocalDateTime bookingDeadline = gameStart.plusHours(1);
+
+                if(LocalDateTime.now().isAfter(bookingDeadline)) {
+                    throw new CustomException(ErrorCode.BOOKING_CLOSED);
+                }
+
+                reservation.setDeliveryFee(0);
+                reservation.setDeliveryMethod(DeliveryMethod.PICKUP);
+            }
+
             reservation.confirm();
 
             int seatTotal = reservation.getSeats().stream()
-                    .mapToInt(seat -> seat.getPrice())
+                    .mapToInt(Seat::getPrice)
                     .sum();
             int bookingFee = 2000 * reservation.getQuantity();
             int deliveryFee = reservation.getDeliveryFee();

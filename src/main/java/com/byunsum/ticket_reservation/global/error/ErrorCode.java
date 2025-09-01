@@ -36,6 +36,7 @@ public enum ErrorCode {
     CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공연 당일 및 이후에는 예매 취소가 불가능합니다."),
     RECONFIRM_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "해당 예매는 재확정할 수 없습니다"),
     RECONFIRM_EXPIRED(HttpStatus.BAD_REQUEST, "재확정 가능 시간이 지났습니다."),
+    BOOKING_CLOSED(HttpStatus.BAD_REQUEST, "예매 가능 시간이 지났습니다."),
     ALREADY_CANCELED_PAYMENT(HttpStatus.CONFLICT, "이미 취소된 결제입니다."),
     UNAUTHORIZED_CANCEL(HttpStatus.FORBIDDEN, "본인의 예매만 취소할 수 있습니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "결제 내역을 찾을 수 없습니다."),
