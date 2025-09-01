@@ -142,7 +142,7 @@ public class PaymentService {
         Reservation reservation = payment.getReservation();
 
         if(reservation.isShipped()) {
-            throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED_AFTER_SHIPMENT);
+            throw new CustomException(ErrorCode.DELIVERY_ALREADY_STARTED);
         }
 
         Performance performance = reservation.getPerformance();
