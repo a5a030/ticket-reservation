@@ -3,7 +3,10 @@ package com.byunsum.ticket_reservation.reservation.controller;
 import com.byunsum.ticket_reservation.reservation.service.ReservationQueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/queue")
@@ -31,5 +34,12 @@ public class ReservationQueueController {
     @Operation(summary = "대기열 활성화 여부 확인", description = "입장 허용된 세션인지 확인합니다.")
     public boolean isActive(@RequestParam String sessionId) {
         return reservationQueueService.isActive(sessionId);
+    }
+
+    @PostMapping("/{performanceId}/allow")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "대기열 입장 허용", description = "앞에서 N명의 대기열을 활성화시켜 예매 가능 상태로 만듭니다.")
+    public List<String> allowEntry(@PathVariable Long performanceId, @RequestParam int batchSize) {
+        return reservationQueueService.allowEntry(performanceId, batchSize);
     }
 }
