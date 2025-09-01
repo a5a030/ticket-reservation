@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.payment.domain;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -140,7 +142,12 @@ public class Payment {
     }
 
     public void markAsReconfirmed() {
+        if(this.status != PaymentStatus.CANCELLED) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
         this.reconfirmedAt = LocalDateTime.now();
         this.status = PaymentStatus.PAID;
+        this.cancelledAt = null;
     }
 }

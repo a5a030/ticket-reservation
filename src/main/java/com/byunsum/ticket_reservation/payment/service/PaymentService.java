@@ -279,7 +279,7 @@ public class PaymentService {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
-        payment.markAsCancelled();
+        payment.markAsReconfirmed();
     }
 
     private void validateCancelDeadline(LocalDate performanceDate) {
