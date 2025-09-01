@@ -26,6 +26,9 @@ public enum ErrorCode {
     ALREADY_RECONFIRMED(HttpStatus.CONFLICT, "이미 재확정된 예매입니다."),
     UNAUTHORIZED_RECONFIRM(HttpStatus.FORBIDDEN, "본인의 예매만 재확정할 수 있습니다."),
 
+    QUEUE_NOT_FOUND(HttpStatus.BAD_REQUEST, "대기열에 등록되지 않았습니다."),
+    QUEUE_EXPIRED(HttpStatus.BAD_REQUEST, "대기열 토큰이 만료되었습니다."),
+
     PERFORMANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "공연 정보를 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예매 정보를 찾을 수 없습니다."),
     SEAT_ALREADY_RESERVED(HttpStatus.CONFLICT, "이미 예매된 좌석입니다."),
