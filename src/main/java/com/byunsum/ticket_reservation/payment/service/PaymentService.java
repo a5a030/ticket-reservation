@@ -140,6 +140,7 @@ public class PaymentService {
         }
 
         Reservation reservation = payment.getReservation();
+        Performance performance = reservation.getPerformance();
 
         if(reservation.getPerformance().getType() != PerformanceType.SPORTS) {
             validateCancelDeadline(reservation.getPerformance().getStartDate());
@@ -151,8 +152,21 @@ public class PaymentService {
                 .sum();
         int bookingFee = 2000 * ticketCount;
         int deliveryFee = reservation.getDeliveryFee();
-        int cancelFee = calculateCancelFee(reservation, seatTotal/ticketCount, ticketCount);
+        int cancelFee;
 
+        if(performance.getType() == PerformanceType.SPORTS) {
+            LocalDateTime gameStart = performance.getStartDateTime();
+            LocalDateTime cancelDeadline = gameStart.minusHours(4);
+
+            if(LocalDateTime.now().isAfter(cancelDeadline)) {
+                throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
+            }
+
+            cancelFee = (int) (seatTotal * 0.1);
+        } else {
+            validateCancelDeadline(performance.getStartDate());
+            cancelFee = calculateCancelFee(reservation, seatTotal/ticketCount, ticketCount);
+        }
         // 예매 당일이면 bookingFee 환불
         boolean isSameDayBooking = reservation.getCreatedAt().toLocalDate().isEqual(LocalDateTime.now().toLocalDate());
         boolean beforeMidnight = LocalDateTime.now().isBefore(
