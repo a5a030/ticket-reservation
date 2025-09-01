@@ -23,8 +23,10 @@ public class ReservationQueueService {
         String sessionId = UUID.randomUUID().toString();
         String key = "waiting:queue:" + performanceId;
 
-        stringRedisTemplate.opsForList().rightPush(key, sessionId);
+        Long size = stringRedisTemplate.opsForList().rightPush(key, sessionId);
         stringRedisTemplate.opsForValue().set("waiting:member:" + sessionId, memberId.toString(), Duration.ofHours(2));
+
+        System.out.println("joinQueue → key=" + key + ", sessionId=" + sessionId + ", newSize=" + size);
 
         return sessionId;
     }
@@ -50,10 +52,14 @@ public class ReservationQueueService {
 
         for(int i=0; i<batchSize; i++) {
             String sessionId = stringRedisTemplate.opsForList().leftPop(key);
+            System.out.println("allowEntry pop → key=" + key + ", sessionId=" + sessionId);
+
             if(sessionId == null) break;
 
             String activeKey = "waiting:active:" + sessionId;
             stringRedisTemplate.opsForValue().set(activeKey, "ACTIVE", Duration.ofMinutes(5));
+
+            activatedSessions.add(sessionId);
         }
 
         return activatedSessions;

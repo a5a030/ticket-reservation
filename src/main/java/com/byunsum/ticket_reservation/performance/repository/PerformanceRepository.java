@@ -19,4 +19,7 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
 
     @Query
     Page<Performance> findAllByOrderByStartDateAscTimeAsc(Pageable pageable);
+
+    @Query("select p.id from Performance p")
+    List<Long> findAllIds();
 }
