@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
+import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -45,10 +46,13 @@ public class PerformanceResponse {
     @Schema(description = "회차별 1인당 최대 예매수")
     private int maxTicketsPerPerson;
 
+    @Schema(description = "예매정책을 위한 분류")
+    private PerformanceType type;
+
     public PerformanceResponse() {
     }
 
-    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson) {
+    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson, PerformanceType type) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -61,6 +65,7 @@ public class PerformanceResponse {
         this.preReservationOpenDate = preReservationOpenDate;
         this.generalOpenDate = generalOpenDate;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
+        this.type = type;
     }
 
     //불변객체
@@ -110,5 +115,9 @@ public class PerformanceResponse {
 
     public int getMaxTicketsPerPerson() {
         return maxTicketsPerPerson;
+    }
+
+    public PerformanceType getType() {
+        return type;
     }
 }

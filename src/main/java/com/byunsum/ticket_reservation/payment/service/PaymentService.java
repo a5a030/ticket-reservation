@@ -10,12 +10,15 @@ import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
+import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -120,6 +123,11 @@ public class PaymentService {
         }
 
         Reservation reservation = payment.getReservation();
+
+        if(reservation.getPerformance().getType() != PerformanceType.SPORTS) {
+            validateCancelDeadline(reservation.getPerformance().getStartDate());
+        }
+
         int ticketCount = reservation.getQuantity();
         int seatTotal = reservation.getSeats().stream()
                 .mapToInt(seat -> seat.getPrice())
@@ -241,5 +249,21 @@ public class PaymentService {
         }
 
         payment.markAsCancelled();
+    }
+
+    private void validateCancelDeadline(LocalDate performanceDate) {
+        LocalDate dayBefore = performanceDate.minusDays(1);
+        DayOfWeek dayOfWeek = dayBefore.getDayOfWeek();
+
+        LocalDateTime deadline;
+        if(dayOfWeek == DayOfWeek.SATURDAY) {
+            deadline = dayBefore.atTime(11,0);
+        } else {
+            deadline = dayBefore.atTime(17,0);
+        }
+
+        if(LocalDateTime.now().isAfter(deadline)) {
+            throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
+        }
     }
 }

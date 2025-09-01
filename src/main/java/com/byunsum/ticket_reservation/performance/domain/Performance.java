@@ -28,12 +28,16 @@ public class Performance {
     private LocalDateTime preReservationOpenDateTime;
     private LocalDateTime generalReservationOpenDateTime;
     private int maxTicketsPerPerson;
+
+    @Enumerated(EnumType.STRING)
+    private PerformanceType type;
+
     //출연진, 가격 등 확장 예정
 
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson) {
+    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
         this.title = title;
         this.description = description;
         this.venue = venue;
@@ -45,6 +49,7 @@ public class Performance {
         this.preReservationOpenDateTime = preReservationOpenDateTime;
         this.generalReservationOpenDateTime = generalReservationOpenDateTime;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
+        this.type = type;
     }
 
     public Long getId() {
@@ -163,5 +168,13 @@ public class Performance {
 
     public void setMaxTicketsPerPerson(int maxTicketsPerPerson) {
         this.maxTicketsPerPerson = maxTicketsPerPerson;
+    }
+
+    public PerformanceType getType() {
+        return type;
+    }
+
+    public void setType(PerformanceType type) {
+        this.type = type;
     }
 }

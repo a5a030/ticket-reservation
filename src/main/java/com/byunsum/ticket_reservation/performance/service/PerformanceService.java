@@ -33,7 +33,8 @@ public class PerformanceService {
                 request.getPosterUrl(),
                 request.getPreReservationOpenDate(),
                 request.getGeneralOpenDate(),
-                request.getMaxTicketsPerPerson()
+                request.getMaxTicketsPerPerson(),
+                request.getType()
         );
 
         performanceRepository.save(performance);
@@ -54,7 +55,8 @@ public class PerformanceService {
                         performance.getPosterUrl(),
                         performance.getPreReservationOpenDateTime(),
                         performance.getGeneralReservationOpenDateTime(),
-                        performance.getMaxTicketsPerPerson()
+                        performance.getMaxTicketsPerPerson(),
+                        performance.getType()
                 ))
                 .collect(Collectors.toList());
     }
@@ -75,7 +77,8 @@ public class PerformanceService {
                 performance.getPosterUrl(),
                 performance.getPreReservationOpenDateTime(),
                 performance.getGeneralReservationOpenDateTime(),
-                performance.getMaxTicketsPerPerson()
+                performance.getMaxTicketsPerPerson(),
+                performance.getType()
         );
     }
 
@@ -102,7 +105,8 @@ public class PerformanceService {
                         p.getPosterUrl(),
                         p.getPreReservationOpenDateTime(),
                         p.getGeneralReservationOpenDateTime(),
-                        p.getMaxTicketsPerPerson()
+                        p.getMaxTicketsPerPerson(),
+                        p.getType()
                 ));
     }
 }

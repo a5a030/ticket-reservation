@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
+import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -41,6 +42,9 @@ public class PerformanceRequest {
 
     @Schema(description = "회차당 1인 최대 예매 수량")
     private int maxTicketsPerPerson;
+
+    @Schema(description = "예매정책을 위한 분류")
+    private PerformanceType type;
 
     public PerformanceRequest() {}
 
@@ -130,5 +134,13 @@ public class PerformanceRequest {
 
     public void setMaxTicketPerPerson(int maxTicketsPerPerson) {
         this.maxTicketsPerPerson = maxTicketsPerPerson;
+    }
+
+    public PerformanceType getType() {
+        return type;
+    }
+
+    public void setType(PerformanceType type) {
+        this.type = type;
     }
 }
