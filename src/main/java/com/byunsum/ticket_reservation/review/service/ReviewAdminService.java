@@ -77,7 +77,7 @@ public class ReviewAdminService {
                 .toList();
 
         // 키워드 요약(summary 필드 기준으로 명사 뽑기)
-        List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCOunt(summaries, 2, 5);
+        List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCount(summaries, 2, 5);
 
         ReviewDashboardResponse response = new ReviewDashboardResponse(
                 performanceId,
