@@ -44,4 +44,12 @@ public class ReservationQueueController {
     public List<String> allowEntry(@PathVariable Long performanceId, @RequestParam int batchSize) {
         return reservationQueueService.allowEntry(performanceId, batchSize);
     }
+
+    @GetMapping("/{performanceId}/stats")
+    @Operation(summary = "대기열 통계", description = "내 순번, 뒤 인원, 예상 대기 시간을 조회합니다.")
+    public ReservationQueueService.QueueStats getStats(@PathVariable Long performanceId,
+                                                       @RequestParam String sessionId,
+                                                       @RequestParam(defaultValue = "5") int usersPerSecond) {
+        return reservationQueueService.getQueueStats(performanceId, sessionId, usersPerSecond);
+    }
 }

@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.reservation.service;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,5 +71,37 @@ public class ReservationQueueService {
         }
 
         return activatedSessions;
+    }
+
+    public QueueStats getQueueStats(Long performanceId, String sessionId, int usersPerSecond) {
+        String key = "waiting:queue:" + performanceId;
+        List<String> queue = stringRedisTemplate.opsForList().range(key, 0, -1);
+
+        if(queue == null || !queue.contains(sessionId)) {
+            throw new CustomException(ErrorCode.QUEUE_NOT_FOUND);
+        }
+
+        int position = queue.indexOf(sessionId) + 1;
+        int behind = queue.size() - position;
+
+        double estimatedSeconds = (1.0 / usersPerSecond) * (position - 1);
+        long minutes = (long) estimatedSeconds / 60;
+        long seconds = (long) estimatedSeconds % 60;
+
+        if(minutes <= 60) {
+            return new QueueStats(position, behind, 0, minutes, seconds);
+        } else {
+            long hours = minutes / 60;
+            minutes = minutes % 60;
+
+            return new QueueStats(position, behind, hours, minutes, seconds);
+        }
+    }
+
+    public record QueueStats(int position,
+                             int behind,
+                             @JsonInclude(JsonInclude.Include.NON_DEFAULT) long hours,
+                             long minutes,
+                             long seconds) {
     }
 }
