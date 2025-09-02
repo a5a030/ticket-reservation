@@ -52,6 +52,10 @@ public class Payment {
     @Schema(description = "실제 환불금액")
     private Integer refundAmount;
 
+    @Schema(description = "취소사유")
+    @Enumerated(EnumType.STRING)
+    private PaymentCancelReason cancelReason;
+
     public Integer getCancelFee() {
         return cancelFee;
     }
@@ -123,18 +127,27 @@ public class Payment {
         this.status = PaymentStatus.PAID;
     }
 
-    public void markAsCancelled() {
-        this.status = PaymentStatus.CANCELLED;
-        this.cancelledAt = LocalDateTime.now();
-        this.cancelFee = 0;
-        this.refundAmount = 0;
-    }
-
     public void markAsCancelled(int cancelFee, int refundAmount) {
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
         this.cancelFee = cancelFee;
         this.refundAmount = refundAmount;
+
+        if(this.reservation != null) {
+            this.reservation.cancel();
+        }
+    }
+
+    public void cancel(PaymentCancelReason reason) {
+        if(isCancelled()) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        }
+
+        this.status = PaymentStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.cancelFee = 0;
+        this.refundAmount = 0;
+        this.cancelReason = reason;
 
         if(this.reservation != null) {
             this.reservation.cancel();

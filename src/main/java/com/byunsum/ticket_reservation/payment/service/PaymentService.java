@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
+import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
@@ -241,7 +242,7 @@ public class PaymentService {
 
         Payment payment = optional.get();
         if(payment.getStatus() == PaymentStatus.PAID) {
-            payment.markAsCancelled();
+            payment.cancel(PaymentCancelReason.USER_REQUEST);
         }
     }
 

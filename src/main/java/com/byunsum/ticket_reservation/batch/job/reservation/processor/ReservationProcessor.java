@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.batch.processor;
+package com.byunsum.ticket_reservation.batch.job.reservation.processor;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;

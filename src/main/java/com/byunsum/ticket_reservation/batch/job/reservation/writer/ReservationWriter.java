@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.batch.writer;
+package com.byunsum.ticket_reservation.batch.job.reservation.writer;
 
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;

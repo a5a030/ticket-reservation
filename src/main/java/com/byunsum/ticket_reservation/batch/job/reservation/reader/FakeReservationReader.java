@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.batch.reader;
+package com.byunsum.ticket_reservation.batch.job.reservation.reader;
 
 import com.byunsum.ticket_reservation.reservation.batch.FakeReservationGenerator;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
