@@ -54,11 +54,8 @@ public class BankTransferExpirationTasklet implements Tasklet {
                 stringRedisTemplate.opsForValue().set(key, "LOCKED", Duration.ofSeconds(ttl));
             }
 
-            expiredPayment.cancel(PaymentCancelReason.BANK_TRANSFER_EXPIRED);
-
             count++;
         }
-
 
         slackNotifier.send("[BankTransferExpiration] 오늘 무통장 만료 처리 건수: " + count);
         return RepeatStatus.FINISHED;
