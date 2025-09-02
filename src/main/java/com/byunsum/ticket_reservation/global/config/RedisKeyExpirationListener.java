@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.global.config;
 
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
+import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
@@ -34,42 +35,14 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
     public void onMessage(Message message, byte[] pattern) {
         String expireKey = message.toString();
 
-        if(expireKey.startsWith("reservation:timeout:")){
-            Long reservationId = Long.parseLong(expireKey.replace("reservation:timeout:",""));
-
-            reservationRepository.findById(reservationId).ifPresent(reservation -> {
-                if(!reservation.isCancelled()) {
-                    reservation.cancel();
-
-                    reservation.getReservationSeats().forEach(seat -> {
-                        seat.getSeat().release();
-                        seatRepository.save(seat.getSeat());
-                    });
-
-                    reservationRepository.save(reservation);
-
-                    System.out.println("[TTL] 결제 대기 시간 초과로 예매 자동 취소됨: " + reservationId);
-                    slackNotifier.send("[TTL] 결제 대기 시간 초과 → 예매 자동 취소 (ID: " + reservationId + ")");
-                }
-            });
+        if(expireKey.startsWith("reservation:timeout:")) {
+            Long reservationId = Long.parseLong(expireKey.replace("reservation:timeout:", ""));
+            cancelReservationWithSeats(reservationId, "[TTL] 결제 대기 시간 초과 → 예매 자동 취소");
         }
 
-        if(expireKey.startsWith("payment:bank:timeout:")){
-            Long reservationId = Long.parseLong(expireKey.replace("payment:bank:timeout:",""));
-
-            reservationRepository.findById(reservationId).ifPresent(reservation -> {
-                if(!reservation.isCancelled()) {
-                    reservation.cancel();
-
-                    reservation.getReservationSeats().forEach(seat -> {
-                        seat.getSeat().release();
-                        seatRepository.save(seat.getSeat());
-                    });
-
-                    System.out.println("[TTL] 무통장입금 미입금으로 예매 자동 취소됨: " + reservationId);
-                    slackNotifier.send("[TTL] 무통장입금 미입금 → 예매 자동 취소 (ID: " + reservationId + ")");
-                }
-            });
+        if(expireKey.startsWith("payment:bank:timeout:")) {
+            Long reservationId = Long.parseLong(expireKey.replace("payment:bank:timeout:", ""));
+            cancelBankTransferReservation(reservationId);
         }
 
         if(expireKey.startsWith("seat:reconfirm:")){
@@ -85,9 +58,46 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
                     reservationRepository.save(reservation);
                 }
 
-                System.out.println("[TTL] 재확정 가능 시간 만료 → 좌석 해제 및 예매 만료 처리 (seatId: " + seatId + ")");
                 slackNotifier.send("[TTL] 재확정 만료 → 좌석 해제 및 예매 만료 처리 (seatId: " + seatId + ")");
             });
         }
     }
+
+    private void cancelReservationWithSeats(Long reservationId, String message) {
+        reservationRepository.findById(reservationId).ifPresent(reservation -> {
+            if(!reservation.isCancelled()) {
+                reservation.cancel();
+
+                reservation.getReservationSeats().forEach(seat -> {
+                    seat.getSeat().release();
+                    seatRepository.save(seat.getSeat());
+                });
+
+                reservationRepository.save(reservation);
+
+                slackNotifier.send("[TTL] 결제 대기 시간 초과 → 예매 자동 취소 (ID: " + reservationId + ")");
+            }
+        });
+    }
+
+    private void cancelBankTransferReservation(Long reservationId) {
+        reservationRepository.findById(reservationId).ifPresent(reservation -> {
+            if (!reservation.isCancelled()) {
+                reservation.cancel();
+
+                reservation.getReservationSeats().forEach(seat -> {
+                    seat.getSeat().release();
+                    seatRepository.save(seat.getSeat());
+                });
+
+                paymentRepository.findByReservationId(reservationId).ifPresent(payment -> {
+                    payment.cancel(PaymentCancelReason.BANK_TRANSFER_EXPIRED);
+                    paymentRepository.save(payment);
+                    slackNotifier.send("[TTL] 무통장입금 미입금 → 결제/예매 자동 취소 (reservationId: " + reservationId +
+                            ", paymentId: " + payment.getId() + ")");
+                });
+            }
+        });
+    }
+
 }
