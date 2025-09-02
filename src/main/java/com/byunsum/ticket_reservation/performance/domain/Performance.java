@@ -32,6 +32,9 @@ public class Performance {
     @Enumerated(EnumType.STRING)
     private PerformanceType type;
 
+    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PerformanceRound> rounds = new ArrayList<>();
+
     //출연진, 가격 등 확장 예정
 
 
@@ -124,13 +127,6 @@ public class Performance {
         this.posterUrl = posterUrl;
     }
 
-    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
-    private List<Seat> seats = new ArrayList<>();
-
-    public List<Seat> getSeats() {
-        return seats;
-    }
-
     public LocalDateTime getStartTime() {
         return LocalDateTime.of(this.startDate, this.time);
     }
@@ -176,5 +172,13 @@ public class Performance {
 
     public void setType(PerformanceType type) {
         this.type = type;
+    }
+
+    public List<PerformanceRound> getRounds() {
+        return rounds;
+    }
+
+    public void addRound(PerformanceRound round) {
+        this.rounds.add(round);
     }
 }

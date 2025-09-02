@@ -1,6 +1,5 @@
 package com.byunsum.ticket_reservation.reservation.domain;
 
-import ch.qos.logback.core.status.Status;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
 

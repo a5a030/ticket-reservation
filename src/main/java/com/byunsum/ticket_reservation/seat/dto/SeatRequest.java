@@ -10,8 +10,8 @@ public class SeatRequest {
     @Schema(description = "좌석 가격")
     private int price;
 
-    @Schema(description = "연결할 공연 ID", example = "1")
-    private Long performanceId;
+    @Schema(description = "연결할 공연 회차ID", example = "1")
+    private Long performanceRoundId;
 
     public SeatRequest() {
     }
@@ -32,11 +32,11 @@ public class SeatRequest {
         this.price = price;
     }
 
-    public Long getPerformanceId() {
-        return performanceId;
+    public Long getPerformanceRoundId() {
+        return performanceRoundId;
     }
 
-    public void setPerformanceId(Long performanceId) {
-        this.performanceId = performanceId;
+    public void setPerformanceRoundId(Long performanceRoundId) {
+        this.performanceRoundId = performanceRoundId;
     }
 }

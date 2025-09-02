@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.seat.domain;
 
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,18 +13,18 @@ public class Seat {
     private int price;
     private boolean isReserved;
 
-    @ManyToOne
-    @JoinColumn(name = "performance_id")
-    private Performance performance;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "performance_round_id")
+    private PerformanceRound performanceRound;
 
     public Seat() {
     }
 
-    public Seat(String seatNo, int price, boolean isReserved, Performance performance) {
+    public Seat(String seatNo, int price, boolean isReserved, PerformanceRound performanceRound) {
         this.seatNo = seatNo;
         this.price = price;
         this.isReserved = isReserved;
-        this.performance = performance;
+        this.performanceRound = performanceRound;
     }
 
     public Long getId() {
@@ -58,12 +59,12 @@ public class Seat {
         isReserved = reserved;
     }
 
-    public Performance getPerformance() {
-        return performance;
+    public PerformanceRound getPerformanceRound() {
+        return performanceRound;
     }
 
-    public void setPerformance(Performance performance) {
-        this.performance = performance;
+    public void setPerformanceRound(PerformanceRound performanceRound) {
+        this.performanceRound = performanceRound;
     }
 
     public void release() {

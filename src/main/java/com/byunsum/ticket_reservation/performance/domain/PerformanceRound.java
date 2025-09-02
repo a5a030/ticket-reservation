@@ -1,8 +1,11 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
+import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class PerformanceRound {
@@ -16,6 +19,9 @@ public class PerformanceRound {
     private LocalDateTime date;
     private String startTime;
     private int roundNumber;
+
+    @OneToMany(mappedBy = "performanceRound", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Seat> seats = new ArrayList<>();
 
     public PerformanceRound() {
     }
@@ -45,5 +51,8 @@ public class PerformanceRound {
 
     public int getRoundNumber() {
         return roundNumber;
+    }
+    public List<Seat> getSeats() {
+        return seats;
     }
 }

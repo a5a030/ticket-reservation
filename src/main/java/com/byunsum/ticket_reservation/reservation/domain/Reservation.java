@@ -31,7 +31,7 @@ public class Reservation {
     private Member member;
 
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReservationSeat> seats = new ArrayList<>();
+    private List<ReservationSeat> reservationSeats = new ArrayList<>();
 
     public boolean isCancelled() {
         return this.status == ReservationStatus.CANCELLED;
@@ -49,7 +49,7 @@ public class Reservation {
 
     @Schema(description = "예매수량")
     public int getQuantity() {
-        return seats.size();
+        return reservationSeats.size();
     }
 
     @Schema(description = "배송비")
@@ -68,7 +68,7 @@ public class Reservation {
         }
         seat.setReserved(true); //좌석 상태 업데이트
         ReservationSeat rs = new ReservationSeat(this, seat);
-        this.seats.add(rs);
+        this.reservationSeats.add(rs);
     }
 
     public int getDeliveryFee() {
@@ -137,7 +137,7 @@ public class Reservation {
             throw new CustomException(ErrorCode.ALREADY_CANCELED);
         }
 
-        for(ReservationSeat seat : seats) {
+        for(ReservationSeat seat : reservationSeats) {
             seat.cancel();
         }
 
@@ -162,13 +162,13 @@ public class Reservation {
     }
 
     public List<Seat> getSeats() {
-        return seats.stream()
+        return reservationSeats.stream()
                 .map(ReservationSeat::getSeat)
                 .toList();
     }
 
     public void addReservationSeat(ReservationSeat rs) {
-        this.seats.add(rs);
+        this.reservationSeats.add(rs);
     }
 
     public boolean isReconfirmed() {
@@ -199,7 +199,7 @@ public class Reservation {
     }
 
     public List<ReservationSeat> getReservationSeats() {
-        return seats;
+        return reservationSeats;
     }
 
     public boolean isShipped() {

@@ -4,6 +4,7 @@ import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
+import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import com.byunsum.ticket_reservation.seat.dto.SeatRequest;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
@@ -16,29 +17,24 @@ import java.util.Optional;
 @Service
 public class SeatService {
     private final SeatRepository seatRepository;
-    private final PerformanceRepository performanceRepository;
+    private final PerformanceRoundRepository performanceRoundRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
-    public SeatService(SeatRepository seatRepository, PerformanceRepository performanceRepository, RedisTemplate<String, String> redisTemplate) {
+    public SeatService(SeatRepository seatRepository, PerformanceRoundRepository performanceRoundRepository, RedisTemplate<String, String> redisTemplate) {
         this.seatRepository = seatRepository;
-        this.performanceRepository = performanceRepository;
+        this.performanceRoundRepository = performanceRoundRepository;
         this.redisTemplate = redisTemplate;
     }
 
     public void createSeat(SeatRequest request) {
-        Optional<Performance> performanceOpt = performanceRepository.findById(request.getPerformanceId());
-
-        if(performanceOpt.isEmpty()) {
-            throw new IllegalArgumentException("해당 ID의 공연이 존재하지 않습니다.");
-        }
-
-        Performance performance = performanceOpt.get();
+        var performanceRound = performanceRoundRepository.findById(request.getPerformanceRoundId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 공연 회차가 존재하지 않습니다."));
 
         Seat seat = new Seat(
                 request.getSeatNo(),
                 request.getPrice(),
                 false, //기본 예약 상태 아님
-                performance
+                performanceRound
         );
 
         seatRepository.save(seat);
