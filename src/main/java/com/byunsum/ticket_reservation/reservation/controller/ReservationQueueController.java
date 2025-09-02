@@ -1,9 +1,11 @@
 package com.byunsum.ticket_reservation.reservation.controller;
 
+import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.reservation.service.ReservationQueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,8 @@ public class ReservationQueueController {
 
     @PostMapping("/{performanceId}/join")
     @Operation(summary = "대기열 등록", description = "해당 공연의 예매 대기열에 등록합니다.")
-    public String joinQueue(@PathVariable Long performanceId, @RequestParam Long memberId) {
-        return reservationQueueService.joinQueue(performanceId, memberId);
+    public String joinQueue(@PathVariable Long performanceId, @AuthenticationPrincipal Member member) {
+        return reservationQueueService.joinQueue(performanceId, member.getId());
     }
 
     @GetMapping("/{performanceId}/position")

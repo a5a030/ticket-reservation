@@ -20,6 +20,13 @@ public class ReservationQueueService {
     }
 
     public String joinQueue(Long performanceId, Long memberId) {
+        String memberKey = "waiting:member:" + performanceId + ":" + memberId;
+
+        String existingSessionId = stringRedisTemplate.opsForValue().get(memberKey);
+        if(existingSessionId != null) {
+            return existingSessionId;
+        }
+
         String sessionId = UUID.randomUUID().toString();
         String key = "waiting:queue:" + performanceId;
 
