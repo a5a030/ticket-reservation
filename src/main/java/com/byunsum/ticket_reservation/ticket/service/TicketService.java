@@ -171,7 +171,7 @@ public class TicketService {
         String blacklistKey = "blacklist:ticket:" + ticketCode;
 
         if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
-            resultStatus = "CANCELLED";
+            resultStatus = TicketStatus.CANCELLED.name();
             responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
                     null, null, null,
                     verifier, deviceInfo, verifiedAt);
@@ -192,7 +192,7 @@ public class TicketService {
         String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
 
         if(reservationId == null) {
-            resultStatus = "EXPIRED";
+            resultStatus = TicketStatus.EXPIRED.name();
             responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.",
                     null, null, null,
                     verifier, deviceInfo, verifiedAt);
@@ -206,7 +206,7 @@ public class TicketService {
             LocalDateTime expiresAt = ticket.getExpiresAt();
 
             if(ticket.getStatus() == TicketStatus.USED) {
-                resultStatus = "ALREADY_USED";
+                resultStatus = TicketStatus.USED.name();
                 responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
@@ -216,21 +216,21 @@ public class TicketService {
                         verifier, ticketCode, deviceInfo
                 ));
 
-                resultStatus = "CANCELLED";
+                resultStatus = TicketStatus.CANCELLED.name();
                 responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
-                resultStatus = "EXPIRED";
-                responseDto = new TicketVerifyResponse(false, "EXPIRED", "티켓이 만료되었습니다.",
+                resultStatus = TicketStatus.EXPIRED.name();
+                responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             } else {
                 ticket.setStatus(TicketStatus.USED);
                 ticketRepository.save(ticket);
 
-                resultStatus = "USED";
-                responseDto = new TicketVerifyResponse(true, "USED", "입장 완료",
+                resultStatus = TicketStatus.USED.name();
+                responseDto = new TicketVerifyResponse(true, resultStatus, "입장 완료",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             }
