@@ -23,6 +23,17 @@ public class Member implements UserDetails {
     private String email;
     private String role; // ROLE_USER or ROLE_ADMIN
 
+    public Member() {
+    }
+
+    public Member(String loginId, String password, String username, String email, String role) {
+        this.loginId = loginId;
+        this.password = password;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+    }
+
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
 

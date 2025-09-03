@@ -112,6 +112,12 @@ public class Reservation {
         this.status = ReservationStatus.PENDING;
     }
 
+    public Reservation(Performance performance, Member member) {
+        this();
+        this.performance = performance;
+        this.member = member;
+    }
+
     public void setPerformance(Performance performance) {
         this.performance = performance;
     }
