@@ -105,6 +105,10 @@ public class Ticket {
     }
 
     public void markExpired() {
+        if(!this.status.canTransitionTo(TicketStatus.EXPIRED)) {
+            throw new IllegalStateException("현재 상태에서는 만료 처리 불가: " + this.status);
+        }
+
         this.status = TicketStatus.EXPIRED;
     }
 

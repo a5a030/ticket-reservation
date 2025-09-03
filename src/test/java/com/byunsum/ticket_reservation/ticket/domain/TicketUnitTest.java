@@ -22,7 +22,7 @@ public class TicketUnitTest {
     @Test
     @DisplayName("RESERVED → USED 전이는 불가")
     void reservedToUsedNotAllowed() {
-        assertTrue(TicketStatus.RESERVED.canTransitionTo(TicketStatus.USED));
+        assertFalse(TicketStatus.RESERVED.canTransitionTo(TicketStatus.USED));
     }
 
     @Test
@@ -65,5 +65,55 @@ public class TicketUnitTest {
         ticket.markExpired();
 
         assertEquals(TicketStatus.EXPIRED, ticket.getStatus());
+    }
+
+    @Test
+    @DisplayName("PAID -> REFUNDED 전이는 허용")
+    void paidToRefundedAllowed() {
+        assertTrue(TicketStatus.PAID.canTransitionTo(TicketStatus.REFUNDED));
+    }
+
+    @Test
+    @DisplayName("ISSUED -> CANCELLED")
+    void issuedToCancelledAllowed() {
+        assertTrue(TicketStatus.ISSUED.canTransitionTo(TicketStatus.CANCELLED));
+    }
+
+    @Test
+    @DisplayName("ISSUED -> EXPIRED")
+    void issuedToExpiredAllowed() {
+        assertTrue(TicketStatus.ISSUED.canTransitionTo(TicketStatus.EXPIRED));
+    }
+
+    @Test
+    @DisplayName("USED 상태는 추가 전이 불가")
+    void usedNoFurtherTransition() {
+        assertFalse(TicketStatus.USED.canTransitionTo(TicketStatus.CANCELLED));
+        assertFalse(TicketStatus.USED.canTransitionTo(TicketStatus.REFUNDED));
+        assertFalse(TicketStatus.USED.canTransitionTo(TicketStatus.EXPIRED));
+    }
+
+    @Test
+    @DisplayName("CANCELLED 상태는 추가 전이 불가")
+    void cancelledNoFurtherTransition() {
+        assertFalse(TicketStatus.CANCELLED.canTransitionTo(TicketStatus.ISSUED));
+    }
+
+    @Test
+    @DisplayName("REFUNDED 상태는 추가 전이 불가")
+    void refundedNoFurtherTransition() {
+        assertFalse(TicketStatus.REFUNDED.canTransitionTo(TicketStatus.ISSUED));
+    }
+
+    @Test
+    @DisplayName("INVALIDATED 상태는 추가 전이 불가")
+    void invalidatedNoFurtherTransition() {
+        assertFalse(TicketStatus.INVALIDATED.canTransitionTo(TicketStatus.ISSUED));
+    }
+
+    @Test
+    @DisplayName("EXPIRED 상태는 추가 전이 불가")
+    void expiredNoFurtherTransition() {
+        assertFalse(TicketStatus.EXPIRED.canTransitionTo(TicketStatus.REFUNDED));
     }
 }

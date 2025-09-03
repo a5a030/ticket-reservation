@@ -43,4 +43,29 @@ public class TicketJpaTest {
         Ticket found = ticketRepository.findById(ticket.getId()).orElseThrow();
         assertThrows(IllegalStateException.class, found::markUsed);
     }
+
+    @Test
+    @DisplayName("ISSUED 상태 티켓은 만료 처리 가능")
+    void issuedTicketCanExpire() {
+        ReservationSeat seat = reservationSeatRepository.save(new ReservationSeat());
+        Ticket ticket = Ticket.create(seat, "qr.png", Duration.ofHours(1));
+        ticketRepository.save(ticket);
+
+        Ticket found = ticketRepository.findById(ticket.getId()).orElseThrow();
+        found.markExpired();
+
+        assertThat(found.getStatus()).isEqualTo(TicketStatus.EXPIRED);
+    }
+
+    @Test
+    @DisplayName("USED 상태 티켓은 만료 처리 불가")
+    void usedTicketCannotExpire() {
+        ReservationSeat seat = reservationSeatRepository.save(new ReservationSeat());
+        Ticket ticket = Ticket.create(seat, "qr.png", Duration.ofHours(1));
+        ticket.markUsed();
+        ticketRepository.save(ticket);
+
+        Ticket found = ticketRepository.findById(ticket.getId()).orElseThrow();
+        assertThrows(IllegalStateException.class, found::markExpired);
+    }
 }

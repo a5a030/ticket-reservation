@@ -14,7 +14,7 @@ public enum TicketStatus {
         return switch (this) {
             case RESERVED -> target == PAID || target == EXPIRED;
             case PAID -> target == ISSUED || target == REFUNDED;
-            case ISSUED -> target == USED || target == CANCELLED || target == INVALIDATED;
+            case ISSUED -> target == USED || target == CANCELLED || target == INVALIDATED || target == EXPIRED;
             case USED, CANCELLED, REFUNDED, INVALIDATED, EXPIRED -> false;
         };
     }
