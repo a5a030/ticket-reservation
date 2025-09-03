@@ -181,4 +181,12 @@ public class Performance {
     public void addRound(PerformanceRound round) {
         this.rounds.add(round);
     }
+
+    public LocalDateTime getEndDateTime() {
+        if(endDate == null || time == null) {
+            return null;
+        }
+
+        return LocalDateTime.of(endDate, time);
+    }
 }

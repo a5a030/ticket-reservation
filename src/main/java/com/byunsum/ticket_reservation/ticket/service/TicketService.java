@@ -25,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -128,12 +130,20 @@ public class TicketService {
                 30, TimeUnit.MINUTES
         );
 
-        //보안 강화 위해 기존 코드 블랙리스트 등록
-        stringRedisTemplate.opsForValue().set(
-                "blacklist:ticket:" + oldCode,
-                "true",
-                Duration.ofHours(48)
-        );
+        LocalDateTime performanceEnd = ticket.getReservationSeat()
+                .getReservation().getPerformance().getEndDateTime();
+
+        if(performanceEnd == null) {
+            throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+        }
+
+        long expiresAtMillis = performanceEnd.plusDays(1)
+                .atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+
+        String blacklistKey = "blacklist:ticket:" + oldCode;
+        stringRedisTemplate.opsForValue().set(blacklistKey, "true");
+        stringRedisTemplate.expireAt(blacklistKey, new Date(expiresAtMillis));
 
         String loginId = ticket.getReservationSeat()
                 .getReservation().getMember().getLoginId();
@@ -268,12 +278,21 @@ public class TicketService {
         //Redis TTl 삭제
         stringRedisTemplate.delete(REDIS_KEY_PREFIX + ticketCode);
 
+        LocalDateTime performanceEnd = ticket.getReservationSeat()
+                .getReservation().getPerformance().getEndDateTime();
+
+        if(performanceEnd == null) {
+            throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+        }
+
+        long expiresAtMillis = performanceEnd.plusDays(1)
+                .atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+
         //블랙리스트 키 등록
-        stringRedisTemplate.opsForValue().set(
-                "blacklist:ticket:" + ticketCode,
-                "true",
-                Duration.ofHours(48)
-        );
+        String blacklistKey = "blacklist:ticket:" + ticketCode;
+        stringRedisTemplate.opsForValue().set(blacklistKey, "true");
+        stringRedisTemplate.expireAt(blacklistKey, new java.util.Date(expiresAtMillis));
     }
 
     private void cachedVerifyResponse(String cacheKey, TicketVerifyResponse responseDto) {
