@@ -1,6 +1,5 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
 import jakarta.persistence.*;
 
@@ -53,20 +52,20 @@ public class Ticket {
                 qrImageUrl,
                 now,
                 now.plus(validDuration),
-                TicketStatus.ACTIVE
+                TicketStatus.ISSUED
         );
     }
 
     public void refresh(String newTicketCode, String newQrImageUrl, Duration validDuration) {
         //기존 티켓 무효화
-        this.status = TicketStatus.CANCELLED;
+        this.status = TicketStatus.INVALIDATED;
 
         //새로 갱신
         this.ticketCode = newTicketCode;
         this.qrImageUrl = newQrImageUrl;
         this.issuedAt = LocalDateTime.now();
         this.expiresAt = LocalDateTime.now().plus(validDuration);
-        this.status = TicketStatus.ACTIVE;
+        this.status = TicketStatus.ISSUED;
     }
 
     public Long getId() {
@@ -98,6 +97,10 @@ public class Ticket {
     }
 
     public void markUsed() {
+        if (!this.status.canTransitionTo(TicketStatus.USED)) {
+            throw new IllegalStateException("현재 상태에서 검표 불가: " + this.status);
+        }
+
         this.status = TicketStatus.USED;
     }
 
@@ -109,7 +112,7 @@ public class Ticket {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
-    public boolean isActive() {
-        return this.status ==  TicketStatus.ACTIVE && !isExpired();
+    public boolean isIssued() {
+        return this.status ==  TicketStatus.ISSUED && !isExpired();
     }
 }
