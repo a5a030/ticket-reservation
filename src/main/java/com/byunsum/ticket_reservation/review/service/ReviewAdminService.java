@@ -104,28 +104,6 @@ public class ReviewAdminService {
         return response;
     }
 
-    private List<KeywordSummary> extractTopKeywords(List<Review> reviews, int limit) {
-        Map<String, Integer> keywordCount = new HashMap<>();
-
-        for(Review review : reviews) {
-            if(review.getSummary() != null) {
-                String[] words = review.getSummary().split("\\s+");
-
-                for(String word : words) {
-                    if(word.length() >= 2) {
-                        keywordCount.put(word, keywordCount.getOrDefault(word, 0) + 1);
-                    }
-                }
-            }
-        }
-
-        return keywordCount.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(limit)
-                .map(e -> new KeywordSummary(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-    }
-
     public void evictDashboardCache(Long performanceId) {
         String cacheKey = "dashboard::" + performanceId;
         stringRedisTemplate.delete(cacheKey);

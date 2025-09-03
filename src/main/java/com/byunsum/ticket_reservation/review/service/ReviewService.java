@@ -9,11 +9,9 @@ import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
 import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
-import com.byunsum.ticket_reservation.review.external.SentimentClient;
-import com.byunsum.ticket_reservation.review.external.SentimentResponse;
-import com.byunsum.ticket_reservation.review.external.SummaryClient;
-import com.byunsum.ticket_reservation.review.external.SummaryResponse;
+import com.byunsum.ticket_reservation.review.external.*;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,13 +26,15 @@ public class ReviewService {
     private final SentimentClient sentimentClient;
     private final SummaryClient summaryClient;
     private final ReviewAdminService reviewAdminService;
+    private final KeywordClient keywordClient;
 
-    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository, SentimentClient sentimentClient, SummaryClient summaryClient, ReviewAdminService reviewAdminService) {
+    public ReviewService(ReviewRepository reviewRepository, ReservationRepository reservationRepository, SentimentClient sentimentClient, SummaryClient summaryClient, ReviewAdminService reviewAdminService, @Qualifier("fallbackKeywordClient") KeywordClient keywordClient) {
         this.reviewRepository = reviewRepository;
         this.reservationRepository = reservationRepository;
         this.sentimentClient = sentimentClient;
         this.summaryClient = summaryClient;
         this.reviewAdminService = reviewAdminService;
+        this.keywordClient = keywordClient;
     }
 
     @Transactional
@@ -97,6 +97,12 @@ public class ReviewService {
     }
 
     private ReviewResponse toResponse(Review review) {
+        String baseText = (review.getSummary() != null && !review.getSummary().isBlank())
+                ? review.getSummary()
+                : review.getContent();
+
+        List<String> keywords = keywordClient.extractKeywords(baseText);
+
         return new ReviewResponse(
                 review.getId(),
                 review.getReservation().getId(),
@@ -105,6 +111,7 @@ public class ReviewService {
                 review.getSentiment(),
                 review.getSentimentScore(),
                 review.getSummary(),
+                keywords,
                 review.getCreatedAt()
         );
     }

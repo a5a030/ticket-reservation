@@ -30,10 +30,13 @@ public class ReviewResponse {
     @Schema(description = "작성일시")
     private LocalDateTime createdAt;
 
+    @Schema(description = "추출된 키워드 리스트")
+    private java.util.List<String> keywords;
+
     public ReviewResponse() {
     }
 
-    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, String summary, LocalDateTime createdAt) {
+    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, String summary, java.util.List<String> keywords, LocalDateTime createdAt) {
         this.id = id;
         this.reservationId = reservationId;
         this.content = content;
@@ -41,6 +44,7 @@ public class ReviewResponse {
         this.sentiment = sentiment;
         this.sentimentScore = sentimentScore;
         this.summary = summary;
+        this.keywords = keywords;
         this.createdAt = createdAt;
     }
 
@@ -74,5 +78,9 @@ public class ReviewResponse {
 
     public String getSummary() {
         return summary;
+    }
+
+    public java.util.List<String> getKeywords() {
+        return keywords;
     }
 }
