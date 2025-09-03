@@ -12,6 +12,7 @@ stateDiagram-v2
     ISSUED --> USED : 검표 완료
     ISSUED --> CANCELLED : 사용자 취소
     ISSUED --> INVALIDATED : 재발급 시 무효화
+    ISSUED --> EXPIRED : TTL 만료
 
     USED --> [*]
     CANCELLED --> [*]
@@ -34,6 +35,7 @@ stateDiagram-v2
 | ISSUED      | 검표          | USED        | 공연 입장        |
 | ISSUED      | 사용자 취소   | CANCELLED   | 공연 전까지만    |
 | ISSUED      | 재발급        | INVALIDATED | 기존 QR 무효     |
+|   ISSUED | TTL 만료 | EXPIRED | 공연 시간 경과 |
 | USED        | -             | [종료]        | 더 이상 전이 없음 |
 | CANCELLED   | -             | [종료]        | Dead state      |
 | REFUNDED    | -             | [종료]        | Dead state      |
