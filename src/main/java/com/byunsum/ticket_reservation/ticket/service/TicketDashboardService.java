@@ -18,7 +18,7 @@ public class TicketDashboardService {
     }
 
     public VerificationStatsResponse getStats(LocalDateTime start, LocalDateTime end) {
-        long total = logRepository.count();
+        long total = logRepository.countByVerifiedAtBetween(start, end);
         long success = logRepository.countByResultAndVerifiedAtBetween("USED", start, end);
 
         double successRate = total == 0 ? 0 : (double) success / total * 100;
