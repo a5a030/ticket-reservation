@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
+import com.byunsum.ticket_reservation.DummyFactory;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketUnitTest {
     private ReservationSeat dummySeat() {
-        return new ReservationSeat();
+        return DummyFactory.dummyReservationSeat();
     }
 
     @Test
@@ -117,3 +118,4 @@ public class TicketUnitTest {
         assertFalse(TicketStatus.EXPIRED.canTransitionTo(TicketStatus.REFUNDED));
     }
 }
+

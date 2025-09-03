@@ -71,6 +71,10 @@ public class Reservation {
         this.reservationSeats.add(rs);
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public int getDeliveryFee() {
         return deliveryFee;
     }

@@ -1,7 +1,11 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
+import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationSeatRepository;
+import com.byunsum.ticket_reservation.seat.domain.Seat;
+import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,12 +24,20 @@ public class TicketJpaTest {
 
     @Autowired
     private ReservationSeatRepository reservationSeatRepository;
+    @Autowired
+    private ReservationRepository reservationRepository;
+    @Autowired
+    private SeatRepository seatRepository;
 
     @Test
     @DisplayName("티켓 생성 후 JPA 저장 → 상태 ISSUED 확인")
     void createAndPersistTicket() {
-        ReservationSeat seat = reservationSeatRepository.save(new ReservationSeat());
-        Ticket ticket = Ticket.create(seat, "qr.png", Duration.ofHours(1));
+        Reservation reservation = reservationRepository.save(new Reservation());
+        Seat seat = seatRepository.save(new Seat());
+
+        ReservationSeat rs = reservationSeatRepository.save(new ReservationSeat(reservation, seat));
+
+        Ticket ticket = Ticket.create(rs, "qr.png", Duration.ofHours(1));
         ticketRepository.save(ticket);
 
         Ticket found = ticketRepository.findById(ticket.getId()).orElseThrow();

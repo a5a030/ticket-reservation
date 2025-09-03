@@ -61,4 +61,12 @@ public class ReservationSeat {
     public LocalDateTime getCancelledAt() {
         return cancelledAt;
     }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+    }
+
+    public void setSeat(Seat seat) {
+        this.seat = seat;
+    }
 }
