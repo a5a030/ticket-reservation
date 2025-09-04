@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.ticket;
 
+import com.byunsum.ticket_reservation.DummyFactory;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
@@ -21,9 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,31 +58,9 @@ public class TicketBlacklistItIntegrationTest {
     @DisplayName("취소된 티켓은 공연 종료일+1dlf TTL로 블랙리스트 등록된다")
     void cancelledTicket_blacklistExpireAtPerformanceEndPlusDay() {
         //given
-        Performance performance = new Performance();
-        performance.setTitle("테스트 공연");
-        performance.setStartDate(LocalDate.now());
-        performance.setEndDate(LocalDate.now().plusDays(1));
-        performance.setTime(LocalTime.of(23, 0));
-        performanceRepository.save(performance);
+        ReservationSeat seat = DummyFactory.dummyReservationSeatPersisted(performanceRepository, memberRepository, reservationRepository, seatRepository, reservationSeatRepository);
 
-        PerformanceRound round = new PerformanceRound(performance,
-                LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.of(19,0)),
-                "1회차", 100);
-        performance.addRound(round);
-
-        Seat seat = new Seat("A1", 10000, true, round);
-        seatRepository.save(seat);
-
-        Member member = new Member("id", "pw", "테스터", "test@test.com", "ROLE_USER");
-        memberRepository.save(member);
-
-        Reservation reservation = new Reservation(performance, member);
-        reservationRepository.save(reservation);
-
-        ReservationSeat rs = new ReservationSeat(reservation, seat);
-        reservationSeatRepository.save(rs);
-
-        Ticket ticket = Ticket.create(rs, "qr.png", java.time.Duration.ofHours(1));
+        Ticket ticket = Ticket.create(seat, "qr.png", Duration.ofHours(1));
         ticketRepository.save(ticket);
 
         //when
