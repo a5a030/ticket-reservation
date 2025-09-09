@@ -7,6 +7,7 @@ import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentMethod;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
+import com.byunsum.ticket_reservation.payment.repository.RefundHistoryRepository;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
@@ -24,6 +25,7 @@ public class PaymentServiceTest {
     private PaymentService paymentService;
     private PaymentRepository paymentRepository;
     private ReservationRepository reservationRepository;
+    private RefundHistoryRepository refundHistoryRepository;
 
     @BeforeEach
     public void setup() {
@@ -32,7 +34,7 @@ public class PaymentServiceTest {
         paymentService = new PaymentService(
                 paymentRepository,
                 reservationRepository,
-                null, null, null
+                null, null, null, null
         );
     }
 

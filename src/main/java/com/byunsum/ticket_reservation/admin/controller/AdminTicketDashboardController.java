@@ -1,6 +1,8 @@
-package com.byunsum.ticket_reservation.ticket.controller;
+package com.byunsum.ticket_reservation.admin.controller;
 
+import com.byunsum.ticket_reservation.ticket.dto.TicketReissueStatsResponse;
 import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
+import com.byunsum.ticket_reservation.ticket.repository.TicketReissueLogRepository;
 import com.byunsum.ticket_reservation.ticket.service.TicketDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,16 +18,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/tickets")
 @PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "관리자 대시보드 - 티켓 검증 통계", description = "티켓 검증 로그 기반 통계 조회 API")
+@Tag(name = "관리자 티켓 대시보드 API", description = "티켓 검증 및 재발급 통계 집계")
 public class AdminTicketDashboardController {
     private final TicketDashboardService ticketDashboardService;
+    private final TicketReissueLogRepository ticketReissueLogRepository;
 
-    public AdminTicketDashboardController(TicketDashboardService ticketDashboardService) {
+    public AdminTicketDashboardController(TicketDashboardService ticketDashboardService, TicketReissueLogRepository ticketReissueLogRepository  ) {
         this.ticketDashboardService = ticketDashboardService;
+        this.ticketReissueLogRepository = ticketReissueLogRepository;
     }
 
     @Operation(
@@ -46,5 +51,17 @@ public class AdminTicketDashboardController {
                                                               @Parameter(description = "조회 종료 시간 (yyyy-MM-dd'T'HH:mm:ss)", example = "2025-08-19T23:59:59") @RequestParam LocalDateTime end
     ) {
         return ResponseEntity.ok(ticketDashboardService.getStats(start, end));
+    }
+
+    @Operation(summary = "회원별 티켓 재발급 통계", description = "회원 ID 기준으로 티켓 재발급 횟수를 집계합니다.")
+    @GetMapping("/reissue-stats/member")
+    public ResponseEntity<List<TicketReissueStatsResponse>> getReissueStatsByMember() {
+        return ResponseEntity.ok(ticketReissueLogRepository.getReissueStatsByMember());
+    }
+
+    @Operation(summary = "공연별 티켓 재발급 통계", description = "공연별 티켓 재발급 횟수를 집계합니다.")
+    @GetMapping("/reissue-stats/performance")
+    public ResponseEntity<List<TicketReissueStatsResponse>> getReissueStatsByPerformance() {
+        return ResponseEntity.ok(ticketReissueLogRepository.getReissueStatsByPerformance());
     }
 }

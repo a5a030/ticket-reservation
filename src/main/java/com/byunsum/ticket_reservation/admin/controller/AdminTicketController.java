@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.ticket.controller;
+package com.byunsum.ticket_reservation.admin.controller;
 
 import com.byunsum.ticket_reservation.ticket.domain.TicketReissueLog;
 import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Tag(name = "관리자 티켓 API", description = "티켓 검증, 목록 조회 등 관리자 기능")
+@Tag(name = "관리자 티켓 API", description = "티켓 검증 로그 및 재발급 로그 조회")
 @RestController
 @RequestMapping("/admin/tickets")
 @PreAuthorize("hasRole('ADMIN')")
