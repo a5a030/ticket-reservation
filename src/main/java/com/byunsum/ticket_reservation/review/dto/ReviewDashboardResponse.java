@@ -1,33 +1,34 @@
 package com.byunsum.ticket_reservation.review.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
-import java.util.Map;
 
 public class ReviewDashboardResponse {
+    @Schema(description = "공연 ID")
     private Long performanceId;
+
+    @Schema(description = "공연 제목")
     private String performanceTitle;
-    private int totalCount;
-    private int positiveCount;
-    private int negativeCount;
-    private int neutralCount;
-    private double positiveRatio;
-    private double averageRating;
 
-    private List<KeywordSummary> topKeywords;
+    @Schema(description = "리뷰 통계 (긍/부정/중립, 평균 평점)")
+    private ReviewStatisticsResponse statistics;
 
-    public ReviewDashboardResponse() {
-    }
+    @Schema(description = "키워드 TOP5")
+    private List<KeywordSummary> keywords;
 
-    public ReviewDashboardResponse(Long performanceId, String performanceTitle, int totalCount, int positiveCount, int negativeCount, int neutralCount, double positiveRatio, double averageRating, List<KeywordSummary> topKeywords) {
+    @Schema(description = "대표 리뷰 예시")
+    private List<ReviewResponse> sampleReviews;
+
+    public ReviewDashboardResponse(Long performanceId, String performanceTitle,
+                                   ReviewStatisticsResponse statistics,
+                                   List<KeywordSummary> keywords,
+                                   List<ReviewResponse> sampleReviews) {
         this.performanceId = performanceId;
         this.performanceTitle = performanceTitle;
-        this.totalCount = totalCount;
-        this.positiveCount = positiveCount;
-        this.negativeCount = negativeCount;
-        this.neutralCount = neutralCount;
-        this.positiveRatio = positiveRatio;
-        this.averageRating = averageRating;
-        this.topKeywords = topKeywords;
+        this.statistics = statistics;
+        this.keywords = keywords;
+        this.sampleReviews = sampleReviews;
     }
 
     public Long getPerformanceId() {
@@ -38,31 +39,15 @@ public class ReviewDashboardResponse {
         return performanceTitle;
     }
 
-    public int getTotalCount() {
-        return totalCount;
+    public ReviewStatisticsResponse getStatistics() {
+        return statistics;
     }
 
-    public int getPositiveCount() {
-        return positiveCount;
+    public List<KeywordSummary> getKeywords() {
+        return keywords;
     }
 
-    public int getNegativeCount() {
-        return negativeCount;
-    }
-
-    public int getNeutralCount() {
-        return neutralCount;
-    }
-
-    public double getPositiveRatio() {
-        return positiveRatio;
-    }
-
-    public double getAverageRating() {
-        return averageRating;
-    }
-
-    public List<KeywordSummary> getTopKeywords() {
-        return topKeywords;
+    public List<ReviewResponse> getSampleReviews() {
+        return sampleReviews;
     }
 }

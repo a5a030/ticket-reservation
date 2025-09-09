@@ -8,6 +8,8 @@ import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
 import com.byunsum.ticket_reservation.review.dto.ReviewDashboardResponse;
+import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
+import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,11 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class ReviewAdminService {
@@ -57,7 +55,7 @@ public class ReviewAdminService {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
-        int totalCount = reviews.size();
+        // 1. 통계 DTO 생성
 
         long positiveCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.POSITIVE).count();
         long negativeCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.NEGATIVE).count();
@@ -68,27 +66,44 @@ public class ReviewAdminService {
                 .average()
                 .orElse(0.0);
 
-        double positiveRatio = totalCount > 0 ? (positiveCount * 100.0 / totalCount) : 0.0;
+        ReviewStatisticsResponse statistics = new ReviewStatisticsResponse(
+                performanceId,
+                positiveCount,
+                negativeCount,
+                neutralCount,
+                averageRating
+        );
 
-        //형태소 분석 기반 키워드 추출
+        // 2. 형태소 분석 기반 키워드 추출(요약 필드 기반)
         List<String> summaries = reviews.stream()
                 .map(Review::getSummary)
                 .filter(s -> s != null && !s.isBlank())
                 .toList();
 
-        // 키워드 요약(summary 필드 기준으로 명사 뽑기)
-        List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCount(summaries, 2, 5);
+        List<KeywordSummary> keywords = keywordService.extractTopKeywordsWithCount(summaries, 2, 5);
+
+        // 3. 샘플 리뷰(최신 3개)
+        List<ReviewResponse> samples = reviews.stream()
+                .sorted()
+                .map(r -> new ReviewResponse(
+                        r.getId(),
+                        r.getReservation().getId(),
+                        r.getContent(),
+                        r.getRating(),
+                        r.getSentiment(),
+                        r.getSentimentScore(),
+                        r.getSummary(),
+                        List.of(),
+                        r.getCreatedAt()
+                ))
+                .toList();
 
         ReviewDashboardResponse response = new ReviewDashboardResponse(
                 performanceId,
                 performance.getTitle(),
-                totalCount,
-                (int) positiveCount,
-                (int) negativeCount,
-                (int) neutralCount,
-                positiveRatio,
-                averageRating,
-                keywordSummaries
+                statistics,
+                keywords,
+                samples
         );
 
         try {
