@@ -43,4 +43,14 @@ public class AdminPaymentStatisticsController {
         result.put("topGenres", paymentStatisticService.getTopGenres(3));
         return result;
     }
+
+    @GetMapping("/summary")
+    @Operation(summary = "결제 요약 지표", description = "총 매출액, 총 결제 건수, 평균 결제 금액 반환")
+    public Map<String, Long> getSummary() {
+        Map<String, Long> result = new HashMap<>();
+        result.put("totalRevenue", paymentStatisticService.getTotalPaymentAmount());
+        result.put("totalCount", paymentStatisticService.getTotalPaymentCount());
+        result.put("averageAmount", paymentStatisticService.getAveragePaymentAmount());
+        return result;
+    }
 }

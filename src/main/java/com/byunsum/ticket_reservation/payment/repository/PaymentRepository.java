@@ -32,6 +32,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT coalesce(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'PAID'")
     Long getTotalPaymentAmount();
 
+    @Query("select count(p) from Payment p where p.status = 'PAID'")
+    Long getTotalPaymentCount();
+
     @Query("SELECT p.paymentMethod AS paymentMethod, COUNT(p) AS count, SUM(p.amount) AS total " +
             "FROM Payment p WHERE p.status = 'PAID' GROUP BY p.paymentMethod")
     List<PaymentStatistics> getPaymentStatistics();

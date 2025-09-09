@@ -36,4 +36,20 @@ public class PaymentStatisticService {
                 .toList();
     }
 
+    public Long getTotalPaymentAmount() {
+        return paymentRepository.getTotalPaymentAmount();
+    }
+
+    public Long getTotalPaymentCount() {
+        return paymentRepository.getTotalPaymentCount();
+    }
+
+    public Long getAveragePaymentAmount() {
+        Long totalAmount = paymentRepository.getTotalPaymentAmount();
+        Long totalCount = paymentRepository.getTotalPaymentCount();
+
+        if(totalAmount == null) return 0L;
+        return totalAmount / totalCount;
+    }
+
 }
