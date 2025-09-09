@@ -36,6 +36,7 @@ public enum ErrorCode {
     SEAT_ALREADY_RELEASED(HttpStatus.BAD_REQUEST, "좌석이 이미 풀려 재확정할 수 없습니다."),
     SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없습니다."),
     ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 예매입니다."),
+    INVALID_PAYMENT_AMOUNT(HttpStatus.BAD_REQUEST, "잘못된 취소 금액입니다."),
     CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "공연 당일 및 이후에는 예매 취소가 불가능합니다."),
     DELIVERY_ALREADY_STARTED(HttpStatus.BAD_REQUEST, "배송이 시작된 티켓은 직접 취소할 수 없습니다."),
     RECONFIRM_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "해당 예매는 재확정할 수 없습니다"),

@@ -38,7 +38,6 @@ public class Payment {
     @Schema(description = "결제 취소 일시", nullable = true)
     private LocalDateTime cancelledAt;
 
-
     @Schema(description = "재확정일시")
     private LocalDateTime reconfirmedAt;
 
@@ -52,9 +51,14 @@ public class Payment {
     @Schema(description = "실제 환불금액")
     private Integer refundAmount;
 
+    @Schema(description = "부분 취소된 누적 금액")
+    private Integer partialAmount = 0;
+
     @Schema(description = "취소사유")
     @Enumerated(EnumType.STRING)
     private PaymentCancelReason cancelReason;
+
+
 
     public Integer getCancelFee() {
         return cancelFee;
@@ -123,6 +127,18 @@ public class Payment {
         return cancelledAt;
     }
 
+    public LocalDateTime getReconfirmedAt() {
+        return reconfirmedAt;
+    }
+
+    public Integer getPartialAmount() {
+        return partialAmount;
+    }
+
+    public PaymentCancelReason getCancelReason() {
+        return cancelReason;
+    }
+
     public void markAsPaid() {
         this.status = PaymentStatus.PAID;
     }
@@ -162,5 +178,31 @@ public class Payment {
         this.reconfirmedAt = LocalDateTime.now();
         this.status = PaymentStatus.PAID;
         this.cancelledAt = null;
+    }
+
+    public void cancelPartial(int cancelAmount, PaymentCancelReason reason) {
+        if(isCancelled()) {
+            throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        }
+
+        if(cancelAmount <= 0 || cancelAmount > this.amount) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
+        }
+
+        this.partialAmount += cancelAmount;
+        this.cancelReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+
+        if(this.partialAmount >= this.amount) {
+            this.status = PaymentStatus.CANCELLED;
+            this.refundAmount = 0;
+
+            if(this.reservation != null) {
+                this.reservation.cancel();
+            }
+        } else {
+            this.status = PaymentStatus.PARTIAL_CANCELLED;
+            this.refundAmount = this.amount - this.partialAmount;
+        }
     }
 }

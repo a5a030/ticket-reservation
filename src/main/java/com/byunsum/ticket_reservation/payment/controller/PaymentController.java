@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.payment.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.payment.dto.PaymentCancelRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
@@ -63,6 +64,23 @@ public class PaymentController {
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long id, @AuthenticationPrincipal Member member) {
         PaymentResponse response = paymentService.cancelPayment(id, member.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "결제 부분취소", description = "결제 금액의 일부를 부분취소합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "부분취소 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 취소 요청"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PatchMapping("/{id}/partial-cancel")
+    public ResponseEntity<PaymentResponse> cancelPartialPayment(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Member member,
+            @RequestBody PaymentCancelRequest request
+            ) {
+        PaymentResponse response = paymentService.cancelPartialPayment(id, member.getId(), request);
 
         return ResponseEntity.ok(response);
     }

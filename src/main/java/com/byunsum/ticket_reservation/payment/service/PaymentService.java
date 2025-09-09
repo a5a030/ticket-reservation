@@ -7,10 +7,13 @@ import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
+import com.byunsum.ticket_reservation.payment.domain.RefundHistory;
+import com.byunsum.ticket_reservation.payment.dto.PaymentCancelRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
+import com.byunsum.ticket_reservation.payment.repository.RefundHistoryRepository;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.byunsum.ticket_reservation.reservation.domain.DeliveryMethod;
@@ -36,23 +39,29 @@ public class PaymentService {
     private final StringRedisTemplate redisTemplate;
     private final SlackNotifier slackNotifier;
     private final NotificationService notificationService;
+    private final RefundHistoryRepository refundHistoryRepository;
 
-    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate, SlackNotifier slackNotifier, NotificationService notificationService) {
+    public PaymentService(PaymentRepository paymentRepository, ReservationRepository reservationRepository, StringRedisTemplate redisTemplate, SlackNotifier slackNotifier, NotificationService notificationService, RefundHistoryRepository refundHistoryRepository) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
         this.redisTemplate = redisTemplate;
         this.slackNotifier = slackNotifier;
         this.notificationService = notificationService;
+        this.refundHistoryRepository = refundHistoryRepository;
     }
 
     private PaymentResponse toPaymentResponse(Payment payment) {
         return new PaymentResponse(
                 payment.getId(),
                 payment.getAmount(),
+                payment.getPartialAmount(),
+                payment.getCancelFee(),
+                payment.getRefundAmount(),
                 payment.getPaymentMethod(),
                 payment.getStatus(),
                 payment.getCreatedAt(),
                 payment.getCancelledAt(),
+                payment.getCancelReason(),
                 payment.getAccountNumber()
         );
     }
@@ -183,6 +192,35 @@ public class PaymentService {
         int refundAmount = seatTotal - cancelFee + refundableBookingFee;
 
         payment.markAsCancelled(cancelFee, refundAmount);
+
+        RefundHistory history = new RefundHistory(payment, cancelFee, refundableBookingFee);
+        refundHistoryRepository.save(history);
+
+        return toPaymentResponse(payment);
+    }
+
+    @Transactional
+    public PaymentResponse cancelPartialPayment(Long paymentId, Long memberId, PaymentCancelRequest request) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if(!payment.getReservation().getMember().getId().equals(memberId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
+        }
+
+        if(payment.getStatus() != PaymentStatus.PAID && payment.getStatus() != PaymentStatus.CANCELLED) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
+        payment.cancelPartial(request.getCancelAmount(), request.getReason());
+
+        RefundHistory history = new RefundHistory(
+                payment,
+                payment.getCancelFee() == null ? 0 : payment.getCancelFee(),
+                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount()
+        );
+
+        refundHistoryRepository.save(history);
 
         return toPaymentResponse(payment);
     }
