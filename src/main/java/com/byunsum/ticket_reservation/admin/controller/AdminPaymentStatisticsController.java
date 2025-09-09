@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/payments/statistics")
@@ -31,5 +33,14 @@ public class AdminPaymentStatisticsController {
     @Operation(summary = "장르별 매출 통계", description = "장르별 매출액과 결제 건수를 집계합니다.")
     public ResponseEntity<List<PaymentSalesStatsResponse>> getSalesByGenre() {
         return ResponseEntity.ok(paymentStatisticService.getSalesByGenre());
+    }
+
+    @Operation(summary = "대시보드 카드 지표", description = "공연/장르별 매출 TOP3 제공")
+    @GetMapping("/cards")
+    public Map<String, List<PaymentSalesStatsResponse>> getDashboardCards() {
+        Map<String, List<PaymentSalesStatsResponse>> result = new HashMap<>();
+        result.put("topPerformances", paymentStatisticService.getTopPerformances(3));
+        result.put("topGenres", paymentStatisticService.getTopGenres(3));
+        return result;
     }
 }

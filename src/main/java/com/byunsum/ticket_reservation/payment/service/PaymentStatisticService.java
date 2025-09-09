@@ -21,4 +21,19 @@ public class PaymentStatisticService {
     public List<PaymentSalesStatsResponse> getSalesByGenre() {
         return paymentRepository.getSalesByGenre();
     }
+
+    public List<PaymentSalesStatsResponse> getTopPerformances(int limit) {
+        return paymentRepository.getSalesByPerformance()
+                .stream()
+                .limit(limit)
+                .toList();
+    }
+
+    public List<PaymentSalesStatsResponse> getTopGenres(int limit) {
+        return paymentRepository.getSalesByGenre()
+                .stream()
+                .limit(limit)
+                .toList();
+    }
+
 }

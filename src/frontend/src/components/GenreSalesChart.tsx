@@ -16,7 +16,7 @@ type SalesStats = {
 
 const COLORS = ["#4F46E5", "#22C55E", "#F59E0B", "#EF4444", "#14B8A6", "#8B5CF6"];
 
-export default function GenreRevenueChart() {
+export default function GenreSalesChart() {
     const [data, setData] = useState<SalesStats[]>([]);
 
     useEffect(() => {

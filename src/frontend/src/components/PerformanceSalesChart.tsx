@@ -16,7 +16,7 @@ type SalesStats = {
     count: number;        // 결제 건수
 };
 
-export default function PerformanceRevenueChart() {
+export default function PerformanceSalesChart() {
     const [data, setData] = useState<SalesStats[]>([]);
 
     useEffect(() => {
