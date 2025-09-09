@@ -40,7 +40,8 @@ dependencies {
 	implementation 'org.redisson:redisson-spring-boot-starter:3.31.0' // Redis 클라이언트
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	runtimeOnly 'com.h2database:h2'
+	testImplementation 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j:8.0.33'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
