@@ -199,8 +199,9 @@ public class Reservation {
     }
 
     public int calculateTotalAmount() {
-        int seatTotal = getSeats().stream()
-                .mapToInt(Seat::getPrice)
+        int seatTotal = reservationSeats.stream()
+                .filter(seat -> seat.getStatus() != ReservationStatus.CANCELLED)
+                .mapToInt(ReservationSeat::getPriceAtReservation)
                 .sum();
 
         int bookingFee = 2000 * getQuantity();
@@ -218,5 +219,10 @@ public class Reservation {
 
     public void markAsShipped() {
         this.shipped = true;
+    }
+
+    public boolean isPartiallyCancelled() {
+        return reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationStatus.CANCELLED)
+                && reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationStatus.CONFIRMED);
     }
 }

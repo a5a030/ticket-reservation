@@ -24,11 +24,18 @@ public class ReservationSeat {
 
     private LocalDateTime cancelledAt;
 
+    @Column(nullable = false)
+    private int priceAtReservation;
+
+    private Integer refundAmount;
+    private Integer cancelFee;
+
     public ReservationSeat() {}
 
     public ReservationSeat(Reservation reservation, Seat seat) {
         this.reservation = reservation;
         this.seat = seat;
+        this.priceAtReservation = seat.getPrice();
         reservation.addReservationSeat(this);
     }
 
@@ -45,12 +52,18 @@ public class ReservationSeat {
     }
 
     public void cancel() {
+        cancel(0,0);
+    }
+
+    public void cancel(int cancelFee, int refundAmount) {
         if(this.status == ReservationStatus.CANCELLED) {
             return;
         }
 
         this.status = ReservationStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
+        this.cancelFee = cancelFee;
+        this.refundAmount = refundAmount;
         seat.release();
     }
 
@@ -60,6 +73,18 @@ public class ReservationSeat {
 
     public LocalDateTime getCancelledAt() {
         return cancelledAt;
+    }
+
+    public int getPriceAtReservation() {
+        return priceAtReservation;
+    }
+
+    public Integer getRefundAmount() {
+        return refundAmount;
+    }
+
+    public Integer getCancelFee() {
+        return cancelFee;
     }
 
     public void setReservation(Reservation reservation) {
