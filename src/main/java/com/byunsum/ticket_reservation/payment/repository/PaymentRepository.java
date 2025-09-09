@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.payment.repository;
 
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
+import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,4 +41,20 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "and p.status = 'PENDING' " +
             "and p.createdAt <= :deadline")
     List<Payment> findPendingBankTransfersBefore(LocalDateTime deadline);
+
+    @Query("SELECT new com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse(" +
+            "p.reservation.performance.title, SUM(p.amount), COUNT(p)) " +
+            "FROM Payment p " +
+            "WHERE p.status = 'PAID' " +
+            "GROUP BY p.reservation.performance.title " +
+            "ORDER BY SUM(p.amount) DESC")
+    List<PaymentSalesStatsResponse> getSalesByPerformance();
+
+    @Query("SELECT new com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse(" +
+            "p.reservation.performance.genre, SUM(p.amount), COUNT(p)) " +
+            "FROM Payment p " +
+            "WHERE p.status = 'PAID' " +
+            "GROUP BY p.reservation.performance.genre " +
+            "ORDER BY SUM(p.amount) DESC")
+    List<PaymentSalesStatsResponse> getSalesByGenre();
 }
