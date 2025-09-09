@@ -212,11 +212,13 @@ public class PaymentService {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
-        payment.cancelPartial(request.getCancelAmount(), request.getReason());
+        int cancelFee = (int) (request.getCancelAmount() * 0.1);
+
+        payment.cancelPartial(request.getCancelAmount(), cancelFee, request.getReason());
 
         RefundHistory history = new RefundHistory(
                 payment,
-                payment.getCancelFee() == null ? 0 : payment.getCancelFee(),
+                cancelFee,
                 payment.getRefundAmount() == null ? 0 : payment.getRefundAmount()
         );
 

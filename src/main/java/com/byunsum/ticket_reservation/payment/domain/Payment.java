@@ -180,7 +180,7 @@ public class Payment {
         this.cancelledAt = null;
     }
 
-    public void cancelPartial(int cancelAmount, PaymentCancelReason reason) {
+    public void cancelPartial(int cancelAmount, int cancelFee, PaymentCancelReason reason) {
         if(isCancelled()) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
         }
@@ -190,6 +190,7 @@ public class Payment {
         }
 
         this.partialAmount += cancelAmount;
+        this.cancelFee = (this.cancelFee == null ? 0 : this.cancelFee) + cancelFee;
         this.cancelReason = reason;
         this.cancelledAt = LocalDateTime.now();
 
@@ -202,7 +203,7 @@ public class Payment {
             }
         } else {
             this.status = PaymentStatus.PARTIAL_CANCELLED;
-            this.refundAmount = this.amount - this.partialAmount;
+            this.refundAmount = this.amount - this.partialAmount - this.cancelFee;
         }
     }
 }
