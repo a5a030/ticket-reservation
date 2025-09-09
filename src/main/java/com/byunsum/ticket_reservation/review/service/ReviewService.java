@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import com.byunsum.ticket_reservation.review.aop.InvalidateReviewCache;
 import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
@@ -38,6 +39,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @InvalidateReviewCache
     public ReviewResponse createReview(ReviewRequest request, Member member) {
         Reservation reservation = reservationRepository.findById(request.getReservationId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
@@ -49,9 +51,6 @@ public class ReviewService {
         // 1. 기본 리뷰 저장
         Review review = new Review(reservation, request.getContent(), request.getRating());
         Review saved = reviewRepository.save(review);
-
-        Long performanceId = reservation.getPerformance().getId();
-        reviewAdminService.evictDashboardCache(performanceId);
 
         // 2. 감정 분석
         SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
@@ -133,6 +132,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @InvalidateReviewCache
     public ReviewResponse updateReview(Long reviewId, ReviewRequest request, Member member) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
@@ -148,13 +148,11 @@ public class ReviewService {
 
         review.updateAI(summaryResponse.getSummary(), sentimentResponse.getSentiment(), sentimentResponse.getScore());
 
-        Long performanceId = review.getReservation().getPerformance().getId();
-        reviewAdminService.evictDashboardCache(performanceId);
-
         return toResponse(review);
     }
 
     @Transactional
+    @InvalidateReviewCache
     public void deleteReview(Long reviewId, Member member) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
@@ -163,9 +161,6 @@ public class ReviewService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_REVIEW_ACCESS);
         }
 
-        Long performanceId = review.getReservation().getPerformance().getId();
         reviewRepository.delete(review);
-
-        reviewAdminService.evictDashboardCache(performanceId);
     }
 }
