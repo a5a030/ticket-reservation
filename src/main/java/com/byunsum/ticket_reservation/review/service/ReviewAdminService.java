@@ -84,7 +84,8 @@ public class ReviewAdminService {
 
         // 3. 샘플 리뷰(최신 3개)
         List<ReviewResponse> samples = reviews.stream()
-                .sorted()
+                .sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt()))
+                .limit(3)
                 .map(r -> new ReviewResponse(
                         r.getId(),
                         r.getReservation().getId(),
