@@ -35,3 +35,28 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Redis ###
+dump.rdb
+appendonly.aof
+
+### Database files ###
+*.db
+*.sqlite
+*.mv.db
+*.h2.db
+
+### Logs ###
+*.log
+logs/
+log/
+*.out
+
+### Cache / Temp ###
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.cache/
+.tmp/
