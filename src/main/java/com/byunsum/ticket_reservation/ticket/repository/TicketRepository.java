@@ -15,6 +15,8 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     Optional<Ticket> findByTicketCode(String ticketCode);
 
-    @Query("select t from Ticket t " + "where t.expiresAt < :now " + "and  t.status = 'ISSUED'")
+    @Query("select t from Ticket t " +
+            "where t.expiresAt < :now " +
+            "and  t.status = 'ISSUED'")
     List<Ticket> findExpiredTickets(@Param("now") LocalDateTime now);
 }
