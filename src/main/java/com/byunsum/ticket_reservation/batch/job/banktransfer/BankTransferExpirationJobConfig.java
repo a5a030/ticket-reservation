@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-@EnableScheduling
 public class BankTransferExpirationJobConfig {
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
@@ -27,12 +26,12 @@ public class BankTransferExpirationJobConfig {
     @Bean
     public Job bankTransferExpirationJob() {
         return new JobBuilder("bankTransferExpirationJob", jobRepository)
-                .start(expireStep())
+                .start(bankTransferExpireStep())
                 .build();
     }
 
     @Bean
-    public Step expireStep() {
+    public Step bankTransferExpireStep() {
         return new StepBuilder("expireStep", jobRepository)
                 .tasklet(tasklet, transactionManager)
                 .build();

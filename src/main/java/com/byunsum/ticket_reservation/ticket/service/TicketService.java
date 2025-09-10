@@ -106,6 +106,57 @@ public class TicketService {
     }
 
     @Transactional
+    public Ticket refreshQrCode(Long reservationSeatId) {
+        Ticket ticket = ticketRepository.findByReservationSeatId(reservationSeatId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+        LocalDateTime performanceStart = ticket.getReservationSeat()
+                .getReservation().getPerformance().getStartTime();
+
+        if (LocalDateTime.now().isBefore(performanceStart.minusHours(3))) {
+            throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
+        }
+
+        String oldCode = ticket.getTicketCode();
+        String newCode = UUID.randomUUID().toString();
+        String newQrImage = qrCodeGenerator.generate(newCode);
+
+        ticket.refresh(newCode, newQrImage, Duration.ofMinutes(30));
+        ticketRepository.save(ticket);
+
+        stringRedisTemplate.opsForValue().set(
+                REDIS_KEY_PREFIX + newCode,
+                reservationSeatId.toString(),
+                30, TimeUnit.MINUTES
+        );
+
+        LocalDateTime performanceEnd = ticket.getReservationSeat()
+                .getReservation().getPerformance().getEndDateTime();
+
+        if (performanceEnd == null) {
+            throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+        }
+
+        long expiresAtMillis = performanceEnd.plusDays(1)
+                .atZone(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+
+        String blacklistKey = "blacklist:ticket:" + oldCode;
+        stringRedisTemplate.opsForValue().set(blacklistKey, "true");
+        stringRedisTemplate.expireAt(blacklistKey, new Date(expiresAtMillis));
+
+        String loginId = ticket.getReservationSeat().getReservation().getMember().getLoginId();
+        String username = ticket.getReservationSeat().getReservation().getMember().getUsername();
+
+        ticketReissueLogRepository.save(
+                new TicketReissueLog(ticket.getReservationSeat(), oldCode, newCode, loginId, username, LocalDateTime.now())
+        );
+
+        return ticket;
+    }
+
+
+    @Transactional
     public List<Ticket> refreshQrCodes(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));

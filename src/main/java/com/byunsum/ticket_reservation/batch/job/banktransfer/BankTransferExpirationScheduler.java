@@ -7,6 +7,8 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class BankTransferExpirationScheduler {
     private final JobLauncher jobLauncher;
@@ -17,12 +19,19 @@ public class BankTransferExpirationScheduler {
         this.bankTransferExpirationJob = bankTransferExpirationJob;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
-    public void runJob() throws Exception {
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("time", System.currentTimeMillis())
-                .toJobParameters();
+    @Scheduled(cron = "0 0 0 * * *")
+    public void runJob() {
+        try {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addLong("time", System.currentTimeMillis())
+                    .toJobParameters();
 
-        jobLauncher.run(bankTransferExpirationJob, jobParameters);
+            jobLauncher.run(bankTransferExpirationJob, jobParameters);
+
+            System.out.println("[BankTransferExpirationScheduler] Job executed at " + LocalDateTime.now());
+        } catch (Exception e) {
+            System.err.println("[BankTransferExpirationScheduler] Job failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
