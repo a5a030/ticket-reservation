@@ -48,6 +48,22 @@ public class TicketController {
         return ResponseEntity.ok(new QrResponse(reservationSeatId, updatedTicket.getQrImageUrl()));
     }
 
+    @PutMapping("/{reservationId}/qr/all")
+    @Operation(summary = "QR 코드 재발급 (다좌석 예약)", description = "예약 ID에 포함된 모든 좌석의 QR 코드를 일괄 재발급합니다. (공연 시작 3시간 전부터 가능)")
+    public ResponseEntity<List<QrResponse>> refreshQrForReservation(@PathVariable Long reservationId) {
+        List<Ticket> updatedTickets = ticketService.refreshQrCodes(reservationId);
+
+        List<QrResponse> responses = updatedTickets.stream()
+                .map(ticket -> new QrResponse(
+                        ticket.getReservationSeat().getId(),
+                        ticket.getQrImageUrl()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(responses);
+    }
+
+
     @PostMapping("/verify")
     @Operation(summary = "QR 티켓 검증", description = "QR 코드(티켓 코드)로 티켓을 검증합니다. 관리자/검표 전용")
     @PreAuthorize("hasRole('ADMIN')")
