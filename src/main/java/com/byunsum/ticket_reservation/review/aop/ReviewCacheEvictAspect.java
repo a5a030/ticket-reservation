@@ -6,12 +6,16 @@ import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
 public class ReviewCacheEvictAspect {
+    private static final Logger log = LoggerFactory.getLogger(ReviewCacheEvictAspect.class);
+
     private final StringRedisTemplate stringRedisTemplate;
     private final ReservationRepository reservationRepository;
     private final ReviewRepository reviewRepository;
@@ -24,14 +28,16 @@ public class ReviewCacheEvictAspect {
 
     @AfterReturning("@annotation(invalidateReviewCache)")
     public void evictReviewCache(JoinPoint joinPoint, InvalidateReviewCache invalidateReviewCache) {
-        int index = invalidateReviewCache.performanceIdParam();
-        Object[] args = joinPoint.getArgs();
+        Long performanceId = resolvePerformanceId(joinPoint.getArgs());
 
-        if(args.length > index && args[index] instanceof Long performanceId) {
+        if (performanceId != null) {
             String cacheKey = "review:dashboard:performanceId:" + performanceId;
             stringRedisTemplate.delete(cacheKey);
-            System.out.println("✅ 리뷰 대시보드 캐시 삭제: " + cacheKey);
+            log.info("✅ 리뷰 대시보드 캐시 삭제: {}", cacheKey);
+        } else {
+            log.warn("⚠️ 캐시 삭제 실패: performanceId 추출 불가 (args={})", (Object) joinPoint.getArgs());
         }
+
     }
 
     private Long resolvePerformanceId(Object[] args) {
