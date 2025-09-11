@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.batch.job.reservation.writer.ReservationWr
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.batch.core.Job;
@@ -43,7 +44,7 @@ public class ReservationBatchConfig {
                                 SeatRepository seatRepository,
                                 ReservationWriter reservationWriter) {
         return new StepBuilder("reservationStep", jobRepository)
-                .<ReservationRequest, Reservation>chunk(100, transactionManager)
+                .<BatchReservationRequest, Reservation>chunk(100, transactionManager)
                 .reader(new FakeReservationReader())
                 .processor(new ReservationProcessor(memberRepository, performanceRepository, seatRepository))
                 .writer(reservationWriter)

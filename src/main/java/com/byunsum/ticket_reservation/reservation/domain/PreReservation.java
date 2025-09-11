@@ -31,7 +31,7 @@ public class PreReservation {
         this.member = member;
         this.performance = performance;
         this.status = status;
-        this.appliedAt = appliedAt;
+        this.appliedAt = LocalDateTime.now();
     }
 
     public Long getId() {

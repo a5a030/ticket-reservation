@@ -21,7 +21,7 @@ public class ReservationResponse {
     private List<String> seatNumbers;
 
     @Schema(description = "총 결제 금액")
-    private int totalPirce;
+    private int totalPrice;
 
     @Schema(description = "예매 완료 일시")
     private LocalDateTime reservedAt;
@@ -42,7 +42,7 @@ public class ReservationResponse {
         this.seatNumbers  = reservation.getSeats().stream()
                 .map(Seat::getSeatNo)
                 .toList();
-        this.totalPirce = reservation.calculateTotalAmount();
+        this.totalPrice = reservation.calculateTotalAmount();
         this.reservedAt = reservation.getCreatedAt();
         this.status = reservation.getStatus().name();
         this.reconfirmed = reservation.isReconfirmed();
@@ -61,8 +61,8 @@ public class ReservationResponse {
         return seatNumbers;
     }
 
-    public int getTotalPirce() {
-        return totalPirce;
+    public int getTotalPrice() {
+        return totalPrice;
     }
 
     public LocalDateTime getReservedAt() {

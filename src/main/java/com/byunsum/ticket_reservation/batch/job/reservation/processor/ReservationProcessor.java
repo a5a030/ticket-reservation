@@ -5,13 +5,13 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
+import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReservationProcessor implements ItemProcessor<ReservationRequest, Reservation> {
+public class ReservationProcessor implements ItemProcessor<BatchReservationRequest, Reservation> {
     private final MemberRepository memberRepository;
     private final PerformanceRepository performanceRepository;
     private final SeatRepository seatRepository;
@@ -23,16 +23,14 @@ public class ReservationProcessor implements ItemProcessor<ReservationRequest, R
     }
 
     @Override
-    public Reservation process(ReservationRequest request){
+    public Reservation process(BatchReservationRequest request){
         var performance = performanceRepository.findById(request.getPerformanceId())
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
         var member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Reservation reservation = new Reservation();
-        reservation.setPerformance(performance);
-        reservation.setMember(member);
+        Reservation reservation = new Reservation(performance, member);
 
         request.getSeatIds().forEach(seatId -> {
             var seat = seatRepository.findById(seatId)

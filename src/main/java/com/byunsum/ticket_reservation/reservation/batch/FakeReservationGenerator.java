@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.reservation.batch;
 
+import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
 
 import java.util.ArrayList;
@@ -17,8 +18,8 @@ public class FakeReservationGenerator {
         this.seatPerPerformance = seatPerPerformance;
     }
 
-    public List<ReservationRequest> generate(int count) {
-        List<ReservationRequest> requests = new ArrayList<>();
+    public List<BatchReservationRequest> generate(int count) {
+        List<BatchReservationRequest> requests = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
             Long memberId = (long) ThreadLocalRandom.current().nextInt(1, userCount+1);
@@ -32,7 +33,7 @@ public class FakeReservationGenerator {
                 seatIds.add(seatId);
             }
 
-            requests.add(new ReservationRequest(memberId, performanceId, seatIds));
+            requests.add(new BatchReservationRequest(memberId, performanceId, seatIds));
         }
 
         return requests;
