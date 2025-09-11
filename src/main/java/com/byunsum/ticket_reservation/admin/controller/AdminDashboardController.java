@@ -7,6 +7,9 @@ import com.byunsum.ticket_reservation.admin.service.AdminDashboardService;
 import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,11 @@ public class AdminDashboardController {
 
     @GetMapping("/sales")
     @Operation(summary = "매출 통계 조회", description = "결제 내역 기반 매출 통계를 조회합니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "성공",
+            content = @Content(schema = @Schema(implementation = SalesStatsResponse.class))
+    )
     public ResponseEntity<SalesStatsResponse> getSalesStats() {
         return ResponseEntity.ok(adminDashboardService.getSalesStats());
     }

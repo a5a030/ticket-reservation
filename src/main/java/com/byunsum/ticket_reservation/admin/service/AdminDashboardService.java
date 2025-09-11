@@ -4,6 +4,7 @@ import com.byunsum.ticket_reservation.admin.dto.DashboardResponse;
 import com.byunsum.ticket_reservation.admin.dto.ReviewStatsResponse;
 import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
+import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.review.domain.Review;
@@ -45,10 +46,26 @@ public class AdminDashboardService {
 
         long average = totalPayments > 0 ? totalSales / totalPayments : 0L;
 
+        Map<String, BigDecimal> salesByPerformance = paymentRepository.getSalesByPerformance()
+                .stream()
+                .collect(Collectors.toMap(
+                        PaymentSalesStatsResponse::getLabel,
+                        r -> BigDecimal.valueOf(r.getTotalAmount())
+                ));
+
+        Map<String, BigDecimal> salesByGenre = paymentRepository.getSalesByGenre()
+                .stream()
+                .collect(Collectors.toMap(
+                        PaymentSalesStatsResponse::getLabel,
+                        r -> BigDecimal.valueOf(r.getTotalAmount())
+                ));
+
         return new  SalesStatsResponse(
                 BigDecimal.valueOf(totalSales),
                 totalPayments,
-                BigDecimal.valueOf(average)
+                BigDecimal.valueOf(average),
+                salesByPerformance,
+                salesByGenre
         );
     }
 
