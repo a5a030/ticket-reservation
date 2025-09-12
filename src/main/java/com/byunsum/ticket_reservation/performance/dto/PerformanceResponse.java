@@ -49,10 +49,14 @@ public class PerformanceResponse {
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
 
+    @Schema(description = "입장 가능 시작 시각")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime entryStartTime;
+
     public PerformanceResponse() {
     }
 
-    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson, PerformanceType type) {
+    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson, PerformanceType type, LocalDateTime entryStartTime) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -66,6 +70,7 @@ public class PerformanceResponse {
         this.generalOpenDate = generalOpenDate;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
         this.type = type;
+        this.entryStartTime = entryStartTime;
     }
 
     //불변객체
@@ -119,5 +124,9 @@ public class PerformanceResponse {
 
     public PerformanceType getType() {
         return type;
+    }
+
+    public LocalDateTime getEntryStartTime() {
+        return entryStartTime;
     }
 }

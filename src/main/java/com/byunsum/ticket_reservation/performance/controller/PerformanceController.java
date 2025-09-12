@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.performance.controller;
 
+import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
 import com.byunsum.ticket_reservation.performance.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,29 @@ public class PerformanceController {
 
     public PerformanceController(PerformanceService performanceService) {
         this.performanceService = performanceService;
+    }
+
+    @Operation(summary = "공연 등록", description = "관리자가 공연을 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "공연 등록 성공")
+    })
+    @PostMapping
+    public ResponseEntity<PerformanceResponse> createPerformance(@RequestBody PerformanceRequest request) {
+        PerformanceResponse response = performanceService.createPerformance(request);
+
+        return ResponseEntity.status(201).body(response);
+    }
+
+    @Operation(summary = "공연 수정", description = "관리자가 공연 정보를 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "공연 수정 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 공연 없음")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<PerformanceResponse> updatePerformance(@PathVariable Long id, @RequestBody PerformanceRequest request) {
+        PerformanceResponse response = performanceService.updatePerformance(id, request);
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "전체 공연 목록 조회", description = "사용자에게 공개되는 공연 전체 목록을 조회합니다.")

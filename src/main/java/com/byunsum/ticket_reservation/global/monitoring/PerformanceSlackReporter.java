@@ -35,10 +35,12 @@ public class PerformanceSlackReporter {
     @Scheduled(cron = "0 */30 * * * *")
     public void reportProgressEvery30Min() {
         LocalDateTime now = LocalDateTime.now();
-        List<Performance> performances = performanceRepository.findByStartDateTimeBetween(now.minusHours(2), now.plusHours(2));
+        List<Performance> performances = performanceRepository.findByEntryStartTimeBetween(now.minusHours(3), now.plusHours(3));
 
         for (Performance performance : performances) {
-            if(performance.getStartDateTime().isAfter(now)) {
+            LocalDateTime entryStart = performance.getEntryStartTime();
+
+            if(entryStart!=null && now.isAfter(entryStart) && performance.getEndDateTime().isAfter(now)) {
                 long total = ticketRepository.countByPerformance(performance);
                 long entered = ticketRepository.countByPerformanceAndEnteredTrue(performance);
                 double ratio = total > 0 ? (entered * 100.0 / total) : 0;
@@ -63,7 +65,7 @@ public class PerformanceSlackReporter {
     @Scheduled(cron = "0 */1 * * * *")
     public void notifyPerformanceStart() {
         LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
-        List<Performance> performances = performanceRepository.findByStartDateTimeBetween(now.minusMinutes(11), now.plusMinutes(1));
+        List<Performance> performances = performanceRepository.findByEntryStartTimeBetween(now.minusMinutes(11), now.plusMinutes(1));
 
         for (Performance performance : performances) {
             LocalDateTime start = performance.getStartDateTime();
@@ -75,6 +77,17 @@ public class PerformanceSlackReporter {
 
                 slackNotifier.send(String.format(
                         "⏰ 공연 시작 10분 전\n- 공연명: %s\n- 현재 입장률: %.1f%%",
+                        performance.getTitle(), ratio
+                ));
+            }
+
+            if(start.equals(now)) {
+                long total = ticketRepository.countByPerformance(performance);
+                long entered = ticketRepository.countByPerformanceAndEnteredTrue(performance);
+                double ratio = total > 0 ? (entered * 100.0 / total) : 0;
+
+                slackNotifier.send(String.format(
+                        "🎶 공연 시작\n- 공연명: %s\n- 최종 입장률: %.1f%%",
                         performance.getTitle(), ratio
                 ));
             }

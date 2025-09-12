@@ -46,6 +46,10 @@ public class PerformanceRequest {
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
 
+    @Schema(description = "입장 가능 시작 시각")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime entryStartTime;
+
     public PerformanceRequest() {}
 
     public String getTitle() {
@@ -142,5 +146,13 @@ public class PerformanceRequest {
 
     public void setType(PerformanceType type) {
         this.type = type;
+    }
+
+    public LocalDateTime getEntryStartTime() {
+        return entryStartTime;
+    }
+
+    public void setEntryStartTime(LocalDateTime entryStartTime) {
+        this.entryStartTime = entryStartTime;
     }
 }

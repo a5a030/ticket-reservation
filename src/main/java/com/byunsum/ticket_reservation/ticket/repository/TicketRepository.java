@@ -21,10 +21,15 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
             "and  t.status = 'ISSUED'")
     List<Ticket> findExpiredTickets(@Param("now") LocalDateTime now);
 
-    @Query("select count(t) from Ticket t where t.performance = :performance")
+    @Query("select count(t) from Ticket t " +
+            "join t.reservationSeat rs "+
+            "join rs.reservation r " +
+            "where r.performance = :performance")
     long countByPerformance(@Param("performance")com.byunsum.ticket_reservation.performance.domain.Performance performance);
 
     @Query("select count(t) from Ticket t " +
-            "where t.performance = :performance and t.entered = true")
+            "join t.reservationSeat rs "+
+            "join rs.reservation r " +
+            "where r.performance = :performance and t.status = 'USED'")
     long countByPerformanceAndEnteredTrue(@Param("performance")com.byunsum.ticket_reservation.performance.domain.Performance performance);
 }

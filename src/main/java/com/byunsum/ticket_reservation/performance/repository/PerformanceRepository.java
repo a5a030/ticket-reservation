@@ -27,6 +27,6 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
     List<Long> findAllIds();
 
     @Query("select p from Performance p " +
-            "where p.startDateTime between :start and :end")
-    List<Performance> findByStartDateTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+            "where p.entryStartTime between :start and :end")
+    List<Performance> findByEntryStartTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
