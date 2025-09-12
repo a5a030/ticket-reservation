@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.ticket.repository;
 
+import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,11 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
             "where t.expiresAt < :now " +
             "and  t.status = 'ISSUED'")
     List<Ticket> findExpiredTickets(@Param("now") LocalDateTime now);
+
+    @Query("select count(t) from Ticket t where t.performance = :performance")
+    long countByPerformance(@Param("performance")com.byunsum.ticket_reservation.performance.domain.Performance performance);
+
+    @Query("select count(t) from Ticket t " +
+            "where t.performance = :performance and t.entered = true")
+    long countByPerformanceAndEnteredTrue(@Param("performance")com.byunsum.ticket_reservation.performance.domain.Performance performance);
 }

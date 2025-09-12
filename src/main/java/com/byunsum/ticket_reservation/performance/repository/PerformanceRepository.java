@@ -1,12 +1,15 @@
 package com.byunsum.ticket_reservation.performance.repository;
 
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import org.aspectj.weaver.patterns.PerFromSuper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -22,4 +25,8 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
 
     @Query("select p.id from Performance p")
     List<Long> findAllIds();
+
+    @Query("select p from Performance p " +
+            "where p.startDateTime between :start and :end")
+    List<Performance> findByStartDateTimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
