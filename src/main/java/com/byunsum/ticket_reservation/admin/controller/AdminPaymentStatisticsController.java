@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,10 +47,10 @@ public class AdminPaymentStatisticsController {
 
     @GetMapping("/summary")
     @Operation(summary = "결제 요약 지표", description = "총 매출액, 총 결제 건수, 평균 결제 금액 반환")
-    public Map<String, Long> getSummary() {
-        Map<String, Long> result = new HashMap<>();
+    public Map<String, BigDecimal> getSummary() {
+        Map<String, BigDecimal> result = new HashMap<>();
         result.put("totalRevenue", paymentStatisticService.getTotalPaymentAmount());
-        result.put("totalCount", paymentStatisticService.getTotalPaymentCount());
+        result.put("totalCount", BigDecimal.valueOf(paymentStatisticService.getTotalPaymentCount()));
         result.put("averageAmount", paymentStatisticService.getAveragePaymentAmount());
         return result;
     }

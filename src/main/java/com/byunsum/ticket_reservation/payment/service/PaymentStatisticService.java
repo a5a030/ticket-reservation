@@ -4,6 +4,8 @@ import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -36,7 +38,7 @@ public class PaymentStatisticService {
                 .toList();
     }
 
-    public Long getTotalPaymentAmount() {
+    public BigDecimal getTotalPaymentAmount() {
         return paymentRepository.getTotalPaymentAmount();
     }
 
@@ -44,12 +46,13 @@ public class PaymentStatisticService {
         return paymentRepository.getTotalPaymentCount();
     }
 
-    public Long getAveragePaymentAmount() {
-        Long totalAmount = paymentRepository.getTotalPaymentAmount();
+    public BigDecimal getAveragePaymentAmount() {
+        BigDecimal totalAmount = paymentRepository.getTotalPaymentAmount();
         Long totalCount = paymentRepository.getTotalPaymentCount();
 
-        if(totalAmount == null) return 0L;
-        return totalAmount / totalCount;
+        return totalCount > 0
+                ? totalAmount.divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
     }
 
 }

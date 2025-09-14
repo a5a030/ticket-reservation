@@ -6,6 +6,8 @@ import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
+import com.byunsum.ticket_reservation.payment.service.PaymentService;
+import com.byunsum.ticket_reservation.payment.service.PaymentStatisticService;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
@@ -16,6 +18,7 @@ import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRep
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -30,40 +33,43 @@ public class AdminDashboardService {
     private final KeywordService keywordService;
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
     private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
+    private final PaymentStatisticService paymentStatisticService;
 
-    public AdminDashboardService(PerformanceRepository performanceRepository, ReviewRepository reviewRepository, KeywordService keywordService, TicketVerificationLogRepository ticketVerificationLogRepository, PaymentRepository paymentRepository) {
+    public AdminDashboardService(PerformanceRepository performanceRepository, ReviewRepository reviewRepository, KeywordService keywordService, TicketVerificationLogRepository ticketVerificationLogRepository, PaymentRepository paymentRepository, PaymentService paymentService, PaymentStatisticService paymentStatisticService) {
         this.performanceRepository = performanceRepository;
         this.reviewRepository = reviewRepository;
         this.keywordService = keywordService;
         this.ticketVerificationLogRepository = ticketVerificationLogRepository;
         this.paymentRepository = paymentRepository;
+        this.paymentService = paymentService;
+        this.paymentStatisticService = paymentStatisticService;
     }
 
 
     public SalesStatsResponse getSalesStats() {
-        long totalSales = paymentRepository.getTotalPaymentAmount();
-        long totalPayments = paymentRepository.findByStatus(PaymentStatus.PAID).size();
+        BigDecimal totalSales = paymentStatisticService.getTotalPaymentAmount();
+        long totalPayments = paymentStatisticService.getTotalPaymentCount();
+        BigDecimal average = paymentStatisticService.getAveragePaymentAmount();
 
-        long average = totalPayments > 0 ? totalSales / totalPayments : 0L;
-
-        Map<String, BigDecimal> salesByPerformance = paymentRepository.getSalesByPerformance()
+        Map<String, BigDecimal> salesByPerformance = paymentStatisticService.getSalesByPerformance()
                 .stream()
                 .collect(Collectors.toMap(
                         PaymentSalesStatsResponse::groupLabel,
-                        r -> r.totalAmount()
+                        PaymentSalesStatsResponse::totalAmount
                 ));
 
-        Map<String, BigDecimal> salesByGenre = paymentRepository.getSalesByGenre()
+        Map<String, BigDecimal> salesByGenre = paymentStatisticService.getSalesByGenre()
                 .stream()
                 .collect(Collectors.toMap(
                         PaymentSalesStatsResponse::groupLabel,
-                        r -> r.totalAmount()
+                        PaymentSalesStatsResponse::totalAmount
                 ));
 
         return new  SalesStatsResponse(
-                BigDecimal.valueOf(totalSales),
+                totalSales,
                 totalPayments,
-                BigDecimal.valueOf(average),
+                average,
                 salesByPerformance,
                 salesByGenre
         );

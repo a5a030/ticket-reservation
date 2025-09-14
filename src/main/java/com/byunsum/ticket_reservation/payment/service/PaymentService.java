@@ -205,8 +205,8 @@ public class PaymentService {
 
         RefundHistory history = new RefundHistory(
                 payment,
-                cancelFee.intValue(),
-                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount().intValue()
+                cancelFee,
+                payment.getRefundAmount() == null ? BigDecimal.ZERO : payment.getRefundAmount()
         );
 
         refundHistoryRepository.save(history);
@@ -227,15 +227,15 @@ public class PaymentService {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
-        BigDecimal cancelAmount = BigDecimal.valueOf(request.getCancelAmount());
+        BigDecimal cancelAmount = request.getCancelAmount();
         BigDecimal cancelFee = cancelAmount.multiply(BigDecimal.valueOf(0.1));
 
         payment.cancelPartial(cancelAmount, cancelFee, request.getReason());
 
         RefundHistory history = new RefundHistory(
                 payment,
-                cancelFee.intValue(),
-                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount().intValue()
+                cancelFee,
+                payment.getRefundAmount() == null ? BigDecimal.ZERO : payment.getRefundAmount()
         );
 
         refundHistoryRepository.save(history);
@@ -283,7 +283,7 @@ public class PaymentService {
                 .toList();
     }
 
-    public Long getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return paymentRepository.getTotalPaymentAmount();
     }
 

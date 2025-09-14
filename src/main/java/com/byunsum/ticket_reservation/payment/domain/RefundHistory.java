@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.payment.domain;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,14 +15,14 @@ public class RefundHistory {
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
 
-    private int cancelFee;
-    private int refundAmount;
+    private BigDecimal cancelFee;
+    private BigDecimal refundAmount;
     private LocalDateTime createdAt =  LocalDateTime.now();
 
     public RefundHistory() {
     }
 
-    public RefundHistory(Payment payment, int cancelFee, int refundAmount) {
+    public RefundHistory(Payment payment, BigDecimal cancelFee, BigDecimal refundAmount) {
         this.payment = payment;
         this.cancelFee = cancelFee;
         this.refundAmount = refundAmount;
@@ -35,11 +36,11 @@ public class RefundHistory {
         return payment;
     }
 
-    public int getCancelFee() {
+    public BigDecimal getCancelFee() {
         return cancelFee;
     }
 
-    public int getRefundAmount() {
+    public BigDecimal getRefundAmount() {
         return refundAmount;
     }
 

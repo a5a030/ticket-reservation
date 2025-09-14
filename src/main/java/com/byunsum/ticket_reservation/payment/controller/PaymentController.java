@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Tag(name = "결제 API", description = "결제 및 결제 취소, 조회 관련 API")
@@ -88,7 +89,7 @@ public class PaymentController {
     @Operation(summary = "총 결제 금액 조회", description = "전체 결제된 금액의 합계를 반환합니다.")
     @ApiResponse(responseCode = "200", description = "총 결제 금액 조회 성공")
     @GetMapping("/total")
-    public ResponseEntity<Long> getTotalPaymentAmount() {
+    public ResponseEntity<BigDecimal> getTotalPaymentAmount() {
         return ResponseEntity.ok(paymentService.getTotalAmount());
     }
 
