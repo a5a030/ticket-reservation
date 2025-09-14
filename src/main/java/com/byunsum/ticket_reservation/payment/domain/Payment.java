@@ -7,6 +7,7 @@ import com.byunsum.ticket_reservation.reservation.domain.ReservationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,7 +18,7 @@ public class Payment {
     private Long id;
 
     @Schema(description = "결제 금액")
-    private int amount;
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Schema(description = "결제 수단", example = "BANK_TRANSFER")
@@ -46,13 +47,13 @@ public class Payment {
     private String accountNumber;
 
     @Schema(description = "취소 수수료")
-    private Integer cancelFee;
+    private BigDecimal cancelFee = BigDecimal.ZERO;
 
     @Schema(description = "실제 환불금액")
-    private Integer refundAmount;
+    private BigDecimal refundAmount =  BigDecimal.ZERO;
 
     @Schema(description = "부분 취소된 누적 금액")
-    private Integer partialAmount = 0;
+    private BigDecimal partialAmount = BigDecimal.ZERO;
 
     @Schema(description = "취소사유")
     @Enumerated(EnumType.STRING)
@@ -60,19 +61,19 @@ public class Payment {
 
 
 
-    public Integer getCancelFee() {
+    public BigDecimal getCancelFee() {
         return cancelFee;
     }
 
-    public void setCancelFee(Integer cancelFee) {
+    public void setCancelFee(BigDecimal cancelFee) {
         this.cancelFee = cancelFee;
     }
 
-    public Integer getRefundAmount() {
+    public BigDecimal getRefundAmount() {
         return refundAmount;
     }
 
-    public void setRefundAmount(Integer refundAmount) {
+    public void setRefundAmount(BigDecimal refundAmount) {
         this.refundAmount = refundAmount;
     }
 
@@ -91,7 +92,7 @@ public class Payment {
     public Payment() {
     }
 
-    public Payment(int amount, PaymentMethod paymentMethod, PaymentStatus status, Reservation reservation) {
+    public Payment(BigDecimal amount, PaymentMethod paymentMethod, PaymentStatus status, Reservation reservation) {
         this.amount = amount;
         this.paymentMethod = paymentMethod;
         this.status = status;
@@ -103,7 +104,7 @@ public class Payment {
         return id;
     }
 
-    public int getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
@@ -131,7 +132,7 @@ public class Payment {
         return reconfirmedAt;
     }
 
-    public Integer getPartialAmount() {
+    public BigDecimal getPartialAmount() {
         return partialAmount;
     }
 
@@ -143,7 +144,7 @@ public class Payment {
         this.status = PaymentStatus.PAID;
     }
 
-    public void markAsCancelled(int cancelFee, int refundAmount) {
+    public void markAsCancelled(BigDecimal cancelFee, BigDecimal refundAmount) {
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
         this.cancelFee = cancelFee;
@@ -161,8 +162,8 @@ public class Payment {
 
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
-        this.cancelFee = 0;
-        this.refundAmount = 0;
+        this.cancelFee = BigDecimal.ZERO;
+        this.refundAmount = BigDecimal.ZERO;
         this.cancelReason = reason;
 
         if(this.reservation != null) {
@@ -180,30 +181,30 @@ public class Payment {
         this.cancelledAt = null;
     }
 
-    public void cancelPartial(int cancelAmount, int cancelFee, PaymentCancelReason reason) {
+    public void cancelPartial(BigDecimal cancelAmount, BigDecimal cancelFee, PaymentCancelReason reason) {
         if(isCancelled()) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
         }
 
-        if(cancelAmount <= 0 || cancelAmount > this.amount) {
+        if(cancelAmount.compareTo(BigDecimal.ZERO) <= 0 || cancelAmount.compareTo(this.amount) > 0) {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
         }
 
-        this.partialAmount += cancelAmount;
-        this.cancelFee = (this.cancelFee == null ? 0 : this.cancelFee) + cancelFee;
+        this.partialAmount = this.partialAmount.add(cancelAmount);
+        this.cancelFee = this.cancelFee.add(cancelFee);
         this.cancelReason = reason;
         this.cancelledAt = LocalDateTime.now();
 
-        if(this.partialAmount >= this.amount) {
+        if(this.partialAmount.compareTo(this.amount) >= 0) {
             this.status = PaymentStatus.CANCELLED;
-            this.refundAmount = 0;
+            this.refundAmount = BigDecimal.ZERO;
 
             if(this.reservation != null) {
                 this.reservation.cancel();
             }
         } else {
             this.status = PaymentStatus.PARTIAL_CANCELLED;
-            this.refundAmount = this.amount - this.partialAmount - this.cancelFee;
+            this.refundAmount = this.amount.subtract(this.partialAmount).subtract(this.cancelFee);
         }
     }
 }

@@ -24,6 +24,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -88,12 +90,14 @@ public class PaymentService {
 
             reservation.confirm();
 
-            int seatTotal = reservation.getSeats().stream()
-                    .mapToInt(Seat::getPrice)
-                    .sum();
-            int bookingFee = 2000 * reservation.getQuantity();
-            int deliveryFee = reservation.getDeliveryFee();
-            int totalAmount = seatTotal + bookingFee + deliveryFee;
+            BigDecimal seatTotal = reservation.getSeats().stream()
+                    .map(seat -> BigDecimal.valueOf(seat.getPrice()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal bookingFee = BigDecimal.valueOf(2000L)
+                    .multiply(BigDecimal.valueOf(reservation.getQuantity()));
+            BigDecimal deliveryFee = BigDecimal.valueOf(reservation.getDeliveryFee());
+            BigDecimal totalAmount = seatTotal.add(bookingFee).add(deliveryFee);
 
             Payment payment = new Payment(
                     totalAmount,
@@ -162,12 +166,14 @@ public class PaymentService {
         }
 
         int ticketCount = reservation.getQuantity();
-        int seatTotal = reservation.getSeats().stream()
-                .mapToInt(seat -> seat.getPrice())
-                .sum();
-        int bookingFee = 2000 * ticketCount;
-        int deliveryFee = reservation.getDeliveryFee();
-        int cancelFee;
+        BigDecimal seatTotal = reservation.getSeats().stream()
+                .map(seat -> BigDecimal.valueOf(seat.getPrice()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal bookingFee = BigDecimal.valueOf(2000L)
+                .multiply(BigDecimal.valueOf(reservation.getQuantity()));
+        BigDecimal deliveryFee = BigDecimal.valueOf(reservation.getDeliveryFee());
+        BigDecimal cancelFee;
 
         if(performance.getType() == PerformanceType.SPORTS) {
             LocalDateTime gameStart = performance.getStartDateTime();
@@ -177,23 +183,32 @@ public class PaymentService {
                 throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
             }
 
-            cancelFee = (int) (seatTotal * 0.1);
+            cancelFee = seatTotal.multiply(BigDecimal.valueOf(0.1));
         } else {
             validateCancelDeadline(performance.getStartDate());
-            cancelFee = calculateCancelFee(reservation, seatTotal/ticketCount, ticketCount);
+            cancelFee = calculateCancelFee(reservation,
+                    seatTotal.divide(BigDecimal.valueOf(ticketCount), RoundingMode.HALF_UP),
+                    ticketCount);
         }
+
         // 예매 당일이면 bookingFee 환불
         boolean isSameDayBooking = reservation.getCreatedAt().toLocalDate().isEqual(LocalDateTime.now().toLocalDate());
         boolean beforeMidnight = LocalDateTime.now().isBefore(
                 reservation.getCreatedAt().toLocalDate().atTime(23,59,59)
         );
-        int refundableBookingFee = (isSameDayBooking && beforeMidnight) ? bookingFee : 0;
 
-        int refundAmount = seatTotal - cancelFee + refundableBookingFee;
+        BigDecimal refundableBookingFee = (isSameDayBooking && beforeMidnight) ? bookingFee : BigDecimal.ZERO;
+
+        BigDecimal refundAmount = seatTotal.subtract(cancelFee).add(refundableBookingFee);
 
         payment.markAsCancelled(cancelFee, refundAmount);
 
-        RefundHistory history = new RefundHistory(payment, cancelFee, refundableBookingFee);
+        RefundHistory history = new RefundHistory(
+                payment,
+                cancelFee.intValue(),
+                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount().intValue()
+        );
+
         refundHistoryRepository.save(history);
 
         return toPaymentResponse(payment);
@@ -212,14 +227,15 @@ public class PaymentService {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
-        int cancelFee = (int) (request.getCancelAmount() * 0.1);
+        BigDecimal cancelAmount = BigDecimal.valueOf(request.getCancelAmount());
+        BigDecimal cancelFee = cancelAmount.multiply(BigDecimal.valueOf(0.1));
 
-        payment.cancelPartial(request.getCancelAmount(), cancelFee, request.getReason());
+        payment.cancelPartial(cancelAmount, cancelFee, request.getReason());
 
         RefundHistory history = new RefundHistory(
                 payment,
-                cancelFee,
-                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount()
+                cancelFee.intValue(),
+                payment.getRefundAmount() == null ? 0 : payment.getRefundAmount().intValue()
         );
 
         refundHistoryRepository.save(history);
@@ -297,20 +313,24 @@ public class PaymentService {
         return sb.toString();
     }
 
-    private int calculateCancelFee(Reservation reservation, int ticketPrice, int ticketCount) {
+    private BigDecimal calculateCancelFee(Reservation reservation, BigDecimal ticketPrice, int ticketCount) {
         long dayBeforeShow = ChronoUnit.DAYS.between(LocalDateTime.now().toLocalDate(), reservation.getPerformance().getStartDate());
         long daySinceBooking = ChronoUnit.DAYS.between(reservation.getCreatedAt().toLocalDate(), LocalDateTime.now().toLocalDate());
 
         if(dayBeforeShow >= 10) {
-            if(daySinceBooking <= 7) return 0;
-            int feePerTicket = Math.min(4000, (int) (ticketPrice * 0.1));
-            return feePerTicket * ticketCount;
+            if(daySinceBooking <= 7) return BigDecimal.ZERO;
+            BigDecimal feePerTicket = ticketPrice.multiply(BigDecimal.valueOf(0.1))
+                    .min(BigDecimal.valueOf(4000));
+            return feePerTicket.multiply(BigDecimal.valueOf(ticketCount));
         } else if(dayBeforeShow >= 7) {
-            return (int) (ticketPrice * 0.1) * ticketCount;
+            return ticketPrice.multiply(BigDecimal.valueOf(0.1))
+                    .multiply(BigDecimal.valueOf(ticketCount));
         } else if(dayBeforeShow >= 3) {
-            return (int) (ticketPrice * 0.2) * ticketCount;
+            return ticketPrice.multiply(BigDecimal.valueOf(0.2))
+                    .multiply(BigDecimal.valueOf(ticketCount));
         } else if(dayBeforeShow >= 1) {
-            return (int) (ticketPrice * 0.3) * ticketCount;
+            return ticketPrice.multiply(BigDecimal.valueOf(0.3))
+                    .multiply(BigDecimal.valueOf(ticketCount));
         } else {
             throw new CustomException(ErrorCode.CANCEL_NOT_ALLOWED);
         }

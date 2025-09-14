@@ -49,15 +49,15 @@ public class AdminDashboardService {
         Map<String, BigDecimal> salesByPerformance = paymentRepository.getSalesByPerformance()
                 .stream()
                 .collect(Collectors.toMap(
-                        PaymentSalesStatsResponse::getLabel,
-                        r -> BigDecimal.valueOf(r.getTotalAmount())
+                        PaymentSalesStatsResponse::groupLabel,
+                        r -> r.totalAmount()
                 ));
 
         Map<String, BigDecimal> salesByGenre = paymentRepository.getSalesByGenre()
                 .stream()
                 .collect(Collectors.toMap(
-                        PaymentSalesStatsResponse::getLabel,
-                        r -> BigDecimal.valueOf(r.getTotalAmount())
+                        PaymentSalesStatsResponse::groupLabel,
+                        r -> r.totalAmount()
                 ));
 
         return new  SalesStatsResponse(
