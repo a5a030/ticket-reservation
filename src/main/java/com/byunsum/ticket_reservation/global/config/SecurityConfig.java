@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationEntryPoint;
 import com.byunsum.ticket_reservation.security.jwt.JwtAuthenticationFilter;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -153,8 +154,8 @@ public class SecurityConfig {
 
     @Bean
     public ProxyManager<String> proxyManager(StatefulRedisConnection<String, byte[]> connection) {
-        return LettuceBasedProxyManager.builderFor(connection)
-                .build();
+        LettuceBasedProxyManager<String> pm = Bucket4jLettuce.casBasedBuilder(connection).build();
+        return pm;
     }
 
     @Bean
