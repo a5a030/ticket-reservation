@@ -9,9 +9,14 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -25,10 +30,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -37,6 +44,9 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Value("${cors.allowed-origins:http://localhost:3000,http://127.0.0.1:3000}")
+    private String corsAllowedOrigins;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -115,8 +125,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // dev
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://127.0.0.1:3000"));
+
+        List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
+                        .map(String::trim).filter(s -> !s.isEmpty()).toList();
+
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));            // 요청 헤더 허용(Preflight)
         config.setExposedHeaders(List.of("Authorization"));// 응답에서 브라우저가 읽을 수 있는 헤더
@@ -129,8 +142,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public RedisRateLimitFilter redisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String>  proxyManager, SlackNotifier slackNotifier) {
-        return new RedisRateLimitFilter(jwtTokenProvider, proxyManager, slackNotifier);
+    public RedisRateLimitFilter redisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String>  proxyManager, SlackNotifier slackNotifier, StringRedisTemplate stringRedisTemplate) {
+        return new RedisRateLimitFilter(jwtTokenProvider, proxyManager, slackNotifier, stringRedisTemplate);
     }
 
     @Bean
@@ -146,6 +159,40 @@ public class SecurityConfig {
 
     @Bean
     public RedisClient redisClient(RedisConnectionFactory factory) {
-        return RedisClient.create("redis://127.0.0.1:6379");
+        if(!(factory instanceof LettuceConnectionFactory lettuceConnectionFactory)) {
+            throw new IllegalStateException("LettuceConnectionFactory가 필요합니다.");
+        }
+
+        RedisStandaloneConfiguration conf = lettuceConnectionFactory.getStandaloneConfiguration();
+        if(conf == null) {
+            throw new IllegalStateException("RedisStandaloneConfiguration이 없습니다.");
+        }
+
+        String host = conf.getHostName();
+        int port = conf.getPort();
+
+        String username = conf.getUsername();
+        RedisPassword redisPassword = conf.getPassword();
+        String password = (redisPassword != null && redisPassword.isPresent())
+                ? new String(redisPassword.get())
+                : null;
+
+        String uri = buildRedisUri(host, port, username, password);
+        return RedisClient.create(uri);
+    }
+
+    private String buildRedisUri(String host, int port, String username, String password) {
+        StringBuilder sb = new StringBuilder("redis://");
+
+        // ACL: username+password
+        if (StringUtils.hasText(username) && StringUtils.hasText(password)) {
+            sb.append(username).append(":").append(password).append("@");
+        } else if (StringUtils.hasText(password)) {
+            // password only
+            sb.append(":").append(password).append("@");
+        }
+
+        sb.append(host).append(":").append(port);
+        return sb.toString();
     }
 }
