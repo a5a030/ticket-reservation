@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -23,14 +25,22 @@ import java.util.function.Supplier;
 public class RedisRateLimitFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RedisRateLimitFilter.class);
 
+    private static final String SLACK_THROTTLE_PREFIX = "slack:ratelimit:";
+    private static final Duration SLACK_THROTTLE_TTL = Duration.ofSeconds(60);
+
     private final JwtTokenProvider jwtTokenProvider;
     private final ProxyManager<String> proxyManager;
     private final SlackNotifier slackNotifier;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    public RedisRateLimitFilter(JwtTokenProvider jwtTokenProvider, ProxyManager<String> proxyManager, SlackNotifier slackNotifier) {
+    public RedisRateLimitFilter(JwtTokenProvider jwtTokenProvider,
+                                ProxyManager<String> proxyManager,
+                                SlackNotifier slackNotifier,
+                                StringRedisTemplate stringRedisTemplate) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.proxyManager = proxyManager;
         this.slackNotifier = slackNotifier;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     private Bandwidth ruleFor(String path) {
@@ -52,7 +62,6 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-
         return !(path.startsWith("/auth/")
                 || path.startsWith("/payments/")
                 || path.startsWith("/reservations/")
@@ -60,11 +69,54 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
         String path = request.getRequestURI();
         Bandwidth rule = ruleFor(path);
         String group = pathGroup(path);
 
+        String key = resolveKey(request);
+        String compositeKey = key + "|" + group;
+
+        Supplier<BucketConfiguration> configSupplier = () -> BucketConfiguration.builder()
+                .addLimit(rule)
+                .addLimit(Bandwidth.classic(200, Refill.greedy(200, Duration.ofMinutes(1)))) // 전체 API 공통 제한
+                .build();
+
+        Bucket bucket = proxyManager.builder().build(compositeKey, configSupplier);
+
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+
+        if (probe.isConsumed()) {
+            response.setHeader("X-RateLimit-Limit", String.valueOf(rule.getCapacity()));
+            response.setHeader("X-RateLimit-Remaining", String.valueOf(probe.getRemainingTokens()));
+            if (log.isDebugEnabled()) {
+                log.debug("RateLimit OK: key={}, path={}, remaining={}", compositeKey, path, probe.getRemainingTokens());
+            }
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        long retryAfterSeconds = Math.max(1, Duration.ofNanos(probe.getNanosToWaitForRefill()).getSeconds());
+
+        log.warn("Rate limit exceeded: key={}, path={}, retryAfter={}s", compositeKey, path, retryAfterSeconds);
+
+        response.setStatus(429);
+        response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"too_many_requests\",\"message\":\"Rate limit exceeded\"}");
+
+        if (canSendSlack(compositeKey)) {
+            slackNotifier.send(String.format(
+                    "RateLimit 초과\nKey: %s\nEndpoint: %s\nRetry After: %ds",
+                    compositeKey, path, retryAfterSeconds
+            ));
+        }
+    }
+
+    private String resolveKey(HttpServletRequest request) {
         String key = clientIp(request);
         String auth = request.getHeader("Authorization");
 
@@ -76,65 +128,38 @@ public class RedisRateLimitFilter extends OncePerRequestFilter {
                 }
             } catch (ExpiredJwtException e) {
                 log.debug("Expired JWT for rate limiting: {}", e.getMessage());
-            } catch (Exception ignored) {}
-        }
-
-        String compositeKey = key + "|" + group;
-
-        Supplier<BucketConfiguration> configSupplier = () -> BucketConfiguration.builder()
-                .addLimit(rule)
-                .addLimit(Bandwidth.classic(200, Refill.greedy(200, Duration.ofMinutes(1)))) // 전체 API 공통 제한
-                .build();
-
-        Bucket bucket = proxyManager.builder()
-                .build(compositeKey, configSupplier);
-
-        if (bucket.tryConsume(1)) {
-            long remaining = bucket.getAvailableTokens();
-            response.setHeader("X-RateLimit-Limit", String.valueOf(rule.getCapacity()));
-            response.setHeader("X-RateLimit-Remaining", String.valueOf(remaining));
-            if (log.isDebugEnabled()) {
-                log.debug("RateLimit OK: key={}, path={}, remaining={}", compositeKey, path, remaining);
+            } catch (Exception ignored) {
             }
-            filterChain.doFilter(request, response);
-        } else {
-            // 초 단위로 변환
-            long nanos = rule.getRefillPeriodNanos();
-            Duration refillPeriod = Duration.ofNanos(nanos);
-            long waitForRefillSeconds = refillPeriod.getSeconds();
-
-            log.warn("Rate limit exceeded: key={}, path={}, retryAfter={}s", key, path, waitForRefillSeconds);
-            response.setStatus(429);
-            response.setHeader("Retry-After", String.valueOf(waitForRefillSeconds > 0 ? waitForRefillSeconds : 1));
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"too_many_requests\",\"message\":\"Rate limit exceeded\"}");
-
-            slackNotifier.send(String.format(
-                    "🚨 RateLimit 초과\nIP: %s\nEndpoint: %s\nRetry After: %ds",
-                    key, path, waitForRefillSeconds
-            ));
         }
+
+        return key;
     }
 
     private String clientIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
 
-        if(xff != null && !xff.isBlank()){
+        if (xff != null && !xff.isBlank()) {
             String ip = xff.split(",")[0].trim();
-
-            if("::1".equals(ip)){
-                ip = "127.0.0.1";
-            }
-
+            if ("::1".equals(ip)) ip = "127.0.0.1";
             return ip;
         }
 
         String remoteAddr = request.getRemoteAddr();
-
-        if("::1".equals(remoteAddr)){
-            remoteAddr = "127.0.0.1";
-        }
-
+        if ("::1".equals(remoteAddr)) remoteAddr = "127.0.0.1";
         return remoteAddr;
+    }
+
+    private boolean canSendSlack(String compositeKey) {
+        try {
+            String throttleKey = SLACK_THROTTLE_PREFIX + compositeKey;
+            Boolean ok = stringRedisTemplate.opsForValue()
+                    .setIfAbsent(throttleKey, "1", SLACK_THROTTLE_TTL);
+            return Boolean.TRUE.equals(ok);
+        } catch (Exception e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Slack throttle check failed. skip slack. reason={}", e.getMessage());
+            }
+            return false;
+        }
     }
 }
