@@ -17,7 +17,7 @@ type ReservationStatus = "CANCELLED" | "CONFIRMED";
 interface ReconfirmButtonProps {
     reservationId: number;
     initialStatus: ReservationStatus;
-    ttlSeconds: number; // 백엔드에서 TTL 내려주면 표시
+    ttlSeconds: number;
     onReconfirm: (id: number) => Promise<void>;
 }
 
@@ -29,6 +29,7 @@ export default function ReconfirmButton({
                                         }: ReconfirmButtonProps) {
     const [status, setStatus] = useState<ReservationStatus>(initialStatus);
     const [timeLeft, setTimeLeft] = useState(ttlSeconds);
+    const [error, setError] = useState<string | null>(null);
 
     // TTL 카운트다운
     useEffect(() => {
@@ -39,31 +40,31 @@ export default function ReconfirmButton({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [status, timeLeft]);
+    }, [status]); // ✅ timeLeft 제거 → 불필요한 interval 재생성 방지
 
     const formatTime = (seconds: number) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
-        const padded = s < 10 ? `0${s}` : s.toString();
-        return `${m}:${padded}`;
+        return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
     const handleClick = async () => {
         try {
             await onReconfirm(reservationId);
             setStatus("CONFIRMED");
+            setError(null);
         } catch (err) {
             console.error("재확정 실패", err);
-            alert("재확정에 실패했습니다.");
+            setError("재확정에 실패했습니다. 다시 시도해주세요.");
         }
     };
 
-    // 재확정 완료 상태
+    // ✅ 예매 확정됨
     if (status === "CONFIRMED") {
         return <span className="text-green-600 font-medium">예매완료</span>;
     }
 
-    // TTL 만료
+    // ✅ TTL 만료
     if (timeLeft <= 0) {
         return <span className="text-gray-400">재확정 불가 (만료)</span>;
     }
@@ -72,7 +73,7 @@ export default function ReconfirmButton({
         <div className="flex items-center gap-2">
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold">
+                    <Button variant="secondary" className="font-semibold">
                         🔄 재확정
                     </Button>
                 </AlertDialogTrigger>
@@ -80,16 +81,15 @@ export default function ReconfirmButton({
                     <AlertDialogHeader>
                         <AlertDialogTitle>예매 재확정</AlertDialogTitle>
                         <AlertDialogDescription>
-                            이 예매는 취소 상태입니다. <br />
+                            이 예매는 현재 <span className="font-bold text-red-500">취소 상태</span>입니다.
+                            <br />
                             재확정은 <span className="text-red-500">단 한 번만</span> 가능하며,
                             남은 시간 {formatTime(timeLeft)} 내에만 실행할 수 있습니다.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>취소</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleClick}>
-                            확인
-                        </AlertDialogAction>
+                        <AlertDialogAction onClick={handleClick}>확인</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -97,6 +97,8 @@ export default function ReconfirmButton({
             <span className="text-sm text-gray-500">
         남은 시간 {formatTime(timeLeft)}
       </span>
+
+            {error && <span className="text-sm text-red-500">{error}</span>}
         </div>
     );
 }

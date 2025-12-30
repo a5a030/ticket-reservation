@@ -18,12 +18,25 @@ const COLORS = ["#4F46E5", "#22C55E", "#F59E0B", "#EF4444", "#14B8A6", "#8B5CF6"
 
 export default function GenreSalesChart() {
     const [data, setData] = useState<SalesStats[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("/admin/payments/revenue-by-genre")
-            .then((res) => res.json())
-            .then((json) => setData(json));
+        fetch("/admin/payments/statistics/genre")
+            .then((res) => {
+                if (!res.ok) throw new Error("장르별 매출 데이터를 불러올 수 없습니다.");
+                return res.json();
+            })
+            .then((json) => setData(json))
+            .catch((err) => setError(err.message))
+            .finally(() => setLoading(false));
     }, []);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div className="text-red-500">{error}</div>;
+    if (data.length === 0) return <div className="text-gray-500">데이터가 없습니다.</div>;
+
+    const total = data.reduce((sum, item) => sum + item.totalAmount, 0);
 
     return (
         <div className="p-4 bg-white rounded-2xl shadow">
@@ -37,13 +50,22 @@ export default function GenreSalesChart() {
                         cx="50%"
                         cy="50%"
                         outerRadius={120}
-                        label={(entry) => `${entry.label} (${(entry.totalAmount / data.reduce((a, b) => a + b.totalAmount, 0) * 100).toFixed(1)}%)`}
+                        label={(entry) =>
+                            total > 0
+                                ? `${entry.label} (${((entry.totalAmount / total) * 100).toFixed(1)}%)`
+                                : `${entry.label} (0%)`
+                        }
                     >
                         {data.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => `${value.toLocaleString()} 원`} />
+                    <Tooltip
+                        formatter={(value: number, _, entry: any) => {
+                            const percent = total > 0 ? ((entry.payload.totalAmount / total) * 100).toFixed(1) : "0";
+                            return [`${value.toLocaleString()} 원 (${percent}%)`, entry.payload.label];
+                        }}
+                    />
                     <Legend />
                 </PieChart>
             </ResponsiveContainer>

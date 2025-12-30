@@ -12,27 +12,36 @@ const DashboardContent: React.FC = () => {
     const [salesByGenre, setSalesByGenre] = useState<PaymentSalesStats[]>([]);
 
     useEffect(() => {
-        axios.get("/admin/dashboard", {
-            params: {
-                start: "2025-08-01T00:00:00",
-                end: "2025-09-01T00:00:00"
-            }
-        }).then(res => setData(res.data));
-
-        axios.get("/admin/payments/sales/performance").then(res => setSalesByPerformance(res.data));
-        axios.get("/admin/payments/sales/genre").then(res => setSalesByGenre(res.data));
+        Promise.all([
+            axios.get("/admin/dashboard", {
+                params: { start: "2025-08-01T00:00:00", end: "2025-09-01T00:00:00" }
+            }),
+            axios.get("/admin/payments/statistics/performance"),
+            axios.get("/admin/payments/statistics/genre")
+        ])
+            .then(([dashboardRes, perfRes, genreRes]) => {
+                setData(dashboardRes.data);
+                setSalesByPerformance(perfRes.data);
+                setSalesByGenre(genreRes.data);
+            })
+            .catch(err => console.error("대시보드 로딩 실패:", err));
     }, []);
+
 
     if (!data) return <p>Loading...</p>;
 
     return (
-        <div>
-            <SalesSection data={data.sales} />
-            <SalesByCategorySection performanceData={salesByPerformance} genreData={salesByGenre} />
+        <div className="space-y-6">
+            <SalesSection sales={data.sales} />
+            <SalesByCategorySection
+                performanceData={salesByPerformance}
+                genreData={salesByGenre}
+            />
             <ReviewSection data={data.reviews} />
             <TicketSection data={data.tickets} />
         </div>
     );
+
 };
 
 export default DashboardContent;
