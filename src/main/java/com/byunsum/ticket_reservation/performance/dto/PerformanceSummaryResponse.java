@@ -47,15 +47,15 @@ public class PerformanceSummaryResponse {
     public PerformanceSummaryResponse() {
     }
 
-    public PerformanceSummaryResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
+    public PerformanceSummaryResponse(Long id, String title, String description, String venue, String genre, String posterUrl, LocalDate startDate, LocalDate endDate, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.venue = venue;
-        this.startDate = startDate;
-        this.endDate = endDate;
         this.genre = genre;
         this.posterUrl = posterUrl;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.preReservationOpenDateTime = preReservationOpenDateTime;
         this.generalReservationOpenDateTime = generalReservationOpenDateTime;
         this.maxTicketsPerPerson = maxTicketsPerPerson;

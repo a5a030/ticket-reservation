@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.performance.controller;
 
+import com.byunsum.ticket_reservation.performance.dto.PerformanceDetailResponse;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceSummaryResponse;
 import com.byunsum.ticket_reservation.performance.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,8 +40,8 @@ public class PerformanceController {
             @ApiResponse(responseCode = "404", description = "해당 공연 없음")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<PerformanceSummaryResponse> getPerformanceById(@PathVariable Long id) {
-        PerformanceSummaryResponse response = performanceService.getPerformanceById(id);
+    public ResponseEntity<PerformanceDetailResponse> getPerformanceById(@PathVariable Long id) {
+        PerformanceDetailResponse response = performanceService.getPerformanceById(id);
         return ResponseEntity.ok(response);
     }
 

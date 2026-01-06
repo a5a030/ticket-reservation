@@ -1,7 +1,7 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
 import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
-import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
+import com.byunsum.ticket_reservation.performance.dto.PerformanceSummaryResponse;
 import com.byunsum.ticket_reservation.performance.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,8 +32,8 @@ public class AdminPerformanceController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Long> savePerformance(@Valid @RequestBody PerformanceRequest request) {
-        Long performanceId = performanceService.createPerformance(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(performanceId);
+        Long id = performanceService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
     @Operation(summary = "공연 수정", description = "관리자가 공연 정보를 수정합니다.")
@@ -45,8 +45,8 @@ public class AdminPerformanceController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<PerformanceResponse> updatePerformance(@PathVariable Long id, @Valid @RequestBody PerformanceRequest request) {
-        Long id = performanceService.updatePerformance(id, request);
-        return ResponseEntity.ok(id);
+    public ResponseEntity<PerformanceSummaryResponse> updatePerformance(@PathVariable Long id, @Valid @RequestBody PerformanceRequest request) {
+        PerformanceSummaryResponse response = performanceService.update(id, request);
+        return ResponseEntity.ok(response);
     }
 }
