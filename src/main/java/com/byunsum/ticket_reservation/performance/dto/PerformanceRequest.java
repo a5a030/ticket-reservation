@@ -24,31 +24,23 @@ public class PerformanceRequest {
     @Schema(description = "공연장")
     private String venue;
 
-    @Schema(description = "공연 시간")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
-    private LocalTime time;
-
     @Schema(description = "공연 시작일")
     private LocalDate startDate;
 
     @Schema(description = "공연 종료일")
     private LocalDate endDate;
 
-    @Schema(description = "선예매 오픈")
-    private LocalDateTime preReservationOpenDate;
+    @Schema(description = "선예매 오픈일시")
+    private LocalDateTime preReservationOpenDateTime;
 
-    @Schema(description = "일반예매 오픈")
-    private LocalDateTime generalOpenDate;
+    @Schema(description = "일반예매 오픈일시")
+    private LocalDateTime generalReservationOpenDateTime;
 
     @Schema(description = "회차당 1인 최대 예매 수량")
     private int maxTicketsPerPerson;
 
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
-
-    @Schema(description = "입장 가능 시작 시각")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime entryStartTime;
 
     public PerformanceRequest() {}
 
@@ -92,14 +84,6 @@ public class PerformanceRequest {
         this.venue = venue;
     }
 
-    public LocalTime getTime() {
-        return time;
-    }
-
-    public void setTime(LocalTime time) {
-        this.time = time;
-    }
-
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -116,27 +100,27 @@ public class PerformanceRequest {
         this.endDate = endDate;
     }
 
-    public LocalDateTime getPreReservationOpenDate() {
-        return preReservationOpenDate;
+    public LocalDateTime getPreReservationOpenDateTime() {
+        return preReservationOpenDateTime;
     }
 
-    public void setPreReservationOpenDate(LocalDateTime preReservationOpenDate) {
-        this.preReservationOpenDate = preReservationOpenDate;
+    public void setPreReservationOpenDateTime(LocalDateTime preReservationOpenDate) {
+        this.preReservationOpenDateTime = preReservationOpenDateTime;
     }
 
-    public LocalDateTime getGeneralOpenDate() {
-        return generalOpenDate;
+    public LocalDateTime getGeneralReservationOpenDateTime() {
+        return generalReservationOpenDateTime;
     }
 
-    public void setGeneralOpenDate(LocalDateTime generalOpenDate) {
-        this.generalOpenDate = generalOpenDate;
+    public void setGeneralReservationOpenDateTime(LocalDateTime generalReservationOpenDateTime) {
+        this.generalReservationOpenDateTime = generalReservationOpenDateTime;
     }
 
     public int getMaxTicketsPerPerson() {
         return maxTicketsPerPerson;
     }
 
-    public void setMaxTicketPerPerson(int maxTicketsPerPerson) {
+    public void setMaxTicketsPerPerson(int maxTicketsPerPerson) {
         this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 
@@ -146,13 +130,5 @@ public class PerformanceRequest {
 
     public void setType(PerformanceType type) {
         this.type = type;
-    }
-
-    public LocalDateTime getEntryStartTime() {
-        return entryStartTime;
-    }
-
-    public void setEntryStartTime(LocalDateTime entryStartTime) {
-        this.entryStartTime = entryStartTime;
     }
 }
