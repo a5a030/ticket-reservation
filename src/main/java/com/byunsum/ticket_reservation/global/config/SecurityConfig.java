@@ -106,6 +106,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/members").permitAll()
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/web/**").permitAll()
+                        .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/pre-reservations/**").authenticated()
                         .anyRequest().authenticated()
                 )

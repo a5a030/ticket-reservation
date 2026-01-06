@@ -6,7 +6,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
@@ -36,7 +35,11 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
             if(memberIdCookie != null) {
                 try {
                     Long memberId = Long.parseLong(memberIdCookie.getValue());
-                    Member member = memberService.findOne(memberId).orElse(null);
+                    Member member = null;
+                    try {
+                        member = memberService.findById(memberId);
+                    } catch(Exception ignored) {}
+
 
                     if (member != null) {
                         session = request.getSession(true);
@@ -44,9 +47,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
 
                         return true;
                     }
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
+                } catch (NumberFormatException ignored) {}
             }
         }
 

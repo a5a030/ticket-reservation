@@ -50,7 +50,7 @@ public class WebMemberController {
         Member loginMember = (Member) session.getAttribute("loginMember");
 
         if(loginMember==null){
-            return "redirect:/web/members/login-form?error=unauthorized";
+            return "redirect:/web/login-form?error=unauthorized";
         }
 
         model.addAttribute("member", loginMember);
@@ -58,16 +58,19 @@ public class WebMemberController {
     }
 
     @PostMapping("/edit")
-    public String edit(@RequestParam String loginId, @RequestParam String password, HttpServletRequest request) {
+    public String edit(@RequestParam String username, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        Member loginMember = (Member) session.getAttribute("loginMember");
-
-        if(loginMember==null){
-            return "redirect:/web/members/login-form?error=unauthorized";
+        if(session == null){
+            return "redirect:/web/login-form?error=unauthorized";
         }
 
-        memberService.update(loginMember.getId(),  loginId, password);
-        loginMember.setLoginId(loginId);
+        Member loginMember = (Member) session.getAttribute("loginMember");
+        if(loginMember==null){
+            return "redirect:/web/login-form?error=unauthorized";
+        }
+
+        memberService.update(loginMember.getId(), username);
+        loginMember.setUsername(username);
 
         return  "redirect:/web/members/me?updated";
     }
@@ -77,7 +80,7 @@ public class WebMemberController {
         HttpSession session = request.getSession(false);
 
         if(session == null || session.getAttribute("loginMember") == null){
-            return "redirect:/web/members/login-form?error=unauthorized";
+            return "redirect:/web/login-form?error=unauthorized";
         }
 
         Member loginMember = (Member) session.getAttribute("loginMember");

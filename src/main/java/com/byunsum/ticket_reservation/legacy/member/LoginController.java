@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.legacy.member;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.legacy.member.form.LoginForm;
 import com.byunsum.ticket_reservation.member.service.MemberService;
@@ -44,21 +45,25 @@ public class LoginController {
                                    HttpServletResponse response) {
         try {
             // 기존세션 무효화
-            HttpSession oldSession = request.getSession();
+            HttpSession oldSession = request.getSession(false);
             if(oldSession != null) {
                 oldSession.invalidate();
             }
 
             // 로그인 검증
-            Member loginMember = memberService.login(loginForm.getLoginId(), loginForm.getPassword());
+            Member member = memberService.findByLoginId(loginForm.getLoginId());
+            if(!passwordEncoder.matches(loginForm.getPassword(), member.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("아이디 또는 비밀번호가 올바르지 않습니다.");
+            }
 
             // 새 세션 생성
             HttpSession newSession = request.getSession(true);
-            newSession.setAttribute("loginMember", loginMember);
+            newSession.setAttribute("loginMember", member);
 
-            Cookie cookie = new Cookie("memberId", String.valueOf(loginMember.getId()));
+            Cookie cookie = new Cookie("memberId", String.valueOf(member.getId()));
             cookie.setMaxAge(60 * 60 * 24 * 7); //7일
             cookie.setPath("/");
+            cookie.setHttpOnly(true);
             response.addCookie(cookie);
 
 //            newSession.setMaxInactiveInterval(30 * 60);
@@ -66,8 +71,8 @@ public class LoginController {
 //            return ResponseEntity.ok("로그인 성공");
             return ResponseEntity.ok("/web/members/me"); //프론트에서 리디렉션 처리
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus()).body(e.getMessage());
         }
     }
 
