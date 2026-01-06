@@ -21,10 +21,6 @@ public class MyPageController {
     @ApiResponse(responseCode = "200", description = "요청 성공")
     @GetMapping
     public ResponseEntity<MyPageResponseDto> getMyPage(@AuthenticationPrincipal Member member) {
-        if(member == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         MyPageResponseDto responseDto = new MyPageResponseDto(
                 member.getLoginId(),
                 member.getUsername(),

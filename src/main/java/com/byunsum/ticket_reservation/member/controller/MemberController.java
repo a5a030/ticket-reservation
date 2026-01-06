@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.member.controller;
 import com.byunsum.ticket_reservation.auth.dto.SignupRequestDto;
 import com.byunsum.ticket_reservation.auth.dto.SignupResponseDto;
 import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.member.dto.MyPageResponseDto;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -68,8 +69,6 @@ public class MemberController {
             String encodedPassword = passwordEncoder.encode(dto.getPassword());
             member.setPassword(encodedPassword); //비밀번호 암호화
 
-            System.out.println("암호화된 비밀번호: "+encodedPassword);
-
             memberService.join(member);
 
             SignupResponseDto responseDto = new SignupResponseDto(
@@ -94,8 +93,15 @@ public class MemberController {
 
     @Operation(summary = "내 정보 조회", description = "JWT 인증된 사용자의 정보를 반환합니다.")
     @GetMapping("/me")
-    public ResponseEntity<?> getLoginMember(@AuthenticationPrincipal Member member) {
-        return  ResponseEntity.ok(member);
+    public ResponseEntity<MyPageResponseDto> getLoginMember(@AuthenticationPrincipal Member member) {
+        MyPageResponseDto responseDto = new MyPageResponseDto(
+                member.getLoginId(),
+                member.getUsername(),
+                member.getEmail(),
+                member.getRole()
+        );
+
+        return  ResponseEntity.ok(responseDto);
     }
 
     @Operation(summary = "보호된 페이지 접근", description = "로그인한 사용자만 접근 가능한 페이지를 테스트합니다.")
