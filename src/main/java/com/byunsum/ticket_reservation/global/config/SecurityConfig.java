@@ -96,16 +96,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/signup",
-                                "/auth/login",
-                                "/auth/refresh",
-                                "/members/new",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/actuator/health"
                         ).permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/members").permitAll()
                         .requestMatchers(HttpMethod.GET, "/performances/**", "/seats/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/pre-reservations/**").authenticated()

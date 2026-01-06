@@ -53,35 +53,31 @@ public class MemberController {
     }
     */
 
-    @Operation(summary = "회원 가입", description = "회원 정보를 받아 새 사용자를 등록합니다.")
+    @Operation(summary = "회원 가입", description = "새 회원을 등록합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "회원 가입 성공"),
             @ApiResponse(responseCode = "409", description = "중복된 사용자 이름")
     })
-    @PostMapping("/new")
-    public ResponseEntity<?> create(@RequestBody SignupRequestDto dto) {
-        try {
-            Member member = new Member();
-            member.setLoginId(dto.getLoginId());
-            member.setUsername(dto.getUsername());
-            member.setEmail(dto.getEmail());
+    @PostMapping
+    public ResponseEntity<SignupResponseDto> create(@RequestBody SignupRequestDto dto) {
+        Member member = new Member();
+        member.setLoginId(dto.getLoginId());
+        member.setUsername(dto.getUsername());
+        member.setEmail(dto.getEmail());
 
-            String encodedPassword = passwordEncoder.encode(dto.getPassword());
-            member.setPassword(encodedPassword); //비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        member.setPassword(encodedPassword); //비밀번호 암호화
 
-            memberService.join(member);
+        memberService.join(member);
 
-            SignupResponseDto responseDto = new SignupResponseDto(
-                    member.getId(),
-                    member.getLoginId(),
-                    member.getUsername(),
-                    member.getEmail()
-            );
+        SignupResponseDto responseDto = new SignupResponseDto(
+                member.getId(),
+                member.getLoginId(),
+                member.getUsername(),
+                member.getEmail()
+        );
 
-            return ResponseEntity.ok(responseDto);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
+        return ResponseEntity.ok(responseDto);
     }
 
     @Operation(summary = "전체 회원 조회(관리자)", description = "등록된 모든 회원 목록을 반환합니다.")
