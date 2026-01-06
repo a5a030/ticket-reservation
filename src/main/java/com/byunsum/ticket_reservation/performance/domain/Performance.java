@@ -1,6 +1,8 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,8 @@ public class Performance {
     private String venue; //공연장
     private String genre;
     private String posterUrl;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDateTime preReservationOpenDateTime;
     private LocalDateTime generalReservationOpenDateTime;
     private int maxTicketsPerPerson;
@@ -32,12 +36,14 @@ public class Performance {
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
+    public Performance(String title, String description, String venue, String genre, String posterUrl, LocalDate startDate, LocalDate endDate, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
         this.title = title;
         this.description = description;
         this.venue = venue;
         this.genre = genre;
         this.posterUrl = posterUrl;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.preReservationOpenDateTime = preReservationOpenDateTime;
         this.generalReservationOpenDateTime = generalReservationOpenDateTime;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
@@ -102,6 +108,22 @@ public class Performance {
         this.posterUrl = posterUrl;
     }
 
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
     public LocalDateTime getPreReservationOpenDateTime() {
         return preReservationOpenDateTime;
     }
@@ -135,6 +157,6 @@ public class Performance {
     }
 
     public List<PerformanceRound> getRounds() {
-        return rounds;
+        return new ArrayList<>(rounds);
     }
 }
