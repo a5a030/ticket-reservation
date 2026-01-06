@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class PerformanceResponse {
+public class PerformanceSummaryResponse {
     @Schema(description = "공연 ID", example = "1")
     private Long id;
 
@@ -21,56 +21,45 @@ public class PerformanceResponse {
     @Schema(description = "공연장")
     private String venue;
 
-    @Schema(description = "공연 시작일")
-    private LocalDate startDate;
-
-    @Schema(description = "공연 종료일")
-    private LocalDate endDate;
-
-    @Schema(description = "공연 시간")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
-    private LocalTime time;
-
     @Schema(description = "공연 장르")
     private String genre;
 
     @Schema(description = "포스터 이미지 URL")
     private String posterUrl;
 
-    @Schema(description = "선예매 오픈")
-    private LocalDateTime preReservationOpenDate;
+    @Schema(description = "공연 시작일")
+    private LocalDate startDate;
 
-    @Schema(description = "일반예매 오픈")
-    private LocalDateTime generalOpenDate;
+    @Schema(description = "공연 종료일")
+    private LocalDate endDate;
+
+    @Schema(description = "선예매 오픈일시")
+    private LocalDateTime preReservationOpenDateTime;
+
+    @Schema(description = "일반예매 오픈일시")
+    private LocalDateTime generalReservationOpenDateTime;
 
     @Schema(description = "회차별 1인당 최대 예매수")
     private int maxTicketsPerPerson;
 
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
-
-    @Schema(description = "입장 가능 시작 시각")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime entryStartTime;
-
-    public PerformanceResponse() {
+    public PerformanceSummaryResponse() {
     }
 
-    public PerformanceResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDate, LocalDateTime generalOpenDate, int maxTicketsPerPerson, PerformanceType type, LocalDateTime entryStartTime) {
+    public PerformanceSummaryResponse(Long id, String title, String description, String venue, LocalDate startDate, LocalDate endDate, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.venue = venue;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.time = time;
         this.genre = genre;
         this.posterUrl = posterUrl;
-        this.preReservationOpenDate = preReservationOpenDate;
-        this.generalOpenDate = generalOpenDate;
+        this.preReservationOpenDateTime = preReservationOpenDateTime;
+        this.generalReservationOpenDateTime = generalReservationOpenDateTime;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
         this.type = type;
-        this.entryStartTime = entryStartTime;
     }
 
     //불변객체
@@ -98,10 +87,6 @@ public class PerformanceResponse {
         return endDate;
     }
 
-    public LocalTime getTime() {
-        return time;
-    }
-
     public String getGenre() {
         return genre;
     }
@@ -110,12 +95,12 @@ public class PerformanceResponse {
         return posterUrl;
     }
 
-    public LocalDateTime getPreReservationOpenDate() {
-        return preReservationOpenDate;
+    public LocalDateTime getPreReservationOpenDateTime() {
+        return preReservationOpenDateTime;
     }
 
-    public LocalDateTime getGeneralOpenDate() {
-        return generalOpenDate;
+    public LocalDateTime getGeneralReservationOpenDateTime() {
+        return generalReservationOpenDateTime;
     }
 
     public int getMaxTicketsPerPerson() {
@@ -124,9 +109,5 @@ public class PerformanceResponse {
 
     public PerformanceType getType() {
         return type;
-    }
-
-    public LocalDateTime getEntryStartTime() {
-        return entryStartTime;
     }
 }

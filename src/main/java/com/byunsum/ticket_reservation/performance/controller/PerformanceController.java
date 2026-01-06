@@ -1,8 +1,6 @@
 package com.byunsum.ticket_reservation.performance.controller;
 
-import com.byunsum.ticket_reservation.performance.domain.Performance;
-import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
-import com.byunsum.ticket_reservation.performance.dto.PerformanceResponse;
+import com.byunsum.ticket_reservation.performance.dto.PerformanceSummaryResponse;
 import com.byunsum.ticket_reservation.performance.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,8 +28,8 @@ public class PerformanceController {
             @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
     })
     @GetMapping()
-    public ResponseEntity<List<PerformanceResponse>> getAllPerformance() {
-        List<PerformanceResponse> performances = performanceService.getAllPerformances();
+    public ResponseEntity<List<PerformanceSummaryResponse>> getAllPerformance() {
+        List<PerformanceSummaryResponse> performances = performanceService.getAllPerformances();
         return ResponseEntity.ok(performances);
     }
 
@@ -41,8 +39,8 @@ public class PerformanceController {
             @ApiResponse(responseCode = "404", description = "해당 공연 없음")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<PerformanceResponse> getPerformanceById(@PathVariable Long id) {
-        PerformanceResponse response = performanceService.getPerformanceById(id);
+    public ResponseEntity<PerformanceSummaryResponse> getPerformanceById(@PathVariable Long id) {
+        PerformanceSummaryResponse response = performanceService.getPerformanceById(id);
         return ResponseEntity.ok(response);
     }
 
@@ -52,8 +50,8 @@ public class PerformanceController {
             @ApiResponse(responseCode = "200", description = "공연 목록 조회 성공")
     })
     @GetMapping("/sorted")
-    public ResponseEntity<Page<PerformanceResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort, Pageable pageable) {
-        Page<PerformanceResponse> performances = performanceService.getPerformanceSorted(sort, pageable);
+    public ResponseEntity<Page<PerformanceSummaryResponse>> getPerformancesSorted(@RequestParam(defaultValue = "all") String sort, Pageable pageable) {
+        Page<PerformanceSummaryResponse> performances = performanceService.getPerformanceSorted(sort, pageable);
 
         return ResponseEntity.ok(performances);
     }
