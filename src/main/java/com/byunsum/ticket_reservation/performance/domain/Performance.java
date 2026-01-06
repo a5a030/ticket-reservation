@@ -1,12 +1,7 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,15 +15,11 @@ public class Performance {
     private String title;
     private String description;
     private String venue; //공연장
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private LocalTime time;
     private String genre;
     private String posterUrl;
     private LocalDateTime preReservationOpenDateTime;
     private LocalDateTime generalReservationOpenDateTime;
     private int maxTicketsPerPerson;
-    private LocalDateTime entryStartTime;
 
     @Enumerated(EnumType.STRING)
     private PerformanceType type;
@@ -41,20 +32,26 @@ public class Performance {
 
     public Performance() {}
 
-    public Performance(String title, String description, String venue, LocalDate startDate, LocalDate endDate, LocalTime time, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type, LocalDateTime entryStartTime) {
+    public Performance(String title, String description, String venue, String genre, String posterUrl, LocalDateTime preReservationOpenDateTime, LocalDateTime generalReservationOpenDateTime, int maxTicketsPerPerson, PerformanceType type) {
         this.title = title;
         this.description = description;
         this.venue = venue;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.time = time;
         this.genre = genre;
         this.posterUrl = posterUrl;
         this.preReservationOpenDateTime = preReservationOpenDateTime;
         this.generalReservationOpenDateTime = generalReservationOpenDateTime;
         this.maxTicketsPerPerson = maxTicketsPerPerson;
         this.type = type;
-        this.entryStartTime = entryStartTime;
+    }
+
+    public void addRound(PerformanceRound round) {
+        this.rounds.add(round);
+        round.setPerformance(this);
+    }
+
+    public void removeRound(PerformanceRound round) {
+        this.rounds.remove(round);
+        round.setPerformance(null);
     }
 
     public Long getId() {
@@ -89,30 +86,6 @@ public class Performance {
         this.venue = venue;
     }
 
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public LocalTime getTime() {
-        return time;
-    }
-
-    public void setTime(LocalTime time) {
-        this.time = time;
-    }
-
     public String getGenre() {
         return genre;
     }
@@ -129,17 +102,6 @@ public class Performance {
         this.posterUrl = posterUrl;
     }
 
-    public LocalDateTime getStartTime() {
-        return LocalDateTime.of(this.startDate, this.time);
-    }
-
-    @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL)
-    private List<Reservation> reservations = new ArrayList<>();
-
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
     public LocalDateTime getPreReservationOpenDateTime() {
         return preReservationOpenDateTime;
     }
@@ -154,18 +116,6 @@ public class Performance {
 
     public void setPreReservationOpenDateTime(LocalDateTime preReservationOpenDateTime) {
         this.preReservationOpenDateTime = preReservationOpenDateTime;
-    }
-
-    public LocalDateTime getEntryStartTime() {
-        return entryStartTime;
-    }
-
-    public void setEntryStartTime(LocalDateTime entryStartTime) {
-        this.entryStartTime = entryStartTime;
-    }
-
-    public LocalDateTime getStartDateTime() {
-        return LocalDateTime.of(this.startDate, this.time);
     }
 
     public int getMaxTicketsPerPerson() {
@@ -186,17 +136,5 @@ public class Performance {
 
     public List<PerformanceRound> getRounds() {
         return rounds;
-    }
-
-    public void addRound(PerformanceRound round) {
-        this.rounds.add(round);
-    }
-
-    public LocalDateTime getEndDateTime() {
-        if(endDate == null || time == null) {
-            return null;
-        }
-
-        return LocalDateTime.of(endDate, time);
     }
 }
