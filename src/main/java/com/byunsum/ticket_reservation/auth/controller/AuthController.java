@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.auth.controller;
 
 import com.byunsum.ticket_reservation.auth.dto.*;
+import com.byunsum.ticket_reservation.auth.service.AuthService;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.service.MemberService;
 import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
@@ -19,12 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private final MemberService memberService;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService;
 
-    public AuthController(MemberService memberService, JwtTokenProvider jwtTokenProvider) {
-        this.memberService = memberService;
-        this.jwtTokenProvider = jwtTokenProvider;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @Operation(summary = "회원가입", description = "사용자 정보를 입력받아 회원가입을 수행하고 JWT 토큰을 발급합니다.")
@@ -34,16 +33,7 @@ public class AuthController {
     })
     @PostMapping("/signup")
     public ResponseEntity<LoginResponseDto> signup(@RequestBody SignupRequestDto requestDto) {
-        memberService.register(requestDto.getLoginId(), requestDto.getUsername(), requestDto.getPassword(), requestDto.getEmail());
-
-        Member member = memberService.findByLoginId(requestDto.getLoginId());
-
-        String accessToken = jwtTokenProvider.createToken(member.getLoginId(),  member.getRole());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getLoginId(),  member.getRole());
-
-        memberService.updateRefreshToken(member.getLoginId(),  refreshToken);
-
-        return ResponseEntity.ok(new LoginResponseDto(accessToken, refreshToken));
+        return ResponseEntity.ok(authService.signup(requestDto));
     }
 
     @Operation(summary = "로그인", description = "사용자의 이름과 비밀번호로 로그인을 수행하고 JWT 토큰을 발급합니다.")
@@ -53,12 +43,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto) {
-        Member member = memberService.login(requestDto.getLoginId(), requestDto.getPassword());
-        String accessToken = jwtTokenProvider.createToken(member.getLoginId(), member.getRole());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getLoginId(), member.getRole());
-
-        memberService.updateRefreshToken(member.getLoginId(), refreshToken);
-        return ResponseEntity.ok(new LoginResponseDto(accessToken, refreshToken));
+        return ResponseEntity.ok(authService.login(requestDto));
     }
 
     @Operation(summary = "리프레시 토큰 재발급", description = "Refresh Token을 검증하고 새로운 Access Token을 발급합니다.")
@@ -68,21 +53,6 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequestDto dto) {
-        String refreshToken = dto.getRefreshToken();
-
-        if(!jwtTokenProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
-        }
-
-        String loginId = jwtTokenProvider.getName(refreshToken);
-        Member member = memberService.findByLoginId(loginId);
-
-        if(member.getRefreshToken() == null || !refreshToken.equals(member.getRefreshToken())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
-        }
-
-        String newAccessToken = jwtTokenProvider.createToken(member.getLoginId(), member.getRole());
-
-        return ResponseEntity.ok(new RefreshTokenResponseDto(newAccessToken, refreshToken));
+        return ResponseEntity.ok(authService.refresh(dto));
     }
 }

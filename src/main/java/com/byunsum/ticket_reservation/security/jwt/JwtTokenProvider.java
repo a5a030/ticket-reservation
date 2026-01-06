@@ -82,7 +82,7 @@ public class JwtTokenProvider {
 
     public List<GrantedAuthority> getAuthorities(String token) {
         String role = getRole(token);
-        return List.of(new SimpleGrantedAuthority("ROLE_"+role));
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     public String createRefreshToken(String name, String role) {

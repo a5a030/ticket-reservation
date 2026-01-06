@@ -77,6 +77,7 @@ public class MemberController {
                 member.getEmail()
         );
 
+
         return ResponseEntity.ok(responseDto);
     }
 
