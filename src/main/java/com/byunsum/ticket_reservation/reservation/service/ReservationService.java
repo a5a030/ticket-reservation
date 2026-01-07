@@ -208,7 +208,7 @@ public class ReservationService {
 
         switch (sort) {
             case IMMINENT:
-                reservations = reservationRepository.findByMemberIdOrderByPerformanceImminent(memberId);
+                reservations = reservationRepository.findByMemberIdOrderByRoundStartDateAsc(memberId);
                 break;
             case OLDEST:
                 reservations = reservationRepository.findByMemberIdOrderByCreatedAtAsc(memberId);

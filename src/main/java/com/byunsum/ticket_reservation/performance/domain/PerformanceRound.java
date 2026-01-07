@@ -61,12 +61,6 @@ public class PerformanceRound {
         return seats;
     }
 
-    @OneToMany(mappedBy = "performanceRound", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Reservation> reservations = new ArrayList<>();
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
     public void setPerformance(Performance performance) {
         this.performance = performance;
     }

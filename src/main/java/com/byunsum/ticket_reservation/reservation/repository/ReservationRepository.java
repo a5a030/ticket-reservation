@@ -18,23 +18,26 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 
-    @Query("select r from Reservation r where r.member.id = :memberId order by r.performance.startDate asc")
-    List<Reservation> findByMemberIdOrderByPerformanceStartDateAsc(@Param("memberId") Long memberId);
-
-    @Query("select r from Reservation r " +
-            "where r.member.id = :memberId " +
-            "order by r.performance.startDate asc, r.performance.time asc")
-    List<Reservation> findByMemberIdOrderByPerformanceImminent(@Param("memberId") Long memberId);
+    @Query("""
+    SELECT r
+    FROM Reservation r
+    WHERE r.member.id = :memberId
+    ORDER BY (
+        SELECT min(pr.startDateTime)
+        FROM ReservationSeat rs
+        JOIN rs.seat s
+        JOIN s.performanceRound pr
+        WHERE rs.reservation = r
+        ) asc
+    """)
+    List<Reservation> findByMemberIdOrderByRoundStartDateAsc(@Param("memberId") Long memberId);
 
     @Query("select r.performance from Reservation r group by r.performance order by count(r) desc")
     List<Performance> findPopularPerformances();
 
     int countByMemberAndPerformance(Member member, Performance performance);
 
-    @Query("select r from Reservation r " +
-            "where r.member.id = :memberId " +
-            "order by r.createdAt asc")
-    List<Reservation> findByMemberIdOrderByCreatedAtAsc(@Param("memberId") Long memberId);
+    List<Reservation> findByMemberIdOrderByCreatedAtAsc(Long memberId);
 
     @Query("""
     SELECT r.member.id, COUNT(DISTINCT pr.id)
