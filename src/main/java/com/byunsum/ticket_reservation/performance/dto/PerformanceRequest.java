@@ -1,32 +1,38 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 public class PerformanceRequest {
+    @NotBlank
     @Schema(description = "공연 제목")
     private String title;
 
     @Schema(description = "공연 설명")
     private String description;
 
+    @NotBlank
     @Schema(description = "공연 장르")
     private String genre;
 
     @Schema(description = "포스터 이미지 URL")
     private String posterUrl;
 
+    @NotBlank
     @Schema(description = "공연장")
     private String venue;
 
+    @NotNull
     @Schema(description = "공연 시작일")
     private LocalDate startDate;
 
+    @NotNull
     @Schema(description = "공연 종료일")
     private LocalDate endDate;
 
@@ -36,9 +42,12 @@ public class PerformanceRequest {
     @Schema(description = "일반예매 오픈일시")
     private LocalDateTime generalReservationOpenDateTime;
 
-    @Schema(description = "회차당 1인 최대 예매 수량")
-    private int maxTicketsPerPerson;
+    @NotNull
+    @Min(1)
+    @Schema(description = "회차 기준 1인당 최대 예매 수량")
+    private Integer maxTicketsPerPerson;
 
+    @NotNull
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
 
@@ -88,8 +97,8 @@ public class PerformanceRequest {
         return startDate;
     }
 
-    public void setStartDate(LocalDate starDate) {
-        this.startDate = starDate;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
     }
 
     public LocalDate getEndDate() {
@@ -104,7 +113,7 @@ public class PerformanceRequest {
         return preReservationOpenDateTime;
     }
 
-    public void setPreReservationOpenDateTime(LocalDateTime preReservationOpenDate) {
+    public void setPreReservationOpenDateTime(LocalDateTime preReservationOpenDateTime) {
         this.preReservationOpenDateTime = preReservationOpenDateTime;
     }
 
@@ -116,11 +125,11 @@ public class PerformanceRequest {
         this.generalReservationOpenDateTime = generalReservationOpenDateTime;
     }
 
-    public int getMaxTicketsPerPerson() {
+    public Integer getMaxTicketsPerPerson() {
         return maxTicketsPerPerson;
     }
 
-    public void setMaxTicketsPerPerson(int maxTicketsPerPerson) {
+    public void setMaxTicketsPerPerson(Integer maxTicketsPerPerson) {
         this.maxTicketsPerPerson = maxTicketsPerPerson;
     }
 

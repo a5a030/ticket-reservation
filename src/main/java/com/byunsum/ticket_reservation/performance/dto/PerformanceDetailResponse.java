@@ -38,7 +38,7 @@ public class PerformanceDetailResponse {
     @Schema(description = "일반예매 오픈일시")
     private LocalDateTime generalReservationOpenDateTime;
 
-    @Schema(description = "회차별 1인당 최대 예매수")
+    @Schema(description = "회차 기준 1인당 최대 예매 수량")
     private int maxTicketsPerPerson;
 
     @Schema(description = "예매정책을 위한 분류")

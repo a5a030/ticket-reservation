@@ -1,12 +1,10 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 public class PerformanceSummaryResponse {
     @Schema(description = "공연 ID", example = "1")
@@ -39,7 +37,7 @@ public class PerformanceSummaryResponse {
     @Schema(description = "일반예매 오픈일시")
     private LocalDateTime generalReservationOpenDateTime;
 
-    @Schema(description = "회차별 1인당 최대 예매수")
+    @Schema(description = "회차 기준 1인당 최대 예매 수량")
     private int maxTicketsPerPerson;
 
     @Schema(description = "예매정책을 위한 분류")

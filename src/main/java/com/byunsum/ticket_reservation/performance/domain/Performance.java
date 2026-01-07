@@ -1,10 +1,12 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
+import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -51,21 +53,29 @@ public class Performance {
     }
 
     public void addRound(PerformanceRound round) {
-        this.rounds.add(round);
+        if(round == null) return;
+        if(round.getPerformance() != null && round.getPerformance() != this) {
+            throw new IllegalStateException("Round already belongs to another performance");
+        }
+
+        if(!this.rounds.contains(round)) {
+            this.rounds.add(round);
+        }
+
         round.setPerformance(this);
     }
 
     public void removeRound(PerformanceRound round) {
+        if(round == null) return;
         this.rounds.remove(round);
-        round.setPerformance(null);
+
+        if(round.getPerformance() == this) {
+            round.setPerformance(null);
+        }
     }
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getTitle() {
@@ -157,6 +167,20 @@ public class Performance {
     }
 
     public List<PerformanceRound> getRounds() {
-        return new ArrayList<>(rounds);
+        return Collections.unmodifiableList(rounds);
+    }
+
+    public void updateFrom(PerformanceRequest request) {
+        this.title = request.getTitle();
+        this.description = request.getDescription();
+        this.venue = request.getVenue();
+        this.genre = request.getGenre();
+        this.posterUrl = request.getPosterUrl();
+        this.startDate = request.getStartDate();
+        this.endDate = request.getEndDate();
+        this.preReservationOpenDateTime = request.getPreReservationOpenDateTime();
+        this.generalReservationOpenDateTime = request.getGeneralReservationOpenDateTime();
+        this.maxTicketsPerPerson = request.getMaxTicketsPerPerson();
+        this.type = request.getType();
     }
 }
