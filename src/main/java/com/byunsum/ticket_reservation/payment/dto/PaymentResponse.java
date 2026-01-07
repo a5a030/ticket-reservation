@@ -15,13 +15,13 @@ public class PaymentResponse {
     @Schema(description = "총 결제 금액")
     private BigDecimal amount;
 
-    @Schema(description = "부분 취소된 금액 (없으면 null)")
+    @Schema(description = "부분 취소된 금액 (없으면 0)")
     private BigDecimal partialAmount;
 
-    @Schema(description = "취소 수수료 (없으면 null)")
+    @Schema(description = "취소 수수료 (없으면 0)")
     private BigDecimal cancelFee;
 
-    @Schema(description = "실제 환불된 금액 (없으면 null)")
+    @Schema(description = "실제 환불된 금액 (없으면 0)")
     private BigDecimal refundAmount;
 
     @Schema(description = "결제 수단")
