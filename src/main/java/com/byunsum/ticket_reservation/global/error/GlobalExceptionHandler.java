@@ -2,9 +2,9 @@ package com.byunsum.ticket_reservation.global.error;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,9 +16,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse>  handleCustomException(CustomException e) {
         ErrorCode code = e.getErrorCode();
+        String message = (e.getMessage() != null && !e.getMessage().isBlank())
+                ? e.getMessage()
+                : code.getMessage();
 
         return new ResponseEntity<>(
-                new ErrorResponse(code, e.getMessage()), code.getStatus()
+                new ErrorResponse(code, message), code.getStatus()
         );
     }
 
@@ -53,5 +56,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 new ErrorResponse(code), code.getStatus()
         );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse>  handleAuthentication(AuthenticationException e) {
+        ErrorCode code = ErrorCode.UNAUTHORIZED;
+
+        return new ResponseEntity<>(
+                new ErrorResponse(code, code.getMessage()), code.getStatus());
     }
 }

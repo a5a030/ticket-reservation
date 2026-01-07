@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "공연 API(관리자)", description = "관리자 전용 공연 등록/관리 API")
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/admin/performances")
 public class AdminPerformanceController {
@@ -29,7 +30,6 @@ public class AdminPerformanceController {
             @ApiResponse(responseCode = "400", description = "입력 값 오류"),
             @ApiResponse(responseCode = "403", description = "권한 없음")
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Long> savePerformance(@Valid @RequestBody PerformanceRequest request) {
         Long id = performanceService.create(request);
@@ -43,7 +43,6 @@ public class AdminPerformanceController {
             @ApiResponse(responseCode = "403", description = "권한 없음"),
             @ApiResponse(responseCode = "404", description = "해당 공연 없음")
     })
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PerformanceSummaryResponse> updatePerformance(@PathVariable Long id, @Valid @RequestBody PerformanceRequest request) {
         PerformanceSummaryResponse response = performanceService.update(id, request);
