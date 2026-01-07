@@ -3,7 +3,6 @@ package com.byunsum.ticket_reservation.reservation.domain;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
-import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -59,8 +58,9 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private DeliveryMethod deliveryMethod;
 
-    @Schema(description = "배송시작여부")
-    private boolean shipped = false;
+    @Schema(description = "배송 상태 (NONE/READY/SHIPPED/DELIVERED)")
+    @Enumerated(EnumType.STRING)
+    private DeliveryStatus deliveryStatus = DeliveryStatus.NONE;
 
     public void addSeat(Seat seat) {
         if(seat.isReserved()) {
@@ -80,7 +80,15 @@ public class Reservation {
     }
 
     public void setDeliveryFee(int deliveryFee) {
+        if(this.deliveryMethod == DeliveryMethod.PICKUP && deliveryFee != 0) {
+            throw new CustomException(ErrorCode.INVALID_DELIVERY_FEE);
+        }
+
         this.deliveryFee = deliveryFee;
+    }
+
+    public DeliveryStatus getDeliveryStatus() {
+        return deliveryStatus;
     }
 
     public DeliveryMethod getDeliveryMethod() {
@@ -89,6 +97,15 @@ public class Reservation {
 
     public void setDeliveryMethod(DeliveryMethod deliveryMethod) {
         this.deliveryMethod = deliveryMethod;
+
+        if(deliveryMethod == DeliveryMethod.PICKUP) {
+            this.deliveryStatus = DeliveryStatus.NONE;
+            this.deliveryFee = 0;
+        } else {
+            if(this.deliveryStatus == DeliveryStatus.NONE) {
+                this.deliveryStatus = DeliveryStatus.READY;
+            }
+        }
     }
 
     public String getTicketCode() {
@@ -214,11 +231,34 @@ public class Reservation {
     }
 
     public boolean isShipped() {
-        return shipped;
+        return deliveryStatus == DeliveryStatus.SHIPPED || deliveryStatus == DeliveryStatus.DELIVERED;
+    }
+
+    public boolean isDelivered() {
+        return deliveryStatus == DeliveryStatus.DELIVERED;
     }
 
     public void markAsShipped() {
-        this.shipped = true;
+        if(this.deliveryMethod == null || this.deliveryMethod != DeliveryMethod.DELIVERY) {
+            throw new CustomException(ErrorCode.INVALID_DELIVERY_METHOD);
+        }
+
+        if(this.deliveryStatus != DeliveryStatus.READY) {
+            throw new CustomException(ErrorCode.INVALID_DELIVERY_STATUS);
+        }
+
+        this.deliveryStatus = DeliveryStatus.SHIPPED;
+    }
+
+    public void markAsDelivered() {
+        if(this.deliveryMethod == null || this.deliveryMethod != DeliveryMethod.DELIVERY) {
+            throw new CustomException(ErrorCode.INVALID_DELIVERY_METHOD);
+        }
+
+        if(this.deliveryStatus != DeliveryStatus.SHIPPED) {
+            throw new CustomException(ErrorCode.INVALID_DELIVERY_STATUS);
+        }
+        this.deliveryStatus = DeliveryStatus.DELIVERED;
     }
 
     public boolean isPartiallyCancelled() {

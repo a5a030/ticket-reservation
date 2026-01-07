@@ -46,7 +46,9 @@ public enum ErrorCode {
     UNAUTHORIZED_CANCEL(HttpStatus.FORBIDDEN, "본인의 예매만 취소할 수 있습니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "결제 내역을 찾을 수 없습니다."),
     INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 상태입니다."),
-
+    INVALID_DELIVERY_METHOD(HttpStatus.BAD_REQUEST, "유효하지 않은 배송 방식입니다."),
+    INVALID_DELIVERY_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 배송 상태 전이입니다."),
+    INVALID_DELIVERY_FEE(HttpStatus.BAD_REQUEST, "배송 방식에 맞지 않는 배송비입니다."),
 
     TICKET_ALREADY_ISSUED(HttpStatus.CONFLICT, "티켓이 이미 발급되었습니다."),
     TICKET_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 티켓을 찾을 수 없습니다."),
@@ -55,6 +57,9 @@ public enum ErrorCode {
     QR_EXPIRED(HttpStatus.BAD_REQUEST, "QR 코드가 만료되었습니다."),
     QR_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 QR 코드입니다."),
     QR_UNAUTHORIZED(HttpStatus.FORBIDDEN, "해당 QR 코드에 대한 권한이 없습니다."),
+    DELIVERY_IN_PROGRESS(HttpStatus.BAD_REQUEST, "배송이 시작된 예매는 고객센터를 통해 취소할 수 있습니다."),
+    DELIVERY_COMPLETED(HttpStatus.BAD_REQUEST, "배송 완료된 예매는 고객센터를 통해 취소할 수 있습니다."),
+    MANUAL_REFUND_REQUIRED(HttpStatus.BAD_REQUEST, "해당 예매는 고객센터를 통해 환불 처리됩니다."),
 
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
 

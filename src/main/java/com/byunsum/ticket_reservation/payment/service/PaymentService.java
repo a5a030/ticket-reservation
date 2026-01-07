@@ -4,10 +4,7 @@ import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.notification.service.NotificationService;
-import com.byunsum.ticket_reservation.payment.domain.Payment;
-import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
-import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
-import com.byunsum.ticket_reservation.payment.domain.RefundHistory;
+import com.byunsum.ticket_reservation.payment.domain.*;
 import com.byunsum.ticket_reservation.payment.dto.PaymentCancelRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentRequest;
 import com.byunsum.ticket_reservation.payment.dto.PaymentResponse;
@@ -15,6 +12,7 @@ import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.payment.repository.RefundHistoryRepository;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.byunsum.ticket_reservation.reservation.domain.DeliveryMethod;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
@@ -77,7 +75,10 @@ public class PaymentService {
             Performance performance = reservation.getPerformance();
 
             if(reservation.getPerformance().getType() == PerformanceType.SPORTS) {
-                LocalDateTime gameStart = performance.getStartDateTime();
+                PerformanceRound round = reservation.getReservationSeats().get(0)
+                        .getSeat().getPerformanceRound();
+
+                LocalDateTime gameStart = round.getStartDateTime();
                 LocalDateTime bookingDeadline = gameStart.plusHours(1);
 
                 if(LocalDateTime.now().isAfter(bookingDeadline)) {
@@ -106,9 +107,11 @@ public class PaymentService {
                     reservation
             );
 
-            if (request.getPaymentMethod().name().equals("BANK_TRANSFER")) {
+            Payment saved = paymentRepository.save(payment);
+
+            if (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
                 String accountNumber = generateAccountNumber();
-                payment.setAccountNumber(accountNumber);
+                saved.setAccountNumber(accountNumber);
 
                 String bankKey = "payment:bank:timeout:" + reservation.getId();
 
@@ -122,11 +125,11 @@ public class PaymentService {
                 notificationService.send(
                         reservation.getMember(),
                         "무통장입금 계좌번호: " + accountNumber,
-                        "/payments/" + payment.getId()
+                        "/payments/" + saved.getId()
                 );
-            }
 
-            Payment saved = paymentRepository.save(payment);
+                paymentRepository.save(saved);
+            }
 
             return toPaymentResponse(saved);
         } catch (CustomException e) {
@@ -155,17 +158,18 @@ public class PaymentService {
 
         Reservation reservation = payment.getReservation();
 
+        if(reservation.isDelivered()) {
+            throw new CustomException(ErrorCode.DELIVERY_COMPLETED);
+        }
+
         if(reservation.isShipped()) {
-            throw new CustomException(ErrorCode.DELIVERY_ALREADY_STARTED);
+            throw new CustomException(ErrorCode.DELIVERY_IN_PROGRESS);
         }
 
         Performance performance = reservation.getPerformance();
 
-        if(reservation.getPerformance().getType() != PerformanceType.SPORTS) {
-            validateCancelDeadline(reservation.getPerformance().getStartDate());
-        }
-
         int ticketCount = reservation.getQuantity();
+
         BigDecimal seatTotal = reservation.getSeats().stream()
                 .map(seat -> BigDecimal.valueOf(seat.getPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -176,7 +180,10 @@ public class PaymentService {
         BigDecimal cancelFee;
 
         if(performance.getType() == PerformanceType.SPORTS) {
-            LocalDateTime gameStart = performance.getStartDateTime();
+            PerformanceRound round = reservation.getReservationSeats().get(0)
+                    .getSeat().getPerformanceRound();
+
+            LocalDateTime gameStart = round.getStartDateTime();
             LocalDateTime cancelDeadline = gameStart.minusHours(4);
 
             if(LocalDateTime.now().isAfter(cancelDeadline)) {
