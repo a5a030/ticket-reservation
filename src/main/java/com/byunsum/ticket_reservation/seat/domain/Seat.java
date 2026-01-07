@@ -1,30 +1,49 @@
 package com.byunsum.ticket_reservation.seat.domain;
 
-import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import jakarta.persistence.*;
 
+@Table(
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_seat_round_seat_no",
+                columnNames = {"performance_round_id", "seat_no"}
+        ),
+        indexes = {
+                @Index(name = "idx_seat_round", columnList = "performance_round_id"),
+                @Index(name = "idx_seat_round_reserved", columnList = "performance_round_id,reserved")
+        }
+)
 @Entity
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "seat_no", nullable = false, length = 20)
     private String seatNo;
+
+    @Column(nullable = false)
     private int price;
-    private boolean isReserved;
+
+    @Column(nullable = false)
+    private boolean reserved;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "performance_round_id")
+    @JoinColumn(name = "performance_round_id", nullable = false)
     private PerformanceRound performanceRound;
 
     public Seat() {
     }
 
-    public Seat(String seatNo, int price, boolean isReserved, PerformanceRound performanceRound) {
-        this.seatNo = seatNo;
+
+    public Seat(String seatNo, int price) {
+        if(price<0) {
+            throw new IllegalArgumentException("price must be >=0");
+        }
+
+        this.seatNo = normalizedSeatNo(seatNo);
         this.price = price;
-        this.isReserved = isReserved;
-        this.performanceRound = performanceRound;
+        this.reserved = false;
     }
 
     public Long getId() {
@@ -40,7 +59,7 @@ public class Seat {
     }
 
     public void setSeatNo(String seatNo) {
-        this.seatNo = seatNo;
+        this.seatNo = normalizedSeatNo(seatNo);
     }
 
     public int getPrice() {
@@ -52,22 +71,36 @@ public class Seat {
     }
 
     public boolean isReserved() {
-        return isReserved;
+        return reserved;
     }
 
     public void setReserved(boolean reserved) {
-        isReserved = reserved;
+        this.reserved = reserved;
     }
 
     public PerformanceRound getPerformanceRound() {
         return performanceRound;
     }
 
-    public void setPerformanceRound(PerformanceRound performanceRound) {
+    void setPerformanceRound(PerformanceRound performanceRound) {
         this.performanceRound = performanceRound;
     }
 
     public void release() {
-        this.isReserved = false;
+        this.reserved = false;
+    }
+
+    private String normalizedSeatNo(String seatNo) {
+        if(seatNo == null) {
+            throw new IllegalArgumentException("seatNo required");
+        }
+
+        String normalizedSeatNo = seatNo.trim().toUpperCase();
+
+        if(normalizedSeatNo.isBlank()) {
+            throw new IllegalArgumentException("seatNo required");
+        }
+
+        return normalizedSeatNo;
     }
 }
