@@ -36,7 +36,11 @@ public class Seat {
     }
 
 
-    public Seat(String seatNo, int price) {
+    public Seat(String seatNo, int price, PerformanceRound round) {
+        if(round == null) {
+            throw new IllegalArgumentException("round required");
+        }
+
         if(price<0) {
             throw new IllegalArgumentException("price must be >=0");
         }
@@ -44,14 +48,11 @@ public class Seat {
         this.seatNo = normalizedSeatNo(seatNo);
         this.price = price;
         this.reserved = false;
+        this.performanceRound = round;
     }
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getSeatNo() {
@@ -80,10 +81,6 @@ public class Seat {
 
     public PerformanceRound getPerformanceRound() {
         return performanceRound;
-    }
-
-    void setPerformanceRound(PerformanceRound performanceRound) {
-        this.performanceRound = performanceRound;
     }
 
     public void release() {
