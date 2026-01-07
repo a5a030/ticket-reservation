@@ -3,6 +3,8 @@ package com.byunsum.ticket_reservation.batch.tasklet;
 import com.byunsum.ticket_reservation.global.monitoring.SlackNotifier;
 import com.byunsum.ticket_reservation.payment.domain.Payment;
 import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
+import com.byunsum.ticket_reservation.payment.domain.PaymentMethod;
+import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
@@ -39,14 +41,18 @@ public class BankTransferExpirationTasklet implements Tasklet {
         LocalDate today = LocalDate.now();
         LocalDateTime deadline = today.atTime(23, 59, 59);
 
-        List<Payment> expiredPayments = paymentRepository.findPendingBankTransfersBefore(deadline);
+        List<Payment> expiredPayments = paymentRepository.findPendingBankTransfersBefore(
+                PaymentMethod.BANK_TRANSFER,
+                PaymentStatus.PENDING,
+                deadline
+        );
 
         int count = 0;
         Random random = new Random();
 
         for(Payment expiredPayment : expiredPayments) {
+            expiredPayment.cancel(PaymentCancelReason.BANK_TRANSFER_EXPIRED);
             Reservation reservation = expiredPayment.getReservation();
-            reservation.cancel();
 
             for(Seat seat : reservation.getSeats()) {
                 String key = "seat:expire:" + seat.getId();

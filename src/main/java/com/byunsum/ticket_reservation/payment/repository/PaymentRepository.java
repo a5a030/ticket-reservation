@@ -1,12 +1,12 @@
 package com.byunsum.ticket_reservation.payment.repository;
 
 import com.byunsum.ticket_reservation.payment.domain.Payment;
+import com.byunsum.ticket_reservation.payment.domain.PaymentMethod;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentStatistics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,8 +19,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT p FROM Payment p WHERE p.reservation.member.id = :memberId ORDER BY p.createdAt DESC")
     List<Payment> findRecentByReservationMemberId(Long memberId);
 
-    List<Payment> findByReservationMemberId(Long memberId);
-
     List<Payment> findByStatus(PaymentStatus status);
 
     @Query("SELECT p FROM Payment p WHERE p.status = :status ORDER BY p.createdAt DESC")
@@ -30,35 +28,35 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findRecentAll();
 
     //COALESCE 적용: null일 경우 0 반환
-    @Query("SELECT coalesce(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'PAID'")
-    BigDecimal getTotalPaymentAmount();
+    @Query("SELECT coalesce(SUM(p.amount), 0) FROM Payment p WHERE p.status = :status")
+    BigDecimal getTotalPaymentAmount(PaymentStatus status);
 
-    @Query("select count(p) from Payment p where p.status = 'PAID'")
-    Long getTotalPaymentCount();
+    @Query("select count(p) from Payment p where p.status = :status")
+    Long getTotalPaymentCount(PaymentStatus status);
 
-    @Query("SELECT p.paymentMethod AS paymentMethod, COUNT(p) AS count, SUM(p.amount) AS total " +
-            "FROM Payment p WHERE p.status = 'PAID' GROUP BY p.paymentMethod")
-    List<PaymentStatistics> getPaymentStatistics();
+    @Query("SELECT p.paymentMethod AS paymentMethod, COUNT(p) AS count, SUM(coalesce(p.amount, 0)) AS total " +
+            "FROM Payment p WHERE p.status = :status GROUP BY p.paymentMethod")
+    List<PaymentStatistics> getPaymentStatistics(PaymentStatus status);
 
     @Query("select p from Payment p " +
-            "where p.paymentMethod = 'BANK_TRANSFER' " +
-            "and p.status = 'PENDING' " +
+            "where p.paymentMethod = :method " +
+            "and p.status = :status " +
             "and p.createdAt <= :deadline")
-    List<Payment> findPendingBankTransfersBefore(LocalDateTime deadline);
+    List<Payment> findPendingBankTransfersBefore(PaymentMethod method, PaymentStatus status, LocalDateTime deadline);
 
     @Query("SELECT new com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse(" +
-            "p.reservation.performance.title, SUM(p.amount), COUNT(p)) " +
+            "p.reservation.performance.title, SUM(coalesce(p.amount, 0)), COUNT(p)) " +
             "FROM Payment p " +
-            "WHERE p.status = 'PAID' " +
+            "WHERE p.status = :status " +
             "GROUP BY p.reservation.performance.title " +
-            "ORDER BY SUM(p.amount) DESC")
-    List<PaymentSalesStatsResponse> getSalesByPerformance();
+            "ORDER BY SUM(coalesce(p.amount, 0)) DESC")
+    List<PaymentSalesStatsResponse> getSalesByPerformance(PaymentStatus status);
 
     @Query("SELECT new com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse(" +
-            "p.reservation.performance.genre, SUM(p.amount), COUNT(p)) " +
+            "p.reservation.performance.genre, SUM(coalesce(p.amount, 0)), COUNT(p)) " +
             "FROM Payment p " +
-            "WHERE p.status = 'PAID' " +
+            "WHERE p.status = :status " +
             "GROUP BY p.reservation.performance.genre " +
-            "ORDER BY SUM(p.amount) DESC")
-    List<PaymentSalesStatsResponse> getSalesByGenre();
+            "ORDER BY SUM(coalesce(p.amount, 0)) DESC")
+    List<PaymentSalesStatsResponse> getSalesByGenre(PaymentStatus status);
 }

@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.payment.service;
 
+import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
@@ -17,38 +18,38 @@ public class PaymentStatisticService {
     }
 
     public List<PaymentSalesStatsResponse> getSalesByPerformance() {
-        return paymentRepository.getSalesByPerformance();
+        return paymentRepository.getSalesByPerformance(PaymentStatus.PAID);
     }
 
     public List<PaymentSalesStatsResponse> getSalesByGenre() {
-        return paymentRepository.getSalesByGenre();
+        return paymentRepository.getSalesByGenre(PaymentStatus.PAID);
     }
 
     public List<PaymentSalesStatsResponse> getTopPerformances(int limit) {
-        return paymentRepository.getSalesByPerformance()
+        return getSalesByPerformance()
                 .stream()
                 .limit(limit)
                 .toList();
     }
 
     public List<PaymentSalesStatsResponse> getTopGenres(int limit) {
-        return paymentRepository.getSalesByGenre()
+        return getSalesByGenre()
                 .stream()
                 .limit(limit)
                 .toList();
     }
 
     public BigDecimal getTotalPaymentAmount() {
-        return paymentRepository.getTotalPaymentAmount();
+        return paymentRepository.getTotalPaymentAmount(PaymentStatus.PAID);
     }
 
     public Long getTotalPaymentCount() {
-        return paymentRepository.getTotalPaymentCount();
+        return paymentRepository.getTotalPaymentCount(PaymentStatus.PAID);
     }
 
     public BigDecimal getAveragePaymentAmount() {
-        BigDecimal totalAmount = paymentRepository.getTotalPaymentAmount();
-        Long totalCount = paymentRepository.getTotalPaymentCount();
+        BigDecimal totalAmount = getTotalPaymentAmount();
+        Long totalCount = getTotalPaymentCount();
 
         return totalCount > 0
                 ? totalAmount.divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP)

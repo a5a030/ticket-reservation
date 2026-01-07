@@ -17,7 +17,6 @@ import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
 import com.byunsum.ticket_reservation.reservation.domain.DeliveryMethod;
 import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
-import com.byunsum.ticket_reservation.seat.domain.Seat;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,10 +99,14 @@ public class PaymentService {
             BigDecimal deliveryFee = BigDecimal.valueOf(reservation.getDeliveryFee());
             BigDecimal totalAmount = seatTotal.add(bookingFee).add(deliveryFee);
 
+            PaymentStatus initialStatus = (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER)
+                    ? PaymentStatus.PENDING
+                    : PaymentStatus.PAID;
+
             Payment payment = new Payment(
                     totalAmount,
                     request.getPaymentMethod(),
-                    PaymentStatus.PAID,
+                    initialStatus,
                     reservation
             );
 
@@ -152,7 +155,7 @@ public class PaymentService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        if(payment.getStatus() != PaymentStatus.PAID) {
+        if(payment.getStatus() != PaymentStatus.PAID || payment.getStatus() != PaymentStatus.PENDING) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
         }
 
@@ -230,11 +233,16 @@ public class PaymentService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        if(payment.getStatus() != PaymentStatus.PAID && payment.getStatus() != PaymentStatus.CANCELLED) {
+        if(payment.getStatus() != PaymentStatus.PAID && payment.getStatus() != PaymentStatus.PARTIAL_CANCELLED) {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
         BigDecimal cancelAmount = request.getCancelAmount();
+
+        if(cancelAmount ==  null) {
+            throw new  CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT);
+        }
+
         BigDecimal cancelFee = cancelAmount.multiply(BigDecimal.valueOf(0.1));
 
         payment.cancelPartial(cancelAmount, cancelFee, request.getReason());
@@ -266,7 +274,7 @@ public class PaymentService {
     }
 
     public List<PaymentResponse> getPaymentsByMember(Long memberId) {
-        List<Payment> payments = paymentRepository.findByReservationMemberId(memberId);
+        List<Payment> payments = paymentRepository.findRecentByReservationMemberId(memberId);
 
         return payments.stream()
                 .map(this::toPaymentResponse)
@@ -276,26 +284,19 @@ public class PaymentService {
     public List<PaymentResponse> getAllPayments(Optional<PaymentStatus> status) {
         List<Payment> payments = status
                 .map(paymentRepository::findRecentByStatus)
-                .orElseGet(paymentRepository::findAll);
+                .orElseGet(paymentRepository::findRecentAll);
 
         return  payments.stream()
                 .map(this::toPaymentResponse)
                 .toList();
     }
 
-    public List<PaymentResponse> getPaymentsUnsorted(Long memberId) {
-        List<Payment> payments = paymentRepository.findByReservationMemberId(memberId);
-        return payments.stream()
-                .map(this::toPaymentResponse)
-                .toList();
-    }
-
     public BigDecimal getTotalAmount() {
-        return paymentRepository.getTotalPaymentAmount();
+        return paymentRepository.getTotalPaymentAmount(PaymentStatus.PAID);
     }
 
     public List<PaymentStatistics> getStatisticsByMethod() {
-        return paymentRepository.getPaymentStatistics();
+        return paymentRepository.getPaymentStatistics(PaymentStatus.PAID);
     }
 
     @Transactional
@@ -304,7 +305,7 @@ public class PaymentService {
         if(optional.isEmpty()) return;
 
         Payment payment = optional.get();
-        if(payment.getStatus() == PaymentStatus.PAID) {
+        if(payment.getStatus() == PaymentStatus.PAID || payment.getStatus() == PaymentStatus.PENDING) {
             payment.cancel(PaymentCancelReason.USER_REQUEST);
         }
     }
@@ -348,7 +349,7 @@ public class PaymentService {
         Payment payment = paymentRepository.findByReservationId(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        if(payment.getStatus() != PaymentStatus.PAID) {
+        if(payment.getStatus() != PaymentStatus.CANCELLED) {
             throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
