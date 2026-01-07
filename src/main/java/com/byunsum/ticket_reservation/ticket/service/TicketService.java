@@ -22,7 +22,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -110,10 +109,10 @@ public class TicketService {
         Ticket ticket = ticketRepository.findByReservationSeatId(reservationSeatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-        LocalDateTime performanceStart = ticket.getReservationSeat()
-                .getReservation().getPerformance().getStartTime();
+        LocalDateTime roundStart = ticket.getReservationSeat()
+                .getSeat().getPerformanceRound().getStartDateTime();
 
-        if (LocalDateTime.now().isBefore(performanceStart.minusHours(3))) {
+        if (LocalDateTime.now().isBefore(roundStart.minusHours(3))) {
             throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
         }
 
@@ -130,14 +129,14 @@ public class TicketService {
                 30, TimeUnit.MINUTES
         );
 
-        LocalDateTime performanceEnd = ticket.getReservationSeat()
-                .getReservation().getPerformance().getEndDateTime();
+        LocalDateTime roundEnd = ticket.getReservationSeat()
+                .getSeat().getPerformanceRound().getEndDateTime();
 
-        if (performanceEnd == null) {
-            throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+        if (roundEnd == null) {
+            throw new CustomException(ErrorCode.ROUND_NOT_FOUND);
         }
 
-        long expiresAtMillis = performanceEnd.plusDays(1)
+        long expiresAtMillis = roundEnd.plusDays(1)
                 .atZone(ZoneId.systemDefault())
                 .toInstant().toEpochMilli();
 
@@ -161,9 +160,14 @@ public class TicketService {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 
-        LocalDateTime performanceStart = reservation.getPerformance().getStartTime();
+        if(reservation.getReservationSeats().isEmpty()) {
+            throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
+        }
 
-        if(LocalDateTime.now().isBefore(performanceStart.minusHours(3))) {
+        LocalDateTime roundStart = reservation.getReservationSeats().get(0)
+                .getSeat().getPerformanceRound().getStartDateTime();
+
+        if(LocalDateTime.now().isBefore(roundStart.minusHours(3))) {
             throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
         }
 
@@ -186,14 +190,13 @@ public class TicketService {
                     30, TimeUnit.MINUTES
             );
 
-            LocalDateTime performanceEnd = ticket.getReservationSeat()
-                    .getReservation().getPerformance().getEndDateTime();
+            LocalDateTime roundEnd = rs.getSeat().getPerformanceRound().getEndDateTime();
 
-            if(performanceEnd == null) {
-                throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+            if(roundEnd == null) {
+                throw new CustomException(ErrorCode.ROUND_NOT_FOUND);
             }
 
-            long expiresAtMillis = performanceEnd.plusDays(1)
+            long expiresAtMillis = roundEnd.plusDays(1)
                     .atZone(ZoneId.systemDefault())
                     .toInstant().toEpochMilli();
 
@@ -258,9 +261,9 @@ public class TicketService {
             return responseDto;
         }
 
-        String reservationId = stringRedisTemplate.opsForValue().get(redisKey);
+        String reservationSeatId = stringRedisTemplate.opsForValue().get(redisKey);
 
-        if(reservationId == null) {
+        if(reservationSeatId == null) {
             resultStatus = TicketStatus.EXPIRED.name();
             responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.",
                     null, null, null,
@@ -337,14 +340,14 @@ public class TicketService {
         //Redis TTl 삭제
         stringRedisTemplate.delete(REDIS_KEY_PREFIX + ticketCode);
 
-        LocalDateTime performanceEnd = ticket.getReservationSeat()
-                .getReservation().getPerformance().getEndDateTime();
+        LocalDateTime roundEnd = ticket.getReservationSeat()
+                .getSeat().getPerformanceRound().getEndDateTime();
 
-        if(performanceEnd == null) {
-            throw new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND);
+        if(roundEnd == null) {
+            throw new CustomException(ErrorCode.ROUND_NOT_FOUND);
         }
 
-        long expiresAtMillis = performanceEnd.plusDays(1)
+        long expiresAtMillis = roundEnd.plusDays(1)
                 .atZone(ZoneId.systemDefault())
                 .toInstant().toEpochMilli();
 
