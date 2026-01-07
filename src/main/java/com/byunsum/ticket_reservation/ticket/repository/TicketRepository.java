@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.ticket.repository;
 
-import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +32,17 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
             "join rs.reservation r " +
             "where r.performance = :performance and t.status = 'USED'")
     long countByPerformanceAndEnteredTrue(@Param("performance")com.byunsum.ticket_reservation.performance.domain.Performance performance);
+
+
+    @Query("select count(t) from Ticket t " +
+            "join t.reservationSeat rs " +
+            "join rs.seat s " +
+            "where s.performanceRound = :round")
+    long countByPerformanceRound(@Param("round") PerformanceRound round);
+
+    @Query("select count(t) from Ticket t " +
+            "join t.reservationSeat rs " +
+            "join rs.seat s " +
+            "where s.performanceRound = :round and t.status = 'USED'")
+    long countByPerformanceRoundAndEnteredTrue(@Param("round") PerformanceRound round);
 }
