@@ -5,6 +5,8 @@ import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
 import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -22,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class ExpireTicketTasklet implements Tasklet {
+    private static final Logger log = LoggerFactory.getLogger(ExpireTicketTasklet.class);
+
     private final TicketRepository ticketRepository;
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
     private final StringRedisTemplate stringRedisTemplate;
@@ -44,15 +48,20 @@ public class ExpireTicketTasklet implements Tasklet {
             ticket.setStatus(TicketStatus.EXPIRED);
 
             String blacklistKey = "blacklist:ticket:" + ticket.getTicketCode();
-            stringRedisTemplate.opsForValue().set(blacklistKey, "true");
 
-            LocalDateTime perfEnd = ticket.getReservationSeat()
-                    .getReservation().getPerformance().getEndDateTime();
+            LocalDateTime roundEnd = ticket.getReservationSeat()
+                    .getSeat().getPerformanceRound().getEndDateTime();
 
-            if(perfEnd != null) {
-                long ttlSeconds = Duration.between(now, perfEnd.plusDays(1)).getSeconds();
-                stringRedisTemplate.expire(blacklistKey, ttlSeconds, TimeUnit.SECONDS);
+            long ttlSeconds = 3600;
+
+            if(roundEnd != null) {
+                long calculated = Duration.between(now, roundEnd.plusDays(1)).getSeconds();
+
+                if(calculated>0) {
+                    ttlSeconds = calculated;
+                }
             }
+                stringRedisTemplate.opsForValue().set(blacklistKey, "true", ttlSeconds, TimeUnit.SECONDS);
         }
 
         ticketRepository.saveAll(expired);
@@ -69,7 +78,7 @@ public class ExpireTicketTasklet implements Tasklet {
 
         ticketVerificationLogRepository.saveAll(logs);
 
-        System.out.println("만료된 티켓 수: " + expired.size());
+        log.info("만료된 티켓 수: {}", expired.size());
 
         return RepeatStatus.FINISHED;
     }
