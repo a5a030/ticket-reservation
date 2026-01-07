@@ -43,10 +43,9 @@ public class MemberService implements UserDetailsService {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        memberRepository.findByLoginId(member.getLoginId())
-                .ifPresent(m -> {
-                    throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
-                });
+        if(memberRepository.existByLoginId(member.getLoginId())) {
+            throw new CustomException(ErrorCode.DUPLICATE_MEMBER);
+        }
     }
 
     public List<Member> findMembers() {
@@ -64,9 +63,9 @@ public class MemberService implements UserDetailsService {
 
 
     @Transactional
-    public void update(Long memberId, String username) {
+    public void update(Long memberId, String name) {
         Member member = findById(memberId);
-        member.setUsername(username);
+        member.setName(name);
     }
 
     public void deleteById(Long id) {

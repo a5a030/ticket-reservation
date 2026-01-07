@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Repository("jpaMemberRepository")
 public class JpaMemberRepository implements MemberRepository {
     private final SpringDataJpaMemberRepository jpaRepository;
 
@@ -37,5 +37,10 @@ public class JpaMemberRepository implements MemberRepository {
     @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existByLoginId(String loginId) {
+        return jpaRepository.existsByLoginId(loginId);
     }
 }

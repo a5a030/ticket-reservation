@@ -12,24 +12,31 @@ import java.util.List;
 @Table(name = "member")
 public class Member implements UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "login_id", unique = true, nullable = false)
+    @Column(name = "login_id", unique = true, nullable = false, length = 50)
     private String loginId;
 
-    private String username;
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, length = 100)
     private String password;
+
+    @Column(nullable = false, length = 100)
     private String email;
+
+    @Column(nullable = false, length = 20)
     private String role; // ROLE_USER or ROLE_ADMIN
 
     public Member() {
     }
 
-    public Member(String loginId, String password, String username, String email, String role) {
+    public Member(String loginId, String password, String name, String email, String role) {
         this.loginId = loginId;
         this.password = password;
-        this.username = username;
+        this.name = name;
         this.email = email;
         this.role = role;
     }
@@ -37,12 +44,17 @@ public class Member implements UserDetails {
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
 
+    @Override
     public String getUsername() {
-        return username;
+        return loginId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getLoginId() {
@@ -61,6 +73,7 @@ public class Member implements UserDetails {
         this.id = id;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -86,6 +99,24 @@ public class Member implements UserDetails {
     }
 
     @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if(role == null || role.isBlank()){
+            return List.of();
+        }
+
+        return List.of(new SimpleGrantedAuthority(role));
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    // UserDetails 기본 정책
+    @Override
     public boolean isAccountNonExpired() {
         return true;
     }
@@ -103,18 +134,5 @@ public class Member implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
     }
 }

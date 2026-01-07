@@ -62,7 +62,7 @@ public class MemberController {
     public ResponseEntity<SignupResponseDto> create(@RequestBody SignupRequestDto dto) {
         Member member = new Member();
         member.setLoginId(dto.getLoginId());
-        member.setUsername(dto.getUsername());
+        member.setName(dto.getName());
         member.setEmail(dto.getEmail());
 
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
@@ -73,7 +73,7 @@ public class MemberController {
         SignupResponseDto responseDto = new SignupResponseDto(
                 member.getId(),
                 member.getLoginId(),
-                member.getUsername(),
+                member.getName(),
                 member.getEmail()
         );
 
@@ -93,7 +93,7 @@ public class MemberController {
     public ResponseEntity<MyPageResponseDto> getLoginMember(@AuthenticationPrincipal Member member) {
         MyPageResponseDto responseDto = new MyPageResponseDto(
                 member.getLoginId(),
-                member.getUsername(),
+                member.getName(),
                 member.getEmail(),
                 member.getRole()
         );

@@ -7,7 +7,7 @@ public class MyPageResponseDto {
     private String loginId;
 
     @Schema(description = "이름")
-    private String username;
+    private String name;
 
     @Schema(description = "이메일")
     private String email;
@@ -15,9 +15,9 @@ public class MyPageResponseDto {
     @Schema(description = "권한", example = "ROLE_USER")
     private String role;
 
-    public MyPageResponseDto(String loginId, String username, String email, String role) {
+    public MyPageResponseDto(String loginId, String name, String email, String role) {
         this.loginId = loginId;
-        this.username = username;
+        this.name = name;
         this.email = email;
         this.role = role;
     }
@@ -26,8 +26,8 @@ public class MyPageResponseDto {
         return loginId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
     public String getEmail() {

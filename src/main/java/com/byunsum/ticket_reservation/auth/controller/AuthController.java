@@ -2,14 +2,11 @@ package com.byunsum.ticket_reservation.auth.controller;
 
 import com.byunsum.ticket_reservation.auth.dto.*;
 import com.byunsum.ticket_reservation.auth.service.AuthService;
-import com.byunsum.ticket_reservation.member.domain.Member;
-import com.byunsum.ticket_reservation.member.service.MemberService;
-import com.byunsum.ticket_reservation.security.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,7 +29,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "유효하지 않은 입력값")
     })
     @PostMapping("/signup")
-    public ResponseEntity<LoginResponseDto> signup(@RequestBody SignupRequestDto requestDto) {
+    public ResponseEntity<LoginResponseDto> signup(@Valid @RequestBody SignupRequestDto requestDto) {
         return ResponseEntity.ok(authService.signup(requestDto));
     }
 
@@ -42,7 +39,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "아이디 또는 비밀번호가 잘못됨")
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
         return ResponseEntity.ok(authService.login(requestDto));
     }
 

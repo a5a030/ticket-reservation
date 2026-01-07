@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface SpringDataJpaMemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByLoginId(String loginId);
+    boolean existsByLoginId(String loginId);
 }

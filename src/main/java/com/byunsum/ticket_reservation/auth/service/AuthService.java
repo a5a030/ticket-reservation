@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
+    private static final String INVALID_REFRESH_TOKEN = "Invalid refresh token";
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -26,7 +27,7 @@ public class AuthService {
     public LoginResponseDto signup(SignupRequestDto dto) {
         Member member = new Member();
         member.setLoginId(dto.getLoginId());
-        member.setUsername(dto.getUsername());
+        member.setName(dto.getName());
         member.setEmail(dto.getEmail());
         member.setPassword(passwordEncoder.encode(dto.getPassword()));
         member.setRole("ROLE_USER");
@@ -60,14 +61,14 @@ public class AuthService {
         String refreshToken = dto.getRefreshToken();
 
         if(!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid refresh token");
+            throw new CustomException(ErrorCode.UNAUTHORIZED, INVALID_REFRESH_TOKEN);
         }
 
         String loginId = jwtTokenProvider.getName(refreshToken);
         Member member = memberService.findByLoginId(loginId);
 
         if(member.getRefreshToken() == null || !refreshToken.equals(member.getRefreshToken())) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid refresh token");
+            throw new CustomException(ErrorCode.UNAUTHORIZED, INVALID_REFRESH_TOKEN);
         }
 
         String newAccessToken = jwtTokenProvider.createToken(member.getLoginId(), member.getRole());

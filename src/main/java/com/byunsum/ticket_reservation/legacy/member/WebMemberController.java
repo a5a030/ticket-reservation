@@ -58,7 +58,7 @@ public class WebMemberController {
     }
 
     @PostMapping("/edit")
-    public String edit(@RequestParam String username, HttpServletRequest request) {
+    public String edit(@RequestParam String name, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if(session == null){
             return "redirect:/web/login-form?error=unauthorized";
@@ -69,8 +69,8 @@ public class WebMemberController {
             return "redirect:/web/login-form?error=unauthorized";
         }
 
-        memberService.update(loginMember.getId(), username);
-        loginMember.setUsername(username);
+        memberService.update(loginMember.getId(), name);
+        loginMember.setName(name);
 
         return  "redirect:/web/members/me?updated";
     }

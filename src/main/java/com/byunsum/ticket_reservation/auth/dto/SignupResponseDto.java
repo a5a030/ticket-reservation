@@ -10,20 +10,20 @@ public class SignupResponseDto {
     private String loginId;
 
     @Schema(description = "이름")
-    private String username;
+    private String name;
 
     @Schema(description = "이메일")
     private String email;
 
-    public SignupResponseDto(Long id, String loginId, String username, String email) {
+    public SignupResponseDto(Long id, String loginId, String name, String email) {
         this.id = id;
         this.loginId = loginId;
-        this.username = username;
+        this.name = name;
         this.email = email;
     }
 
     public Long getId() { return id; }
     public String getLoginId() { return loginId; }
-    public String getUsername() { return username; }
+    public String getName() { return name; }
     public String getEmail() { return email; }
 }
