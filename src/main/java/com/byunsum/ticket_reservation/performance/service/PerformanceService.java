@@ -13,7 +13,9 @@ import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRep
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +29,10 @@ public class PerformanceService {
         this.performanceRoundRepository = performanceRoundRepository;
     }
 
+    @Transactional
     public Long create(PerformanceRequest request) {
+        validateRequest(request);
+
         Performance performance = new Performance(
                 request.getTitle(),
                 request.getDescription(),
@@ -46,26 +51,19 @@ public class PerformanceService {
         return saved.getId();
     }
 
+    @Transactional
     public PerformanceSummaryResponse update(Long id, PerformanceRequest request) {
+        validateRequest(request);
+
         Performance performance = performanceRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
-        performance.setTitle(request.getTitle());
-        performance.setDescription(request.getDescription());
-        performance.setVenue(request.getVenue());
-        performance.setGenre(request.getGenre());
-        performance.setPosterUrl(request.getPosterUrl());
-        performance.setStartDate(request.getStartDate());
-        performance.setEndDate(request.getEndDate());
-        performance.setPreReservationOpenDateTime(request.getPreReservationOpenDateTime());
-        performance.setGeneralReservationOpenDateTime(request.getGeneralReservationOpenDateTime());
-        performance.setMaxTicketsPerPerson(request.getMaxTicketsPerPerson());
-        performance.setType(request.getType());
+        performance.updateFrom(request);
 
-        Performance updated = performanceRepository.save(performance);
-        return toSummaryResponse(updated);
+        return toSummaryResponse(performance);
     }
 
+    @Transactional(readOnly = true)
     public List<PerformanceSummaryResponse> getAllPerformances() {
         return performanceRepository.findAll()
                 .stream()
@@ -73,11 +71,13 @@ public class PerformanceService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Page<PerformanceSummaryResponse> getAllPerformances(Pageable pageable) {
         return performanceRepository.findAll(pageable)
                 .map(this::toSummaryResponse);
     }
 
+    @Transactional(readOnly = true)
     public PerformanceDetailResponse getPerformanceById(Long id) {
         Performance performance = performanceRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
@@ -92,18 +92,14 @@ public class PerformanceService {
         return toDetailResponse(performance, roundResponses);
     }
 
+    @Transactional(readOnly = true)
     public Page<PerformanceSummaryResponse> getPerformanceSorted(String sort, Pageable pageable) {
-//        Page<Performance> performances;
-//
-//        if("imminent".equalsIgnoreCase(sort)) {
-//            performances = performanceRepository.findAllByOrderByStartDateAscTimeAsc(pageable);
-//        } else if("popular".equalsIgnoreCase(sort)) {
-//            performances = performanceRepository.findAllOrderByReservationsCountDesc(pageable);
-//        } else {
-//            performances = performanceRepository.findAll(pageable);
-//        }
+        String normalized = (sort == null) ? null : sort.trim().toLowerCase();
+        if (normalized != null && normalized.isEmpty()) normalized = null;
 
-//        return performances.map(this::toSummaryResponse);
+        if (normalized != null && !List.of("imminent", "popular", "recent").contains(normalized)) {
+            throw new CustomException(ErrorCode.INVALID_SORT);
+        }
 
         return performanceRepository.findAll(pageable).map(this::toSummaryResponse);
     }
@@ -151,5 +147,18 @@ public class PerformanceService {
                 performance.getType(),
                 rounds
         );
+    }
+
+    private void validateRequest(PerformanceRequest request) {
+        if(request.getStartDate().isAfter(request.getEndDate())) {
+            throw new CustomException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        LocalDateTime pre = request.getPreReservationOpenDateTime();
+        LocalDateTime general = request.getGeneralReservationOpenDateTime();
+
+        if(pre != null && general != null && pre.isAfter(general)) {
+            throw new CustomException(ErrorCode.INVALID_RESERVATION_OPEN_TIME);
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.seat.service;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
@@ -27,17 +28,9 @@ public class SeatService {
     }
 
     public void createSeat(SeatRequest request) {
-        var performanceRound = performanceRoundRepository.findById(request.getPerformanceRoundId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 공연 회차가 존재하지 않습니다."));
-
-        Seat seat = new Seat(
-                request.getSeatNo(),
-                request.getPrice(),
-                false, //기본 예약 상태 아님
-                performanceRound
-        );
-
-        seatRepository.save(seat);
+        PerformanceRound round = performanceRoundRepository.findById(request.getPerformanceRoundId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ROUND_NOT_FOUND));
+        round.addSeat(request.getSeatNo(), request.getPrice());
     }
 
     @Transactional
@@ -57,7 +50,6 @@ public class SeatService {
         }
 
         seat.setReserved(true);
-        seatRepository.save(seat);
         redisTemplate.delete(key);
     }
 }
