@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,10 @@ public class SeatController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
     @PostMapping
-    public ResponseEntity<Void> createSeat(@RequestBody SeatRequest request) {
+    public ResponseEntity<Void> createSeat(@Valid @RequestBody SeatRequest request) {
         seatService.createSeat(request);
 
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Operation(summary = "좌석 선택", description = "사용자가 좌석을 선택하여 일시적으로 홀딩합니다.")

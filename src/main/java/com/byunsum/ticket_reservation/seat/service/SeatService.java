@@ -2,9 +2,7 @@ package com.byunsum.ticket_reservation.seat.service;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
-import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
-import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import com.byunsum.ticket_reservation.seat.dto.SeatRequest;
@@ -12,8 +10,6 @@ import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class SeatService {
@@ -27,10 +23,12 @@ public class SeatService {
         this.redisTemplate = redisTemplate;
     }
 
+    @Transactional
     public void createSeat(SeatRequest request) {
         PerformanceRound round = performanceRoundRepository.findById(request.getPerformanceRoundId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ROUND_NOT_FOUND));
         round.addSeat(request.getSeatNo(), request.getPrice());
+        performanceRoundRepository.save(round);
     }
 
     @Transactional
@@ -46,7 +44,7 @@ public class SeatService {
         String selectedBy = redisTemplate.opsForValue().get(key);
 
         if(selectedBy == null || !selectedBy.equals(memberId.toString())) {
-            throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
+            throw new CustomException(ErrorCode.SEAT_ALREADY_SELECTED);
         }
 
         seat.setReserved(true);
