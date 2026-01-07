@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
+import com.byunsum.ticket_reservation.admin.dto.PaymentDashboardCardsResponse;
+import com.byunsum.ticket_reservation.admin.dto.PaymentSummaryResponse;
 import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
 import com.byunsum.ticket_reservation.payment.service.PaymentStatisticService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,20 +40,20 @@ public class AdminPaymentStatisticsController {
 
     @Operation(summary = "대시보드 카드 지표", description = "공연/장르별 매출 TOP3 제공")
     @GetMapping("/cards")
-    public Map<String, List<PaymentSalesStatsResponse>> getDashboardCards() {
-        Map<String, List<PaymentSalesStatsResponse>> result = new HashMap<>();
-        result.put("topPerformances", paymentStatisticService.getTopPerformances(3));
-        result.put("topGenres", paymentStatisticService.getTopGenres(3));
-        return result;
+    public ResponseEntity<PaymentDashboardCardsResponse> getDashboardCards() {
+        return ResponseEntity.ok(new PaymentDashboardCardsResponse(
+                paymentStatisticService.getTopPerformances(3),
+                paymentStatisticService.getTopGenres(3)
+        ));
     }
 
     @GetMapping("/summary")
     @Operation(summary = "결제 요약 지표", description = "총 매출액, 총 결제 건수, 평균 결제 금액 반환")
-    public Map<String, BigDecimal> getSummary() {
-        Map<String, BigDecimal> result = new HashMap<>();
-        result.put("totalRevenue", paymentStatisticService.getTotalPaymentAmount());
-        result.put("totalCount", BigDecimal.valueOf(paymentStatisticService.getTotalPaymentCount()));
-        result.put("averageAmount", paymentStatisticService.getAveragePaymentAmount());
-        return result;
+    public ResponseEntity<PaymentSummaryResponse> getSummary() {
+        return ResponseEntity.ok(new PaymentSummaryResponse(
+                paymentStatisticService.getTotalPaymentAmount(),
+                paymentStatisticService.getTotalPaymentCount(),
+                paymentStatisticService.getAveragePaymentAmount()
+        ));
     }
 }
