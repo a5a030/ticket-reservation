@@ -9,6 +9,7 @@ import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
 import com.byunsum.ticket_reservation.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -31,7 +32,7 @@ public class ReviewController {
 
     @Operation(summary = "리뷰 등록", description = "공연에 대한 후기를 작성합니다.")
     @PostMapping
-    public ResponseEntity<ReviewResponse> createReview(@RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
+    public ResponseEntity<ReviewResponse> createReview(@Valid @RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
         ReviewResponse response = reviewService.createReview(request, member);
 
         return ResponseEntity.ok(response);
@@ -48,11 +49,8 @@ public class ReviewController {
     @Operation(summary = "내가 쓴 리뷰 조회", description = "사용자가 작성한 모든 후기를 조회합니다.")
     @GetMapping("/my")
     public ResponseEntity<List<ReviewResponse>> getMyReviews(@AuthenticationPrincipal Member member) {
-        if(member == null){
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
-
         List<ReviewResponse> responses = reviewService.getReviewsByMember(member.getId());
+
         return ResponseEntity.ok(responses);
     }
 
@@ -67,7 +65,7 @@ public class ReviewController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "리뷰 수정", description = "본인이 작성한 후기를 수정합니다.")
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long id, @RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
+    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long id, @Valid @RequestBody ReviewRequest request, @AuthenticationPrincipal Member member) {
         return ResponseEntity.ok(reviewService.updateReview(id, request, member));
     }
 

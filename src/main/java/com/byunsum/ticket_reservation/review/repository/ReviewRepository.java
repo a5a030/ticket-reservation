@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -26,7 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "group by r.sentiment")
     List<Object[]> countBySentimentGroup(@Param("performanceId") Long performanceId);
 
-    @Query("select avg(r.rating )"+
+    @Query("select avg(r.rating )" +
             "from Review r " +
             "where r.reservation.performance.id = :performanceId")
     Double findAverageRating(@Param("performanceId") Long performanceId);

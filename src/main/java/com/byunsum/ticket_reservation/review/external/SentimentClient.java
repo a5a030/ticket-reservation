@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.review.external;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -9,6 +11,8 @@ import java.util.Map;
 
 @Component
 public class SentimentClient {
+    private static final Logger log = LoggerFactory.getLogger(SentimentClient.class);
+
     private final RestTemplate restTemplate;
     private static final String SENTIMENT_API_URL = "http://localhost:5005/analyze";
 
@@ -32,7 +36,7 @@ public class SentimentClient {
 
             return response.getBody();
         } catch (Exception e) {
-            System.out.println("감정 분석 서버 호출 실패: " + e.getMessage());
+            log.warn("감정 분석 서버 호출 실패: {}", e.getMessage());
 
             return new SentimentResponse("NEUTRAL", 0.0); //fallback
         }

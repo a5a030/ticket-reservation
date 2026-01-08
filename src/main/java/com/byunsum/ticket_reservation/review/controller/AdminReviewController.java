@@ -19,7 +19,7 @@ import java.util.List;
 @Tag(name = "관리자 후기 대시보드 API", description = "공연별 후기 통계 및 요약 정보를 제공합니다.")
 public class AdminReviewController {
     private final KeywordService keywordService;
-    private  final ReviewAdminService reviewAdminService;
+    private final ReviewAdminService reviewAdminService;
 
     public AdminReviewController(ReviewAdminService reviewAdminService, KeywordService keywordService) {
         this.reviewAdminService = reviewAdminService;
