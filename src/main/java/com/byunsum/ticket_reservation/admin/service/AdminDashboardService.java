@@ -10,6 +10,7 @@ import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.payment.service.PaymentStatisticService;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.review.domain.Review;
+import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
 import com.byunsum.ticket_reservation.review.service.KeywordService;
@@ -80,8 +81,8 @@ public class AdminDashboardService {
 
         long totalReviews = reviews.size();
 
-        long positive = reviews.stream().filter(r -> "POSITIVE".equals(r.getSentiment())).count();
-        long negative = reviews.stream().filter(r -> "NEGATIVE".equals(r.getSentiment())).count();
+        long positive = reviews.stream().filter(r -> r.getSentiment() == SentimentType.POSITIVE).count();
+        long negative = reviews.stream().filter(r -> r.getSentiment() == SentimentType.NEGATIVE).count();
 
         Map<String, Long> sentimentCount = Map.of("POSITIVE", positive, "NEGATIVE", negative);
 
@@ -91,7 +92,7 @@ public class AdminDashboardService {
 
         List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCount(reviewTexts, 2, 5);
 
-        Map<String, Integer> topKeywords = keywordSummaries.stream()
+        Map<String, Long> topKeywords = keywordSummaries.stream()
                 .collect(Collectors.toMap(KeywordSummary::getKeyword, KeywordSummary::getCount));
 
         double averageScore = reviews.stream()

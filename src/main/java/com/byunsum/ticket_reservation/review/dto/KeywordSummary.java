@@ -2,12 +2,12 @@ package com.byunsum.ticket_reservation.review.dto;
 
 public class KeywordSummary {
     private String keyword;
-    private int count;
+    private Long count;
 
     public KeywordSummary() {
     }
 
-    public KeywordSummary(String keyword, int count) {
+    public KeywordSummary(String keyword, Long count) {
         this.keyword = keyword;
         this.count = count;
     }
@@ -16,7 +16,7 @@ public class KeywordSummary {
         return keyword;
     }
 
-    public int getCount() {
+    public Long getCount() {
         return count;
     }
 }

@@ -12,7 +12,7 @@ public record ReviewStatsResponse(@Schema(description = "리뷰 총 개수")
                                   Map<String, Long> sentimentCount,
 
                                   @Schema(description = "자주 언급된 키워드")
-                                  Map<String, Integer> topKeywords,
+                                  Map<String, Long> topKeywords,
 
                                   @Schema(description = "평균 감정 점수")
                                   double averageScore,

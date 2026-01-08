@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openkoreantext.processor.KoreanTokenJava;
 import org.openkoreantext.processor.OpenKoreanTextProcessorJava;
 import org.openkoreantext.processor.tokenizer.KoreanTokenizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import scala.collection.Seq;
@@ -20,11 +22,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class KeywordService {
+    private static final Logger log = LoggerFactory.getLogger(KeywordService.class);
+
     private final ReviewRepository reviewRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final String CACHE_PREFIX = "review:keywords:";
+    private static final String CACHE_PREFIX = "review:keywords:v1";
 
     public KeywordService(ReviewRepository reviewRepository, StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper) {
         this.reviewRepository = reviewRepository;
@@ -64,7 +68,7 @@ public class KeywordService {
         return buildFrequencyMap(reviews, minLength).entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(keywordLimit)
-                .map(entry -> new KeywordSummary(entry.getKey(), entry.getValue()))
+                .map(entry -> new KeywordSummary(entry.getKey(), entry.getValue().longValue()))
                 .collect(Collectors.toList());
     }
 
@@ -76,17 +80,23 @@ public class KeywordService {
         if(cached != null) {
             try {
                 return objectMapper.readValue(cached, new TypeReference<List<KeywordSummary>>() {});
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("캐시 역직렬화 실패: {}", e.getMessage());
+            }
         }
 
         List<String> reviews = reviewRepository.findByReservationPerformanceId(performanceId)
-                .stream().map(Review::getContent).toList();
+                .stream()
+                .map(r -> (r.getSummary() != null && !r.getSummary().isBlank()) ? r.getSummary() : r.getContent())
+                .toList();
 
         List<KeywordSummary> result = extractTopKeywordsWithCount(reviews,2,5);
 
         try {
             stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(result), Duration.ofHours(1));
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("캐시 직렬화 실패: {}", e.getMessage());
+        }
 
         return result;
     }
