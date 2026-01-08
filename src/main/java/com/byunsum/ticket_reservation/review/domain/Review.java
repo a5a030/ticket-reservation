@@ -22,21 +22,18 @@ public class Review {
     private int rating;
 
     private String summary; // ai 요약
-    private String sentiment; // 감정 분석 결과
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SentimentType sentiment; // 감정 분석 결과
+
+    @Column(nullable = false)
     private double sentimentScore;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Review() {
-    }
-
-    public Review(Reservation reservation, String content, int rating) {
-        this.reservation = reservation;
-        this.content = content;
-        this.rating = rating;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public Review(Reservation reservation, String content, int rating, LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -47,13 +44,25 @@ public class Review {
         this.updatedAt = updatedAt;
     }
 
+    public Review(Reservation reservation, String content, int rating) {
+        this.reservation = reservation;
+        this.content = content;
+        this.rating = rating;
+        this.summary = "";
+        this.sentiment = SentimentType.NEUTRAL;
+        this.sentimentScore = 0.0;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
     public void update(String content, int rating) {
         this.content = content;
         this.rating = rating;
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateAI(String summary, String sentiment, double score) {
+    public void updateAI(String summary, SentimentType sentiment, double score) {
         this.summary = summary;
         this.sentiment = sentiment;
         this.sentimentScore = score;
@@ -80,7 +89,7 @@ public class Review {
         return summary;
     }
 
-    public String getSentiment() {
+    public SentimentType getSentiment() {
         return sentiment;
     }
 
@@ -96,7 +105,7 @@ public class Review {
         return sentimentScore;
     }
 
-    public void setSentiment(String sentiment) {
+    public void setSentiment(SentimentType sentiment) {
         this.sentiment = sentiment;
     }
 

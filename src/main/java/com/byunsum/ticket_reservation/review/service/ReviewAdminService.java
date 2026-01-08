@@ -57,9 +57,10 @@ public class ReviewAdminService {
 
         // 1. 통계 DTO 생성
 
-        long positiveCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.POSITIVE).count();
-        long negativeCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.NEGATIVE).count();
-        long neutralCount = reviews.stream().filter(r -> SentimentType.from(r.getSentiment()) == SentimentType.NEUTRAL).count();
+        long positiveCount = reviews.stream().filter(r -> r.getSentiment() == SentimentType.POSITIVE).count();
+        long negativeCount = reviews.stream().filter(r -> r.getSentiment() == SentimentType.NEGATIVE).count();
+        long neutralCount  = reviews.stream().filter(r -> r.getSentiment() == SentimentType.NEUTRAL).count();
+
 
         double averageRating = reviews.stream()
                 .mapToDouble(Review::getRating)

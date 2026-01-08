@@ -7,6 +7,7 @@ import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.review.aop.InvalidateReviewCache;
 import com.byunsum.ticket_reservation.review.domain.Review;
+import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.ReviewRequest;
 import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
 import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
@@ -54,8 +55,8 @@ public class ReviewService {
 
         // 2. 감정 분석
         SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
-        String sentiment = sentimentResponse.getSentiment();
-        Double score = sentimentResponse.getScore();
+        SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
+        double score = sentimentResponse.getScore();
 
         // 3. 요약 분석
         SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
@@ -71,7 +72,7 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
         return toResponse(review);
     }
@@ -119,9 +120,10 @@ public class ReviewService {
     public ReviewStatisticsResponse getReviewStatistics(Long performanceId) {
         List<Review> reviews = reviewRepository.findByReservationPerformanceId(performanceId);
 
-        long positiveCount = reviews.stream().filter(r -> "POSITIVE".equalsIgnoreCase(r.getSentiment())).count();
-        long negativeCount = reviews.stream().filter(r -> "NEGATIVE".equalsIgnoreCase(r.getSentiment())).count();
-        long neutralCount = reviews.stream().filter(r -> "NEUTRAL".equalsIgnoreCase(r.getSentiment())).count();
+        long positiveCount = reviews.stream().filter(r -> r.getSentiment() == SentimentType.POSITIVE).count();
+        long negativeCount = reviews.stream().filter(r -> r.getSentiment() == SentimentType.NEGATIVE).count();
+        long neutralCount  = reviews.stream().filter(r -> r.getSentiment() == SentimentType.NEUTRAL).count();
+
 
         double averageRating = reviews.stream()
                 .mapToDouble(Review::getRating)
@@ -135,7 +137,7 @@ public class ReviewService {
     @InvalidateReviewCache
     public ReviewResponse updateReview(Long reviewId, ReviewRequest request, Member member) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
         if(!review.getReservation().getMember().getId().equals(member.getId())) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
@@ -146,7 +148,10 @@ public class ReviewService {
         SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
         SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
 
-        review.updateAI(summaryResponse.getSummary(), sentimentResponse.getSentiment(), sentimentResponse.getScore());
+        SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
+        double score = sentimentResponse.getScore();
+
+        review.updateAI(summaryResponse.getSummary(), sentiment, score);
 
         return toResponse(review);
     }

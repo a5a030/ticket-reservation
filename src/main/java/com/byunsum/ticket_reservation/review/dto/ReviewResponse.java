@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.review.dto;
 
+import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -19,7 +20,7 @@ public class ReviewResponse {
     private int rating;
 
     @Schema(description = "감정분석", example = "POSITIVE")
-    private String sentiment;
+    private SentimentType sentiment;
 
     @Schema(description = "감정 신뢰도 점수", example = "0.508")
     private double sentimentScore;
@@ -36,7 +37,7 @@ public class ReviewResponse {
     public ReviewResponse() {
     }
 
-    public ReviewResponse(Long id, Long reservationId, String content, int rating, String sentiment, double sentimentScore, String summary, java.util.List<String> keywords, LocalDateTime createdAt) {
+    public ReviewResponse(Long id, Long reservationId, String content, int rating, SentimentType sentiment, double sentimentScore, String summary, java.util.List<String> keywords, LocalDateTime createdAt) {
         this.id = id;
         this.reservationId = reservationId;
         this.content = content;
@@ -68,7 +69,7 @@ public class ReviewResponse {
         return createdAt;
     }
 
-    public String getSentiment() {
+    public SentimentType getSentiment() {
         return sentiment;
     }
 
