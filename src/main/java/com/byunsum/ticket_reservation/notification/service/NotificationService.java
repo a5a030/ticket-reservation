@@ -28,11 +28,13 @@ public class NotificationService {
     }
 
     public void send(Member member, String message, String link) {
-        Notification notification = new Notification();
-        notification.setMember(member);
-        notification.setMessage(message);
-        notification.setLink(link);
-        notification.setType(NotificationType.PAYMENT);
+        Notification notification = new Notification(
+                message,
+                member,
+                link,
+                NotificationType.PAYMENT,
+                false
+        );
 
         notificationRepository.save(notification);
     }
@@ -49,7 +51,7 @@ public class NotificationService {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
-        notification.markAsRead(true);
+        notification.markAsRead();
     }
 
     public List<NotificationResponseDto> getAllNotifications(Member member) {
@@ -61,7 +63,7 @@ public class NotificationService {
     }
 
     public List<NotificationResponseDto> getUnreadNotifications(Member member) {
-        List<Notification> unread = notificationRepository.findByMemberAndIsReadFalseOrderByCreatedAtDesc(member);
+        List<Notification> unread = notificationRepository.findByMemberAndReadFalseOrderByCreatedAtDesc(member);
 
         return unread.stream()
                 .map(NotificationResponseDto::new)

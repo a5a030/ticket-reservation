@@ -41,7 +41,6 @@ public class NotificationController {
 
     @Operation(summary = "알림 읽음 처리", description = "알림 ID를 통해 해당 알림을 읽음 처리합니다.")
     @ApiResponse(responseCode = "200", description = "읽음 처리 성공")
-    @Transactional
     @PatchMapping("/{notificationId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long notificationId, @AuthenticationPrincipal Member member) {
         notificationService.markAsRead(notificationId, member);
@@ -52,10 +51,6 @@ public class NotificationController {
     @ApiResponse(responseCode = "200", description = "테스트 알림 전송 성공")
     @PostMapping("/test")
     public ResponseEntity<String> testNotification(@AuthenticationPrincipal Member member) {
-        if (member == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
         String message = "테스트 알림입니다!";
         notificationService.createNotification(message, member, NotificationType.SYSTEM);
 
