@@ -13,6 +13,8 @@ import com.byunsum.ticket_reservation.review.dto.ReviewResponse;
 import com.byunsum.ticket_reservation.review.dto.ReviewStatisticsResponse;
 import com.byunsum.ticket_reservation.review.external.*;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
+    private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
     private final ReviewRepository reviewRepository;
     private final ReservationRepository reservationRepository;
     private final SentimentClient sentimentClient;
@@ -53,17 +56,23 @@ public class ReviewService {
         Review review = new Review(reservation, request.getContent(), request.getRating());
         Review saved = reviewRepository.save(review);
 
-        // 2. 감정 분석
-        SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
-        SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
-        double score = sentimentResponse.getScore();
+        try {
+            // 2. 감정 분석
+            SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
+            SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
+            double score = sentimentResponse.getScore();
 
-        // 3. 요약 분석
-        SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
-        String summary = summaryResponse.getSummary();
+            // 3. 요약 분석
+            SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
+            String summary = summaryResponse.getSummary();
 
-        // 4. 리뷰에 분석 결과 반영
-        saved.updateAI(summary, sentiment, score);
+            // 4. 리뷰에 분석 결과 반영
+            saved.updateAI(summary, sentiment, score);
+        } catch (Exception e) {
+            // 외부 AI 실패 시 리뷰는 기본값(NEUTRAL) 유지
+            log.warn("리뷰 AI 분석 실패 (reviewId={}): {}", saved.getId(), e.getMessage());
+        }
+
 
         return toResponse(saved);
     }
@@ -145,13 +154,17 @@ public class ReviewService {
 
         review.update(request.getContent(), request.getRating());
 
-        SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
-        SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
+        try {
+            SentimentResponse sentimentResponse = sentimentClient.analyzeSentiment(review.getContent());
+            SummaryResponse summaryResponse = summaryClient.getSummary(review.getContent());
 
-        SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
-        double score = sentimentResponse.getScore();
+            SentimentType sentiment = SentimentType.from(sentimentResponse.getSentiment());
+            double score = sentimentResponse.getScore();
 
-        review.updateAI(summaryResponse.getSummary(), sentiment, score);
+            review.updateAI(summaryResponse.getSummary(), sentiment, score);
+        } catch (Exception e) {
+            log.warn("리뷰 AI 재분석 실패 (reviewId={}): {}", review.getId(), e.getMessage());
+        }
 
         return toResponse(review);
     }
