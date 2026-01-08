@@ -15,15 +15,18 @@ public class Notification {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @Column(nullable = false)
     private String message;
     private String link;
 
-    @Column(name = "is_read")
-    private boolean isRead;
+    @Column(nullable = false)
+    private boolean read;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private NotificationType type;
 
     @PrePersist
@@ -39,17 +42,15 @@ public class Notification {
         this.member = member;
         this.type = type;
         this.link = null;
-        this.isRead = false;
-        this.createdAt = LocalDateTime.now();
+        this.read = false;
     }
 
-    public Notification(String message, Member member, String link, NotificationType type, boolean isRead, LocalDateTime createdAt) {
+    public Notification(String message, Member member, String link, NotificationType type, boolean read) {
         this.message = message;
         this.member = member;
         this.link = link;
         this.type = type;
-        this.isRead = isRead;
-        this.createdAt = createdAt;
+        this.read = read;
     }
 
     public Long getId() {
@@ -73,42 +74,18 @@ public class Notification {
     }
 
     public boolean isRead() {
-        return isRead;
+        return read;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void markAsRead(boolean read) {
-        this.isRead = read;
+    public void markAsRead() {
+        this.read = true;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setRead(boolean read) {
-        isRead = read;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setMember(Member member) {
-        this.member = member;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public void setLink(String link) {
-        this.link = link;
-    }
-
-    public void setType(NotificationType type) {
-        this.type = type;
+    public void markAsUnread() {
+        this.read = false;
     }
 }
