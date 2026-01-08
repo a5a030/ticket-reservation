@@ -19,7 +19,7 @@ public class Notification {
     private String message;
     private String link;
 
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     private boolean read;
 
     @Column(nullable = false, updatable = false)
