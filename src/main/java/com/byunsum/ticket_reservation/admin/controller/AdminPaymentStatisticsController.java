@@ -7,15 +7,14 @@ import com.byunsum.ticket_reservation.payment.service.PaymentStatisticService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/admin/payments/statistics")
 @Tag(name = "관리자 결제 통계 API", description = "공연별/장르별 매출 통계 조회")

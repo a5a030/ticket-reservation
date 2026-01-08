@@ -4,6 +4,6 @@ import java.math.BigDecimal;
 
 public record PaymentSummaryResponse(
         BigDecimal totalRevenue,
-        Long totalCount,
+        long totalCount,
         BigDecimal averageAmount
 ) {}
