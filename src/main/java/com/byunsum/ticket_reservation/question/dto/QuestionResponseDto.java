@@ -15,19 +15,23 @@ public class QuestionResponseDto {
     @Schema(description = "작성 일시")
     private LocalDateTime createdAt;
 
+    @Schema(description = "답변 여부")
+    private boolean answered;
+
     public QuestionResponseDto(Question question) {
         this.id = question.getId();
         this.createdAt = question.getCreatedAt();
+        this.answered = question.getAnswer() != null;
     }
 
-    private String formatDateTime(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return null;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return dateTime.format(formatter);
-    }
+//    private String formatDateTime(LocalDateTime dateTime) {
+//        if (dateTime == null) {
+//            return null;
+//        }
+//
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//        return dateTime.format(formatter);
+//    }
 
     public Long getId() {
         return id;
@@ -35,5 +39,9 @@ public class QuestionResponseDto {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isAnswered() {
+        return answered;
     }
 }

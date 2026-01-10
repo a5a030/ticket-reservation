@@ -11,17 +11,21 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String title;
 
     @Lob
+    @Column(nullable = false)
     private String content;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "author_id", nullable = false)
     private Member author;
 
-    @OneToOne(mappedBy = "question", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Answer answer;
 
     public Question() {
@@ -34,8 +38,8 @@ public class Question {
     }
 
     //생성 시점 자동 등록
-    @PostPersist
-    public void postPersist() {
+    @PrePersist
+    public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
@@ -67,10 +71,6 @@ public class Question {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public Member getAuthor() {
         return author;
     }
@@ -85,5 +85,9 @@ public class Question {
 
     public void setAnswer(Answer answer) {
         this.answer = answer;
+
+        if(answer != null && answer.getQuestion() != this){
+            answer.setQuestion(this);
+        }
     }
 }

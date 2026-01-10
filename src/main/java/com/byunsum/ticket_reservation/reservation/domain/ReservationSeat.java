@@ -20,7 +20,7 @@ public class ReservationSeat {
     private Seat seat;
 
     @Enumerated(EnumType.STRING)
-    private ReservationStatus status = ReservationStatus.CONFIRMED;
+    private ReservationStatus status = ReservationStatus.PENDING;
 
     private LocalDateTime cancelledAt;
 

@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.question.dto.QuestionRequestDto;
 import com.byunsum.ticket_reservation.question.dto.QuestionResponseDto;
 import com.byunsum.ticket_reservation.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ public class QuestionService {
         this.questionRepository = questionRepository;
     }
 
+    @Transactional
     public QuestionResponseDto create(QuestionRequestDto dto, Member member) {
         Question question = new Question();
         question.setTitle(dto.getTitle());
@@ -29,16 +31,11 @@ public class QuestionService {
         return new QuestionResponseDto(saved);
     }
 
-    public List<QuestionResponseDto> findMyQuestions(Member member) {
-        List<Question> questions = questionRepository.findByAuthor(member);
+    @Transactional(readOnly = true)
+    public List<QuestionResponseDto> findMyQuestions(Long authorId) {
+        List<Question> questions = questionRepository.findByAuthorId(authorId);
 
         return questions.stream()
-                .map(q -> new QuestionResponseDto(q))
-                .collect(Collectors.toList());
-    }
-
-    public List<QuestionResponseDto> findAllQuestions() {
-        return  questionRepository.findAll().stream()
                 .map(q -> new QuestionResponseDto(q))
                 .collect(Collectors.toList());
     }

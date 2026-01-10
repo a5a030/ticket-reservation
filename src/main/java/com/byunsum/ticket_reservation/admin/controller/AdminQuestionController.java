@@ -1,6 +1,8 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
 import com.byunsum.ticket_reservation.admin.service.AdminQuestionService;
+import com.byunsum.ticket_reservation.member.domain.Member;
+import com.byunsum.ticket_reservation.question.dto.AnswerRequestDto;
 import com.byunsum.ticket_reservation.question.dto.QuestionResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,11 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "관리자 문의글 API", description = "관리자용 문의글 조회/관리 API")
 @RestController
@@ -34,8 +32,8 @@ public class AdminQuestionController {
             @ApiResponse(responseCode = "403", description = "접근 권한 없음 (관리자 아님)")
     })
     @GetMapping
-    public ResponseEntity<Page<QuestionResponseDto>> getAllQuestions(@ParameterObject Pageable pageable) {
-        Page<QuestionResponseDto> result = adminQuestionService.findAllQuestions(pageable);
+    public ResponseEntity<Page<QuestionResponseDto>> getAll(@ParameterObject Pageable pageable) {
+        Page<QuestionResponseDto> result = adminQuestionService.findAll(pageable);
         return ResponseEntity.ok(result);
     }
 }

@@ -1,5 +1,6 @@
 package com.byunsum.ticket_reservation.question.dto;
 
+import com.byunsum.ticket_reservation.question.domain.Answer;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,12 @@ public class AnswerResponseDto {
         this.id = id;
         this.content = content;
         this.createdAt = createdAt;
+    }
+
+    public AnswerResponseDto(Answer answer) {
+        this.id = answer.getId();
+        this.content = answer.getContent();
+        this.createdAt = answer.getCreatedAt();
     }
 
     public Long getId() {

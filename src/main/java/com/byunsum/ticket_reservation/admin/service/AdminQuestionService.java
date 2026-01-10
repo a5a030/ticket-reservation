@@ -7,9 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 public class AdminQuestionService {
     private final QuestionRepository questionRepository;
@@ -19,7 +16,7 @@ public class AdminQuestionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<QuestionResponseDto> findAllQuestions(Pageable pageable) {
+    public Page<QuestionResponseDto> findAll(Pageable pageable) {
         return  questionRepository.findAll(pageable)
                 .map(QuestionResponseDto::new);
     }

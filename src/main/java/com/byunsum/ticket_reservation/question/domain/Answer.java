@@ -11,12 +11,14 @@ public class Answer {
     private Long id;
 
     @Lob
+    @Column(nullable = false)
     private String content;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToOne
-    @JoinColumn(name = "question_id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "question_id", nullable = false, unique = true)
     private Question question;
 
     public Answer() {
@@ -24,11 +26,11 @@ public class Answer {
 
     public Answer(String content, Question question) {
         this.content = content;
-        this.question = question;
+        setQuestion(question);
     }
 
-    @PostPersist
-    public void postPersist() {
+    @PrePersist
+    public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
@@ -52,11 +54,11 @@ public class Answer {
         this.content = content;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public void setQuestion(Question question) {
         this.question = question;
+
+        if(question != null && question.getAnswer() != this){
+            question.setAnswer(this);
+        }
     }
 }
