@@ -6,6 +6,7 @@ import com.byunsum.ticket_reservation.ticket.repository.TicketReissueLogReposito
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Tag(name = "관리자 티켓 API", description = "티켓 검증 로그 및 재발급 로그 조회")
+@Tag(name = "관리자 티켓 로그 API", description = "티켓 검증 로그 및 재발급 로그 조회")
 @RestController
 @RequestMapping("/admin/tickets")
 @PreAuthorize("hasRole('ADMIN')")
@@ -33,7 +34,7 @@ public class AdminTicketController {
     public Page<TicketVerificationLog> getVerificationLogs(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
                                                            @RequestParam(required = false) String status,
-                                                           Pageable pageable) {
+                                                           @ParameterObject Pageable pageable) {
         if(status != null && !status.isBlank()) {
             return ticketVerificationLogRepository.findByVerifiedAtBetweenAndResult(from, to, status, pageable);
         }

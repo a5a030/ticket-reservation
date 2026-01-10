@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ public class TicketReissueLog {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_seat_id", nullable = false)
     private ReservationSeat reservationSeat;
@@ -48,6 +50,7 @@ public class TicketReissueLog {
         return id;
     }
 
+    @JsonIgnore
     public ReservationSeat getReservationSeat() {
         return reservationSeat;
     }

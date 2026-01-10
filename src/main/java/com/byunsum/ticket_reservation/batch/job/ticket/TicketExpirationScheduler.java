@@ -17,7 +17,7 @@ public class TicketExpirationScheduler {
     }
 
     // 매일 자정에 만료 티켓 정리 배치 실행
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void run() throws Exception {
         jobLauncher.run(ticketExpirationJob,
                 new JobParametersBuilder()

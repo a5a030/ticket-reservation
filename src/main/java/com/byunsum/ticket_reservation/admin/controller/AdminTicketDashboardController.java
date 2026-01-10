@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/tickets")
 @PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "관리자 티켓 대시보드 API", description = "티켓 검증 및 재발급 통계 집계")
+@Tag(name = "관리자 티켓 통계 대시보드 API", description = "티켓 검증 및 재발급 통계 집계")
 public class AdminTicketDashboardController {
     private final TicketDashboardService ticketDashboardService;
     private final TicketReissueLogRepository ticketReissueLogRepository;
@@ -47,8 +48,8 @@ public class AdminTicketDashboardController {
             }
     )
     @GetMapping("/stats")
-    public ResponseEntity<VerificationStatsResponse> getStats(@Parameter(description = "조회 시작 시간 (yyyy-MM-dd'T'HH:mm:ss)", example = "2025-08-01T00:00:00") @RequestParam LocalDateTime start,
-                                                              @Parameter(description = "조회 종료 시간 (yyyy-MM-dd'T'HH:mm:ss)", example = "2025-08-19T23:59:59") @RequestParam LocalDateTime end
+    public ResponseEntity<VerificationStatsResponse> getStats(@Parameter(description = "조회 시작 시간 (yyyy-MM-dd'T'HH:mm:ss)", example = "2025-08-01T00:00:00") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+                                                              @Parameter(description = "조회 종료 시간 (yyyy-MM-dd'T'HH:mm:ss)", example = "2025-08-19T23:59:59") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
     ) {
         return ResponseEntity.ok(ticketDashboardService.getStats(start, end));
     }

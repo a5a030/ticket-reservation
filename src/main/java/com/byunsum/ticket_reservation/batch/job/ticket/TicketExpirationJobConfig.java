@@ -3,8 +3,6 @@ package com.byunsum.ticket_reservation.batch.job.ticket;
 import com.byunsum.ticket_reservation.batch.tasklet.ExpireTicketTasklet;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -27,13 +25,13 @@ public class TicketExpirationJobConfig {
     @Bean
     public Job ticketExpirationJob() {
         return new JobBuilder("ticketExpirationJob", jobRepository)
-                .start(expirationTicketStep())
+                .start(expireTicketStep())
                 .build();
     }
 
     @Bean
-    public Step expirationTicketStep() {
-        return new StepBuilder("expirationTicketStep", jobRepository)
+    public Step expireTicketStep() {
+        return new StepBuilder("expireTicketStep", jobRepository)
                 .tasklet(expireTicketTasklet, transactionManager)
                 .build();
     }
