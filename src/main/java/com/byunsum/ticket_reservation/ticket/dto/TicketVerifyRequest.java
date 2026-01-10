@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record TicketVerifyRequest(
         @NotBlank(message = "티켓 코드는 필수입니다.")
-        @Schema(description = "검증할 티켓 코드", example = "f81s9-d83sd-...")
+        @Schema(description = "검증할 티켓 코드", example = "550e8400-e29b-41d4-a716-446655440000")
         String ticketCode
 ) {
 }

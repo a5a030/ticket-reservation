@@ -17,6 +17,6 @@ public interface TicketReissueLogRepository extends JpaRepository<TicketReissueL
 
     @Query("select new com.byunsum.ticket_reservation.ticket.dto.TicketReissueStatsResponse(r.performance.title, count(l)) " +
             "from TicketReissueLog  l join l.reservationSeat rs join  rs.reservation r " +
-            "group by r.performance.title order by count(l) desc")
+            "group by r.performance.id, r.performance.title order by count(l) desc")
     List<TicketReissueStatsResponse> getReissueStatsByPerformance();
 }

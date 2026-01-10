@@ -23,10 +23,10 @@ public record TicketVerifyResponse(
         @Schema(description = "티켓 만료시각", example = "2025-08-19T18:30:00")
         LocalDateTime expiresAt,
 
-        @Schema(description = "검증자 ID")
+        @Schema(description = "검증자 식별자(스태프 loginId 또는 시스템 ID)")
         String verifier,
 
-        @Schema(description = "검증 요층자 IP/Device 정보")
+        @Schema(description = "검증 요청자 IP/Device 정보")
         String deviceInfo,
 
         @Schema(description = "검증 시각")
