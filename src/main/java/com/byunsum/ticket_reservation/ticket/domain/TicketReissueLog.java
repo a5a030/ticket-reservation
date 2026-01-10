@@ -11,24 +11,36 @@ public class TicketReissueLog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_seat_id")
+    @JoinColumn(name = "reservation_seat_id", nullable = false)
     private ReservationSeat reservationSeat;
 
+    @Column(nullable = false, length = 36)
     private String oldTicketCode;
+    @Column(nullable = false, length = 36)
     private String newTicketCode;
-    private String loginId;
-    private String username;
+
+    @Column(nullable = false)
+    private String actorLoginId;
+    @Column(nullable = false)
+    private String actorName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReissueReason reissueReason;
+
+    @Column(nullable = false)
     private LocalDateTime reissueAt;
 
     public TicketReissueLog() {
     }
 
-    public TicketReissueLog(ReservationSeat reservationSeat, String oldTicketCode, String newTicketCode, String loginId, String username, LocalDateTime reissueAt) {
+    public TicketReissueLog(ReservationSeat reservationSeat, String oldTicketCode, String newTicketCode, String actorLoginId, String actorName, ReissueReason reason, LocalDateTime reissueAt) {
         this.reservationSeat = reservationSeat;
         this.oldTicketCode = oldTicketCode;
         this.newTicketCode = newTicketCode;
-        this.loginId = loginId;
-        this.username = username;
+        this.actorLoginId = actorLoginId;
+        this.actorName = actorName;
+        this.reissueReason = reason;
         this.reissueAt = reissueAt;
     }
 
@@ -48,12 +60,12 @@ public class TicketReissueLog {
         return newTicketCode;
     }
 
-    public String getLoginId() {
-        return loginId;
+    public String getActorLoginId() {
+        return actorLoginId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getActorName() {
+        return actorName;
     }
 
     public LocalDateTime getReissueAt() {

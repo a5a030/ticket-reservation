@@ -10,25 +10,26 @@ import java.util.UUID;
 @Entity
 public class Ticket {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_seat_id", nullable = false)
     private ReservationSeat reservationSeat;
 
+    @Column(nullable = false, unique = true, length = 36)
     private String ticketCode;
     private String qrImageUrl;
 
+    @Column(nullable = false)
     private LocalDateTime issuedAt;
+
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
-
-    public void setStatus(TicketStatus status) {
-        this.status = status;
-    }
 
     public Ticket() {
     }
@@ -56,16 +57,12 @@ public class Ticket {
         );
     }
 
-    public void refresh(String newTicketCode, String newQrImageUrl, Duration validDuration) {
-        //기존 티켓 무효화
-        this.status = TicketStatus.INVALIDATED;
+    public void invalidate() {
+        if(!this.status.canTransitionTo(TicketStatus.INVALIDATED)) {
+            throw new IllegalStateException("현재 상태에서 무효화 불가: "+this.status);
+        }
 
-        //새로 갱신
-        this.ticketCode = newTicketCode;
-        this.qrImageUrl = newQrImageUrl;
-        this.issuedAt = LocalDateTime.now();
-        this.expiresAt = LocalDateTime.now().plus(validDuration);
-        this.status = TicketStatus.ISSUED;
+        this.status = TicketStatus.INVALIDATED;
     }
 
     public Long getId() {
