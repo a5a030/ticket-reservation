@@ -43,8 +43,7 @@ public class Ticket {
         this.status = status;
     }
 
-    public static Ticket create(ReservationSeat reservationSeat, String  qrImageUrl, Duration validDuration) {
-        String ticketCode = UUID.randomUUID().toString();
+    public static Ticket create(ReservationSeat reservationSeat, String ticketCode, String  qrImageUrl, Duration validDuration) {
         LocalDateTime now = LocalDateTime.now();
 
         return  new Ticket(

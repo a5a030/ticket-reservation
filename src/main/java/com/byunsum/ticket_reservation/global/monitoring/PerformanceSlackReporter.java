@@ -32,7 +32,7 @@ public class PerformanceSlackReporter {
     }
 
     // 30분 단위 입장률 리포트
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(cron = "0 */30 * * * *", zone = "Asia/Seoul")
     public void reportProgressEvery30Min() {
         LocalDateTime now = LocalDateTime.now();
         List<PerformanceRound> rounds = roundRepository.findByEntryDateTimeBetween(now.minusHours(3), now.plusHours(3));
@@ -45,7 +45,7 @@ public class PerformanceSlackReporter {
 
             if(now.isAfter(entryStart) && end.isAfter(now)) {
                 long total = ticketRepository.countByPerformanceRound(round);
-                long entered = ticketRepository.countByPerformanceRoundAndEnteredTrue(round);
+                long entered = ticketRepository.countUsedByPerformanceRound(round);
                 double ratio = total > 0 ? (entered * 100.0 / total) : 0;
 
                 String message = String.format(
@@ -65,7 +65,7 @@ public class PerformanceSlackReporter {
     }
 
     // 공연 시작 10분 전&정각 알림
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
     public void notifyPerformanceStart() {
         LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
         List<PerformanceRound> rounds =
@@ -78,7 +78,7 @@ public class PerformanceSlackReporter {
 
             if(start.minusMinutes(10).equals(now)) {
                 long total = ticketRepository.countByPerformanceRound(round);
-                long entered = ticketRepository.countByPerformanceRoundAndEnteredTrue(round);
+                long entered = ticketRepository.countUsedByPerformanceRound(round);
                 double ratio = total > 0 ? (entered * 100.0 / total) : 0;
 
                 slackNotifier.send(String.format(
@@ -91,7 +91,7 @@ public class PerformanceSlackReporter {
 
             if(start.equals(now)) {
                 long total = ticketRepository.countByPerformanceRound(round);
-                long entered = ticketRepository.countByPerformanceRoundAndEnteredTrue(round);
+                long entered = ticketRepository.countUsedByPerformanceRound(round);
                 double ratio = total > 0 ? (entered * 100.0 / total) : 0;
 
                 slackNotifier.send(String.format(

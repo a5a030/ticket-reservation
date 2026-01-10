@@ -112,23 +112,24 @@ public class AdminDashboardService {
 
     public VerificationStatsResponse getTicketStats(LocalDateTime start, LocalDateTime end) {
         long total = ticketVerificationLogRepository.countByVerifiedAtBetween(start, end);
-        long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("SUCCESS", start, end);
-        long fail = ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("FAIL", start, end);
+        long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("USED", start, end);
+        long fail = total - success;
 
-        double successRate = total > 0 ? (double) success / total : 0.0;
+        double rate = total > 0 ? (double) success / total * 100 : 0.0;
+        String successRate = String.format("%.1f%%", rate);
 
         Map<String, Long> resultCounts = ticketVerificationLogRepository.countByResultBetween(start, end)
                 .stream()
                 .collect(Collectors.toMap(
                         r -> (String) r[0],
-                        r -> (Long) r[1]
+                        r -> ((Number) r[1]).longValue()
                 ));
 
         Map<Integer, Long> hourlyCounts = ticketVerificationLogRepository.countByHourBetween(start, end)
                 .stream()
                 .collect(Collectors.toMap(
-                        r -> ((Integer) r[0]),
-                        r -> (Long) r[1]
+                        r -> ((Number) r[0]).intValue(),
+                        r -> ((Number) r[1]).longValue()
                 ));
 
         return new  VerificationStatsResponse(successRate, resultCounts, hourlyCounts);

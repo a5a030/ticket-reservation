@@ -17,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +27,9 @@ public class ExpireTicketTasklet implements Tasklet {
     private final TicketRepository ticketRepository;
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
     private final StringRedisTemplate stringRedisTemplate;
+
+    private static final String REDIS_TICKET_PREFIX = "ticket:";
+    private static final String BLACKLIST_PREFIX = "blacklist:ticket:";
 
     public ExpireTicketTasklet(TicketRepository ticketRepository, TicketVerificationLogRepository ticketVerificationLogRepository, StringRedisTemplate stringRedisTemplate) {
         this.ticketRepository = ticketRepository;
@@ -45,9 +46,10 @@ public class ExpireTicketTasklet implements Tasklet {
         if(expired.isEmpty()) return RepeatStatus.FINISHED;
 
         for(Ticket ticket : expired){
-            ticket.setStatus(TicketStatus.EXPIRED);
+            ticket.markExpired();
+            stringRedisTemplate.delete(REDIS_TICKET_PREFIX + ticket.getTicketCode());
 
-            String blacklistKey = "blacklist:ticket:" + ticket.getTicketCode();
+            String blacklistKey = BLACKLIST_PREFIX + ticket.getTicketCode();
 
             LocalDateTime roundEnd = ticket.getReservationSeat()
                     .getSeat().getPerformanceRound().getEndDateTime();

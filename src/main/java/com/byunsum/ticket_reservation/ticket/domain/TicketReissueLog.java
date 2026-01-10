@@ -68,6 +68,10 @@ public class TicketReissueLog {
         return actorName;
     }
 
+    public ReissueReason getReissueReason() {
+        return reissueReason;
+    }
+
     public LocalDateTime getReissueAt() {
         return reissueAt;
     }

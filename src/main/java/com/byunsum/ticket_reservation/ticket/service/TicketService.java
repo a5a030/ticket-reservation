@@ -7,10 +7,7 @@ import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationSeatRepository;
-import com.byunsum.ticket_reservation.ticket.domain.Ticket;
-import com.byunsum.ticket_reservation.ticket.domain.TicketReissueLog;
-import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
-import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
+import com.byunsum.ticket_reservation.ticket.domain.*;
 import com.byunsum.ticket_reservation.ticket.dto.TicketVerifyResponse;
 import com.byunsum.ticket_reservation.ticket.qr.QrCodeGenerator;
 import com.byunsum.ticket_reservation.ticket.repository.TicketReissueLogRepository;
@@ -67,14 +64,14 @@ public class TicketService {
         List<Ticket> tickets = new ArrayList<>();
 
         for(ReservationSeat rs : reservation.getReservationSeats()) {
-            if(ticketRepository.existsByReservationSeatId(rs.getId())) {
+            if(ticketRepository.existsByReservationSeatIdAndStatus(rs.getId(), TicketStatus.ISSUED)) {
                 throw new CustomException(ErrorCode.TICKET_ALREADY_ISSUED);
             }
 
             String ticketCode = UUID.randomUUID().toString();
             String qrImageUrl = qrCodeGenerator.generate(ticketCode);
 
-            Ticket ticket = Ticket.create(rs, qrImageUrl, TICKET_VALID_DURATION);
+            Ticket ticket = Ticket.create(rs, ticketCode, qrImageUrl, TICKET_VALID_DURATION);
             ticketRepository.save(ticket);
 
             stringRedisTemplate.opsForValue().set(
@@ -98,7 +95,7 @@ public class TicketService {
         List<Ticket> tickets = new ArrayList<>();
 
         for(ReservationSeat rs : reservation.getReservationSeats()) {
-            ticketRepository.findByReservationSeatId(rs.getId()).ifPresent(tickets::add);
+            ticketRepository.findFirstByReservationSeatIdOrderByIssuedAtDesc(rs.getId()).ifPresent(tickets::add);
         }
 
         return tickets;
@@ -106,22 +103,33 @@ public class TicketService {
 
     @Transactional
     public Ticket refreshQrCode(Long reservationSeatId) {
-        Ticket ticket = ticketRepository.findByReservationSeatId(reservationSeatId)
+        Ticket current = ticketRepository.findFirstByReservationSeatIdAndStatusOrderByIssuedAtDesc(reservationSeatId, TicketStatus.ISSUED)
                 .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-        LocalDateTime roundStart = ticket.getReservationSeat()
+        LocalDateTime roundStart = current.getReservationSeat()
                 .getSeat().getPerformanceRound().getStartDateTime();
 
         if (LocalDateTime.now().isBefore(roundStart.minusHours(3))) {
             throw new CustomException(ErrorCode.QR_NOT_YET_AVAILABLE);
         }
 
-        String oldCode = ticket.getTicketCode();
+        String oldCode = current.getTicketCode();
+
+        //기존티켓 무효화
+        current.invalidate();
+        ticketRepository.save(current);
+
         String newCode = UUID.randomUUID().toString();
         String newQrImage = qrCodeGenerator.generate(newCode);
 
-        ticket.refresh(newCode, newQrImage, Duration.ofMinutes(30));
-        ticketRepository.save(ticket);
+        Ticket newTicket = Ticket.create(
+                current.getReservationSeat(),
+                newCode,
+                newQrImage,
+                Duration.ofMinutes(30)
+        );
+
+        ticketRepository.save(newTicket);
 
         stringRedisTemplate.opsForValue().set(
                 REDIS_KEY_PREFIX + newCode,
@@ -129,7 +137,7 @@ public class TicketService {
                 30, TimeUnit.MINUTES
         );
 
-        LocalDateTime roundEnd = ticket.getReservationSeat()
+        LocalDateTime roundEnd = current.getReservationSeat()
                 .getSeat().getPerformanceRound().getEndDateTime();
 
         if (roundEnd == null) {
@@ -144,14 +152,14 @@ public class TicketService {
         stringRedisTemplate.opsForValue().set(blacklistKey, "true");
         stringRedisTemplate.expireAt(blacklistKey, new Date(expiresAtMillis));
 
-        String loginId = ticket.getReservationSeat().getReservation().getMember().getLoginId();
-        String username = ticket.getReservationSeat().getReservation().getMember().getUsername();
+        String loginId = current.getReservationSeat().getReservation().getMember().getLoginId();
+        String username = current.getReservationSeat().getReservation().getMember().getUsername();
 
         ticketReissueLogRepository.save(
-                new TicketReissueLog(ticket.getReservationSeat(), oldCode, newCode, loginId, username, LocalDateTime.now())
+                new TicketReissueLog(current.getReservationSeat(), oldCode, newCode, loginId, username, ReissueReason.USER_REQUEST, LocalDateTime.now())
         );
 
-        return ticket;
+        return newTicket;
     }
 
 
@@ -174,15 +182,25 @@ public class TicketService {
         List<Ticket> tickets = new ArrayList<>();
 
         for(ReservationSeat rs : reservation.getReservationSeats()) {
-            Ticket ticket = ticketRepository.findByReservationSeatId(rs.getId())
+            Ticket current = ticketRepository.findFirstByReservationSeatIdAndStatusOrderByIssuedAtDesc(rs.getId(), TicketStatus.ISSUED)
                     .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-            String oldCode = ticket.getTicketCode();
-            String newCode = UUID.randomUUID().toString();
-            String newQrImage =  qrCodeGenerator.generate(newCode);
+            String oldCode = current.getTicketCode();
 
-            ticket.refresh(newCode, newQrImage, Duration.ofMinutes(30));
-            ticketRepository.save(ticket);
+            //기존 티켓 무효화
+            current.invalidate();
+            ticketRepository.save(current);
+
+            String newCode = UUID.randomUUID().toString();
+            String newQrImage = qrCodeGenerator.generate(newCode);
+
+            Ticket newTicket = Ticket.create(
+                    current.getReservationSeat(),
+                    newCode,
+                    newQrImage,
+                    Duration.ofMinutes(30)
+            );
+            ticketRepository.save(newTicket);
 
             stringRedisTemplate.opsForValue().set(
                     REDIS_KEY_PREFIX + newCode,
@@ -204,16 +222,14 @@ public class TicketService {
             stringRedisTemplate.opsForValue().set(blacklistKey, "true");
             stringRedisTemplate.expireAt(blacklistKey, new Date(expiresAtMillis));
 
-            String loginId = ticket.getReservationSeat()
-                    .getReservation().getMember().getLoginId();
-            String username = ticket.getReservationSeat()
-                    .getReservation().getMember().getUsername();
+            String loginId = rs.getReservation().getMember().getLoginId();
+            String username = rs.getReservation().getMember().getUsername();
 
             ticketReissueLogRepository.save(
-                    new TicketReissueLog(ticket.getReservationSeat(), oldCode, newCode, loginId, username, LocalDateTime.now())
+                    new TicketReissueLog(rs, oldCode, newCode, loginId, username, ReissueReason.USER_REQUEST, LocalDateTime.now())
             );
 
-            tickets.add(ticket);
+            tickets.add(newTicket);
         }
 
         return tickets;
@@ -243,8 +259,8 @@ public class TicketService {
         String blacklistKey = "blacklist:ticket:" + ticketCode;
 
         if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
-            resultStatus = TicketStatus.CANCELLED.name();
-            responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
+            resultStatus = TicketStatus.INVALIDATED.name();
+            responseDto = new TicketVerifyResponse(false, resultStatus, "무효 처리된 티켓입니다.",
                     null, null, null,
                     verifier, deviceInfo, verifiedAt);
             ticketVerificationLogRepository.save(
@@ -282,14 +298,14 @@ public class TicketService {
                 responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
-            } else if(ticket.getStatus() == TicketStatus.CANCELLED) {
+            } else if(ticket.getStatus() == TicketStatus.INVALIDATED) {
                 slackNotifier.send(String.format(
-                        "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
+                        "\uD83D\uDEAB 무효 처리된 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
                         verifier, ticketCode, deviceInfo
                 ));
 
-                resultStatus = TicketStatus.CANCELLED.name();
-                responseDto = new TicketVerifyResponse(false, resultStatus, "취소된 티켓입니다.",
+                resultStatus = TicketStatus.INVALIDATED.name();
+                responseDto = new TicketVerifyResponse(false, resultStatus, "무효 처리된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -298,7 +314,7 @@ public class TicketService {
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             } else {
-                ticket.setStatus(TicketStatus.USED);
+                ticket.markUsed();
                 ticketRepository.save(ticket);
 
                 resultStatus = TicketStatus.USED.name();
@@ -334,8 +350,7 @@ public class TicketService {
         Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
                 .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
 
-        ticket.setStatus(TicketStatus.CANCELLED);
-        ticketRepository.save(ticket);
+        ticket.invalidate();
 
         //Redis TTl 삭제
         stringRedisTemplate.delete(REDIS_KEY_PREFIX + ticketCode);
