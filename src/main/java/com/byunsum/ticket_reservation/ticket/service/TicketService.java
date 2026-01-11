@@ -38,6 +38,8 @@ public class TicketService {
 
     private static final Duration TICKET_VALID_DURATION = Duration.ofHours(4);
     private static final String REDIS_KEY_PREFIX = "ticket:";
+    private static final String LOCK_KEY_PREFIX = "lock:ticket:";
+
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
     private final SlackNotifier slackNotifier;
     private final TicketReissueLogRepository ticketReissueLogRepository;
@@ -237,100 +239,180 @@ public class TicketService {
 
     @Transactional
     public TicketVerifyResponse verifyTicket(String ticketCode, HttpServletRequest request) {
-        String cacheKey = "verifyTicket:" + ticketCode;
-
-        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
-
-        if(cached != null) {
-            try {
-                return objectMapper.readValue(cached, TicketVerifyResponse.class);
-            } catch (Exception e) {}
-        }
-        String redisKey = REDIS_KEY_PREFIX + ticketCode;
-
-        String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
-        String deviceInfo = clientIp(request);
-        String resultStatus;
-        TicketVerifyResponse responseDto;
-
-        LocalDateTime verifiedAt = LocalDateTime.now();
-
-        //1. 블랙리스트 조회
-        String blacklistKey = "blacklist:ticket:" + ticketCode;
-
-        if(Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
-            resultStatus = TicketStatus.INVALIDATED.name();
-            responseDto = new TicketVerifyResponse(false, resultStatus, "무효 처리된 티켓입니다.",
+        //검표 동시성 락
+        if(!acquireVerifyLock(ticketCode)) {
+            TicketVerifyResponse response = new TicketVerifyResponse(
+                    false,
+                    "DUPLICATE_SCAN",
+                    "이미 검표가 진행 중인 티켓입니다.",
                     null, null, null,
-                    verifier, deviceInfo, verifiedAt);
-            ticketVerificationLogRepository.save(
-                    new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+                    SecurityContextHolder.getContext().getAuthentication().getName(),
+                    clientIp(request),
+                    LocalDateTime.now()
             );
 
-            slackNotifier.send(String.format(
-                    "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
-                    verifier, ticketCode, deviceInfo
-            ));
+            ticketVerificationLogRepository.save(
+                    new TicketVerificationLog(
+                            ticketCode,
+                            response.verifier(),
+                            response.deviceInfo(),
+                            "DUPLICATE_SCAN",
+                            response.verifiedAt()
+                    )
+            );
 
-            cachedVerifyResponse(cacheKey, responseDto);
-
-            return responseDto;
+            return response;
         }
 
-        String reservationSeatId = stringRedisTemplate.opsForValue().get(redisKey);
+        try {
+            String cacheKey = "verifyTicket:" + ticketCode;
 
-        if(reservationSeatId == null) {
-            resultStatus = TicketStatus.EXPIRED.name();
-            responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.",
-                    null, null, null,
-                    verifier, deviceInfo, verifiedAt);
-        } else {
+            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+
+            if (cached != null) {
+                try {
+                    return objectMapper.readValue(cached, TicketVerifyResponse.class);
+                } catch (Exception ignored) {
+                }
+            }
+
+            String redisKey = REDIS_KEY_PREFIX + ticketCode;
+
+            String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
+            String deviceInfo = clientIp(request);
+            String resultStatus;
+            TicketVerifyResponse responseDto;
+
+            LocalDateTime verifiedAt = LocalDateTime.now();
+
+            //1. 블랙리스트 조회
+            String blacklistKey = "blacklist:ticket:" + ticketCode;
+
+            if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
+                resultStatus = TicketStatus.INVALIDATED.name();
+                responseDto = new TicketVerifyResponse(false, resultStatus, "무효 처리된 티켓입니다.",
+                        null, null, null,
+                        verifier, deviceInfo, verifiedAt);
+
+                ticketVerificationLogRepository.save(
+                        new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+                );
+
+                try {
+                    slackNotifier.send(String.format(
+                            "\uD83D\uDEAB 취소 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
+                            verifier, ticketCode, deviceInfo
+                    ));
+                } catch (Exception ignored) {
+                }
+
+                cachedVerifyResponse(cacheKey, responseDto);
+
+                return responseDto;
+            }
+
+            //2. Redis에서 티켓 유효성 확인
+            String reservationSeatId = stringRedisTemplate.opsForValue().get(redisKey);
+
+            if (reservationSeatId == null) {
+                resultStatus = TicketStatus.EXPIRED.name();
+                responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다. 재발급이 필요합니다.",
+                        null, null, null,
+                        verifier, deviceInfo, verifiedAt);
+
+                ticketVerificationLogRepository.save(
+                        new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+                );
+                cachedVerifyResponse(cacheKey, responseDto);
+
+                return responseDto;
+            }
+
+            //3. DB에서 티켓 조회
             Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
                     .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+
+            Long dbReservationSeatId = ticket.getReservationSeat() != null ? ticket.getReservationSeat().getId() : null;
+
+            if (dbReservationSeatId == null || !reservationSeatId.equals(dbReservationSeatId.toString())) {
+                resultStatus = "TAMPERED";
+                responseDto = new TicketVerifyResponse(
+                        false, resultStatus, "티켓 정보가 유효하지 않습니다. 관리자에게 문의해주세요.",
+                        null, null, null,
+                        verifier, deviceInfo, verifiedAt
+                );
+
+                ticketVerificationLogRepository.save(
+                        new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+                );
+
+                try {
+                    slackNotifier.send(String.format(
+                            "\u26A0\uFE0F 티켓 매핑 불일치 감지\n검증자: %s\n티켓코드: %s\nRedis reservationSeatId: %s\nDB reservationSeatId: %s\nIP: %s",
+                            verifier, ticketCode, reservationSeatId, dbReservationSeatId, deviceInfo
+                    ));
+                } catch (Exception ignored) {
+                }
+
+                cachedVerifyResponse(cacheKey, responseDto);
+
+                return responseDto;
+            }
 
             String performanceTitle = ticket.getReservationSeat()
                     .getReservation().getPerformance().getTitle();
             String seatNo = ticket.getReservationSeat().getSeat().getSeatNo();
             LocalDateTime expiresAt = ticket.getExpiresAt();
 
-            if(ticket.getStatus() == TicketStatus.USED) {
+            //4. 상태별 검표 처리
+            if (ticket.getStatus() == TicketStatus.USED) {
                 resultStatus = TicketStatus.USED.name();
                 responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
-            } else if(ticket.getStatus() == TicketStatus.INVALIDATED) {
-                slackNotifier.send(String.format(
-                        "\uD83D\uDEAB 무효 처리된 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
-                        verifier, ticketCode, deviceInfo
-                ));
-
+            } else if (ticket.getStatus() == TicketStatus.INVALIDATED) {
                 resultStatus = TicketStatus.INVALIDATED.name();
                 responseDto = new TicketVerifyResponse(false, resultStatus, "무효 처리된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
-            } else if(ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
+                try {
+                    slackNotifier.send(String.format(
+                            "\uD83D\uDEAB 무효 처리된 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
+                            verifier, ticketCode, deviceInfo
+                    ));
+                } catch (Exception ignored) {
+                }
+            } else if (ticket.getExpiresAt() != null && ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
                 resultStatus = TicketStatus.EXPIRED.name();
                 responseDto = new TicketVerifyResponse(false, resultStatus, "티켓이 만료되었습니다.",
                         performanceTitle, seatNo, expiresAt,
                         verifier, deviceInfo, verifiedAt);
             } else {
-                ticket.markUsed();
-                ticketRepository.save(ticket);
+                int updated = ticketRepository.markUsedIfIssued(ticketCode);
 
-                resultStatus = TicketStatus.USED.name();
-                responseDto = new TicketVerifyResponse(true, resultStatus, "입장 완료",
-                        performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt);
+                if(updated == 0) {
+                    resultStatus = TicketStatus.USED.name();
+                    responseDto = new TicketVerifyResponse(false, resultStatus, "이미 사용된 티켓입니다.",
+                            performanceTitle, seatNo, expiresAt,
+                            verifier, deviceInfo, verifiedAt);
+                } else {
+                    resultStatus = TicketStatus.USED.name();
+                    responseDto = new TicketVerifyResponse(true, resultStatus, "입장 완료",
+                            performanceTitle, seatNo, expiresAt,
+                            verifier, deviceInfo, verifiedAt);
+                }
             }
+
+            ticketVerificationLogRepository.save(
+                    new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
+            );
+
+            cachedVerifyResponse(cacheKey, responseDto);
+
+            return responseDto;
+        } finally {
+            releaseVerifyLock(ticketCode);
         }
-
-        ticketVerificationLogRepository.save(
-                new TicketVerificationLog(ticketCode, verifier, deviceInfo, resultStatus, verifiedAt)
-        );
-
-        cachedVerifyResponse(cacheKey, responseDto);
-
-        return responseDto;
     }
 
     private String clientIp(HttpServletRequest request) {
@@ -380,5 +462,17 @@ public class TicketService {
                     5, TimeUnit.SECONDS
             );
         } catch (Exception e) {}
+    }
+
+    private boolean acquireVerifyLock(String ticketCode) {
+        String lockKey = LOCK_KEY_PREFIX + ticketCode;
+        return Boolean.TRUE.equals(
+                stringRedisTemplate.opsForValue()
+                        .setIfAbsent(lockKey, "LOCK", 4, TimeUnit.SECONDS)
+        );
+    }
+
+    private void releaseVerifyLock(String ticketCode) {
+        stringRedisTemplate.delete(LOCK_KEY_PREFIX + ticketCode);
     }
 }

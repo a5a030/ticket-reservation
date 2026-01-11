@@ -5,6 +5,7 @@ import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -49,4 +50,10 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
             "join rs.seat s " +
             "where s.performanceRound = :round and t.status = 'USED'")
     long countUsedByPerformanceRound(@Param("round") PerformanceRound round);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Ticket  t " +
+            "set  t.status = 'USED' " +
+            "where t.ticketCode = :ticketCode and t.status='ISSUED'")
+    int markUsedIfIssued(@Param("ticketCode") String ticketCode);
 }
