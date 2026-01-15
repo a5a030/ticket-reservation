@@ -3,6 +3,7 @@ package com.byunsum.ticket_reservation.batch.tasklet;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.domain.TicketStatus;
 import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
+import com.byunsum.ticket_reservation.ticket.domain.TicketVerifyResult;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class ExpireTicketTasklet implements Tasklet {
                         ticket.getTicketCode(),
                         "BATCH",
                         "system",
-                        TicketStatus.EXPIRED.name(),
+                        TicketVerifyResult.EXPIRED,
                         now
                 ))
                 .toList();

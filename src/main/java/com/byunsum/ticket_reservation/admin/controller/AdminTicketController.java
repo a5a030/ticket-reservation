@@ -2,6 +2,7 @@ package com.byunsum.ticket_reservation.admin.controller;
 
 import com.byunsum.ticket_reservation.ticket.domain.TicketReissueLog;
 import com.byunsum.ticket_reservation.ticket.domain.TicketVerificationLog;
+import com.byunsum.ticket_reservation.ticket.domain.TicketVerifyResult;
 import com.byunsum.ticket_reservation.ticket.repository.TicketReissueLogRepository;
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,10 +34,10 @@ public class AdminTicketController {
     @GetMapping("/logs")
     public Page<TicketVerificationLog> getVerificationLogs(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-                                                           @RequestParam(required = false) String status,
+                                                           @RequestParam(required = false) TicketVerifyResult result,
                                                            @ParameterObject Pageable pageable) {
-        if(status != null && !status.isBlank()) {
-            return ticketVerificationLogRepository.findByVerifiedAtBetweenAndResult(from, to, status, pageable);
+        if(result != null) {
+            return ticketVerificationLogRepository.findByVerifiedAtBetweenAndResult(from, to, result, pageable);
         }
 
         return  ticketVerificationLogRepository.findByVerifiedAtBetween(from, to, pageable);

@@ -1,9 +1,6 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -15,18 +12,21 @@ public class TicketVerificationLog {
 
     private String ticketCode;
     private String verifier;
-    private String deviceInfo;
-    private String result;
+    private String ipAddress;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TicketVerifyResult result;
 
     private LocalDateTime verifiedAt;
 
     public TicketVerificationLog() {
     }
 
-    public TicketVerificationLog(String ticketCode, String verifier, String deviceInfo, String result, LocalDateTime verifiedAt) {
+    public TicketVerificationLog(String ticketCode, String verifier, String ipAddress, TicketVerifyResult result, LocalDateTime verifiedAt) {
         this.ticketCode = ticketCode;
         this.verifier = verifier;
-        this.deviceInfo = deviceInfo;
+        this.ipAddress = ipAddress;
         this.result = result;
         this.verifiedAt = verifiedAt;
     }
