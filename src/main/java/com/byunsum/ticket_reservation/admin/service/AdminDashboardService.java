@@ -3,12 +3,8 @@ package com.byunsum.ticket_reservation.admin.service;
 import com.byunsum.ticket_reservation.admin.dto.DashboardResponse;
 import com.byunsum.ticket_reservation.admin.dto.ReviewStatsResponse;
 import com.byunsum.ticket_reservation.admin.dto.SalesStatsResponse;
-import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.dto.PaymentSalesStatsResponse;
-import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
-import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.payment.service.PaymentStatisticService;
-import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
 import com.byunsum.ticket_reservation.review.domain.Review;
 import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
@@ -28,21 +24,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class AdminDashboardService {
-    private final PerformanceRepository performanceRepository;
     private final ReviewRepository reviewRepository;
     private final KeywordService keywordService;
     private final TicketVerificationLogRepository ticketVerificationLogRepository;
-    private final PaymentRepository paymentRepository;
-    private final PaymentService paymentService;
     private final PaymentStatisticService paymentStatisticService;
 
-    public AdminDashboardService(PerformanceRepository performanceRepository, ReviewRepository reviewRepository, KeywordService keywordService, TicketVerificationLogRepository ticketVerificationLogRepository, PaymentRepository paymentRepository, PaymentService paymentService, PaymentStatisticService paymentStatisticService) {
-        this.performanceRepository = performanceRepository;
+    public AdminDashboardService(ReviewRepository reviewRepository, KeywordService keywordService, TicketVerificationLogRepository ticketVerificationLogRepository, PaymentStatisticService paymentStatisticService) {
         this.reviewRepository = reviewRepository;
         this.keywordService = keywordService;
         this.ticketVerificationLogRepository = ticketVerificationLogRepository;
-        this.paymentRepository = paymentRepository;
-        this.paymentService = paymentService;
         this.paymentStatisticService = paymentStatisticService;
     }
 
@@ -56,14 +46,16 @@ public class AdminDashboardService {
                 .stream()
                 .collect(Collectors.toMap(
                         PaymentSalesStatsResponse::groupLabel,
-                        PaymentSalesStatsResponse::totalAmount
+                        PaymentSalesStatsResponse::totalAmount,
+                        BigDecimal::add
                 ));
 
         Map<String, BigDecimal> salesByGenre = paymentStatisticService.getSalesByGenre()
                 .stream()
                 .collect(Collectors.toMap(
                         PaymentSalesStatsResponse::groupLabel,
-                        PaymentSalesStatsResponse::totalAmount
+                        PaymentSalesStatsResponse::totalAmount,
+                        BigDecimal::add
                 ));
 
         return new  SalesStatsResponse(
@@ -77,6 +69,16 @@ public class AdminDashboardService {
 
     public ReviewStatsResponse getReviewStats() {
         List<Review> reviews = reviewRepository.findAll();
+
+        if(reviews.isEmpty()) {
+            return new ReviewStatsResponse(
+                    0L,
+                    Map.of("POSITIVE", 0L, "NEGATIVE", 0L),
+                    Map.of(),
+                    0.0,
+                    List.of()
+            );
+        }
 
         long totalReviews = reviews.size();
 
@@ -92,7 +94,11 @@ public class AdminDashboardService {
         List<KeywordSummary> keywordSummaries = keywordService.extractTopKeywordsWithCount(reviewTexts, 2, 5);
 
         Map<String, Long> topKeywords = keywordSummaries.stream()
-                .collect(Collectors.toMap(KeywordSummary::getKeyword, KeywordSummary::getCount));
+                .collect(Collectors.toMap(
+                        KeywordSummary::getKeyword,
+                        KeywordSummary::getCount,
+                        Long::sum
+                ));
 
         double averageScore = reviews.stream()
                 .mapToDouble(Review::getSentimentScore)
@@ -100,7 +106,7 @@ public class AdminDashboardService {
                 .orElse(0.0);
 
         List<String> recentSummaries = reviews.stream()
-                .filter(r -> r.getSummary() != null)
+                .filter(r -> r.getSummary() != null && !r.getSummary().isBlank())
                 .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
                 .limit(3)
                 .map(Review::getSummary)
@@ -112,7 +118,6 @@ public class AdminDashboardService {
     public VerificationStatsResponse getTicketStats(LocalDateTime start, LocalDateTime end) {
         long total = ticketVerificationLogRepository.countByVerifiedAtBetween(start, end);
         long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween(TicketVerifyResult.SUCCESS, start, end);
-        long fail = total - success;
 
         double rate = total > 0 ? (double) success / total * 100 : 0.0;
         String successRate = String.format("%.1f%%", rate);
@@ -121,14 +126,16 @@ public class AdminDashboardService {
                 .stream()
                 .collect(Collectors.toMap(
                         r -> ((TicketVerifyResult) r[0]).name(),
-                        r -> ((Number) r[1]).longValue()
+                        r -> ((Number) r[1]).longValue(),
+                        Long::sum
                 ));
 
         Map<Integer, Long> hourlyCounts = ticketVerificationLogRepository.countByHourBetween(start, end)
                 .stream()
                 .collect(Collectors.toMap(
                         r -> ((Number) r[0]).intValue(),
-                        r -> ((Number) r[1]).longValue()
+                        r -> ((Number) r[1]).longValue(),
+                        Long::sum
                 ));
 
         return new  VerificationStatsResponse(successRate, resultCounts, hourlyCounts);
