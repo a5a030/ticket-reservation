@@ -14,17 +14,16 @@ import com.byunsum.ticket_reservation.review.domain.SentimentType;
 import com.byunsum.ticket_reservation.review.dto.KeywordSummary;
 import com.byunsum.ticket_reservation.review.repository.ReviewRepository;
 import com.byunsum.ticket_reservation.review.service.KeywordService;
+import com.byunsum.ticket_reservation.ticket.domain.TicketVerifyResult;
 import com.byunsum.ticket_reservation.ticket.dto.VerificationStatsResponse;
 import com.byunsum.ticket_reservation.ticket.repository.TicketVerificationLogRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,7 +111,7 @@ public class AdminDashboardService {
 
     public VerificationStatsResponse getTicketStats(LocalDateTime start, LocalDateTime end) {
         long total = ticketVerificationLogRepository.countByVerifiedAtBetween(start, end);
-        long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween("USED", start, end);
+        long success =  ticketVerificationLogRepository.countByResultAndVerifiedAtBetween(TicketVerifyResult.SUCCESS, start, end);
         long fail = total - success;
 
         double rate = total > 0 ? (double) success / total * 100 : 0.0;
@@ -121,7 +120,7 @@ public class AdminDashboardService {
         Map<String, Long> resultCounts = ticketVerificationLogRepository.countByResultBetween(start, end)
                 .stream()
                 .collect(Collectors.toMap(
-                        r -> (String) r[0],
+                        r -> ((TicketVerifyResult) r[0]).name(),
                         r -> ((Number) r[1]).longValue()
                 ));
 

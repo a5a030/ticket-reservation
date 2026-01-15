@@ -246,14 +246,14 @@ public class TicketService {
 
         if (!acquireVerifyLock(ticketCode)) {
             TicketVerifyResponse response = build(
-                    false, "DUPLICATE_SCAN", "이미 검표가 진행 중인 티켓입니다.",
+                    false, TicketVerifyResult.DUPLICATE_SCAN.name(), "이미 검표가 진행 중인 티켓입니다.",
                     null, null, null,
                     SecurityContextHolder.getContext().getAuthentication().getName(),
                     clientIp(request),
                     LocalDateTime.now()
             );
             ticketVerificationLogRepository.save(
-                    new TicketVerificationLog(ticketCode, response.verifier(), response.deviceInfo(), response.status(), response.verifiedAt())
+                    new TicketVerificationLog(ticketCode, response.verifier(), response.deviceInfo(), toResult(response.status()), response.verifiedAt())
             );
             return response;
         }
@@ -263,7 +263,8 @@ public class TicketService {
             if(cached2 != null) return cached2;
 
             String verifier = SecurityContextHolder.getContext().getAuthentication().getName();
-            String deviceInfo = clientIp(request);
+            String ipAddress = clientIp(request);
+            String userAgent = request.getHeader("User-Agent");
             LocalDateTime verifiedAt = LocalDateTime.now();
 
             //1. 블랙리스트 조회
@@ -271,15 +272,15 @@ public class TicketService {
 
             if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistKey))) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.INVALIDATED.name(), "무효 처리된 티켓입니다.",
+                        false, TicketVerifyResult.INVALIDATED.name(), "무효 처리된 티켓입니다.",
                         null, null, null,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
                 safeSlack(String.format(
                         "취소/무효 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
-                        verifier, ticketCode, deviceInfo
+                        verifier, ticketCode, ipAddress
                 ));
 
                 return response;
@@ -291,9 +292,9 @@ public class TicketService {
 
             if (reservationSeatId == null) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.EXPIRED.name(), "티켓이 만료되었습니다. 재발급이 필요합니다.",
+                        false, TicketVerifyResult.EXPIRED.name(), "티켓이 만료되었습니다. 재발급이 필요합니다.",
                         null, null, null,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
@@ -301,23 +302,41 @@ public class TicketService {
             }
 
             //3. DB에서 티켓 조회
-            Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
-                    .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+            Ticket ticket;
+
+            try {
+                ticket = ticketRepository.findByTicketCode(ticketCode)
+                        .orElseThrow(() -> new CustomException(ErrorCode.TICKET_NOT_FOUND));
+            } catch (CustomException e) {
+                if(e.getErrorCode() == ErrorCode.TICKET_NOT_FOUND) {
+                    TicketVerifyResponse response = build(
+                            false, TicketVerifyResult.NOT_FOUND.name(), "티켓을 찾을 수 없습니다.",
+                            null, null, null,
+                            verifier, ipAddress, verifiedAt
+                    );
+
+                    saveLogAndCache(ticketCode, response, cacheKey);
+
+                    return response;
+                }
+
+                throw e;
+            }
 
             Long dbReservationSeatId = ticket.getReservationSeat() != null ? ticket.getReservationSeat().getId() : null;
 
             if (dbReservationSeatId == null || !reservationSeatId.equals(dbReservationSeatId.toString())) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.TAMPERED.name(), "티켓 정보가 유효하지 않습니다. 관리자에게 문의해주세요.",
+                        false, TicketVerifyResult.TAMPERED.name(), "티켓 정보가 유효하지 않습니다. 관리자에게 문의해주세요.",
                         null, null, null,
-                        verifier, deviceInfo, verifiedAt
+                        verifier, ipAddress, verifiedAt
                 );
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
                 safeSlack(String.format(
                         "티켓 매핑 불일치 감지\n검증자: %s\n티켓코드: %s\nRedis reservationSeatId: %s\nDB reservationSeatId: %s\nIP: %s",
-                        verifier, ticketCode, reservationSeatId, dbReservationSeatId, deviceInfo
+                        verifier, ticketCode, reservationSeatId, dbReservationSeatId, ipAddress
                 ));
 
                 return response;
@@ -331,9 +350,9 @@ public class TicketService {
             //4. 상태별 검표 처리
             if (ticket.getStatus() == TicketStatus.USED) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.USED.name(), "이미 사용된 티켓입니다.",
+                        false, TicketVerifyResult.USED.name(), "이미 사용된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
@@ -342,15 +361,15 @@ public class TicketService {
 
             if (ticket.getStatus() == TicketStatus.INVALIDATED) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.INVALIDATED.name(), "무효 처리된 티켓입니다.",
+                        false, TicketVerifyResult.INVALIDATED.name(), "무효 처리된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
                 safeSlack(String.format(
                         "무효 처리된 티켓 검증 시도 감지\n검증자: %s\n티켓코드: %s\nIP: %s",
-                        verifier, ticketCode, deviceInfo
+                        verifier, ticketCode, ipAddress
                 ));
 
                 return  response;
@@ -358,9 +377,9 @@ public class TicketService {
 
             if (ticket.getExpiresAt() != null && ticket.getExpiresAt().isBefore(LocalDateTime.now())) {
                 TicketVerifyResponse response = build(
-                        false, TicketStatus.EXPIRED.name(), "티켓이 만료되었습니다.",
+                        false, TicketVerifyResult.EXPIRED.name(), "티켓이 만료되었습니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
@@ -371,9 +390,9 @@ public class TicketService {
 
             if(updated == 1) {
                 TicketVerifyResponse response = build(
-                        true, TicketStatus.USED.name(), "입장 완료",
+                        true, TicketVerifyResult.SUCCESS.name(), "입장 완료",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt);
+                        verifier, ipAddress, verifiedAt);
 
                 saveLogAndCache(ticketCode, response, cacheKey);
 
@@ -389,21 +408,21 @@ public class TicketService {
 
             if(latestStatus == TicketStatus.USED) {
                 response = build(
-                        false, TicketStatus.USED.name(), "이미 사용된 티켓입니다.",
+                        false, TicketVerifyResult.USED.name(), "이미 사용된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt
+                        verifier, ipAddress, verifiedAt
                 );
             } else if(latestStatus == TicketStatus.INVALIDATED) {
                 response = build(
-                        false, TicketStatus.INVALIDATED.name(), "무효 처리된 티켓입니다.",
+                        false, TicketVerifyResult.INVALIDATED.name(), "무효 처리된 티켓입니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt
+                        verifier, ipAddress, verifiedAt
                 );
             } else {
                 response = build(
-                        false, latestStatus.name(), "티켓 상태가 유효하지 않습니다.",
+                        false, TicketVerifyResult.INVALID_STATE.name(), "티켓 상태가 유효하지 않습니다.",
                         performanceTitle, seatNo, expiresAt,
-                        verifier, deviceInfo, verifiedAt
+                        verifier, ipAddress, verifiedAt
                 );
             }
 
@@ -515,7 +534,7 @@ public class TicketService {
 
     private void saveLogAndCache(String ticketCode, TicketVerifyResponse response, String cacheKey) {
         ticketVerificationLogRepository.save(
-                new TicketVerificationLog(ticketCode, response.verifier(), response.deviceInfo(), response.status(), response.verifiedAt())
+                new TicketVerificationLog(ticketCode, response.verifier(), response.deviceInfo(), toResult(response.status()), response.verifiedAt())
         );
         cachedVerifyResponse(cacheKey, response);
     }
@@ -524,5 +543,13 @@ public class TicketService {
         try {
             slackNotifier.send(message);
         } catch (Exception ignored) {}
+    }
+
+    private TicketVerifyResult toResult(String status) {
+        try {
+            return TicketVerifyResult.valueOf(status);
+        } catch (Exception e) {
+            return TicketVerifyResult.INVALID_STATE;
+        }
     }
 }
