@@ -49,8 +49,7 @@ public class Reservation {
     @Schema(description = "예매수량")
     public int getQuantity() {
         return (int) reservationSeats.stream()
-                .filter(rs -> rs.getStatus() == ReservationSeatStatus.HOLD
-                || rs.getStatus() == ReservationSeatStatus.CONFIRMED)
+                .filter(rs -> rs.getStatus() == ReservationSeatStatus.CONFIRMED)
                 .count();
     }
 
@@ -271,13 +270,11 @@ public class Reservation {
 
     public int calculateTotalAmount() {
         long activeCount = reservationSeats.stream()
-                .filter(rs -> rs.getStatus() == ReservationSeatStatus.HOLD
-                        || rs.getStatus() == ReservationSeatStatus.CONFIRMED)
+                .filter(rs -> rs.getStatus() == ReservationSeatStatus.CONFIRMED)
                 .count();
 
         int seatTotal = reservationSeats.stream()
-                .filter(seat -> seat.getStatus() == ReservationSeatStatus.HOLD
-                        || seat.getStatus() == ReservationSeatStatus.CONFIRMED)
+                .filter(rs -> rs.getStatus() == ReservationSeatStatus.CONFIRMED)
                 .mapToInt(ReservationSeat::getPriceAtReservation)
                 .sum();
 

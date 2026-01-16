@@ -88,7 +88,7 @@ public class PaymentService {
                 reservation.setDeliveryMethod(DeliveryMethod.PICKUP);
             }
 
-            reservation.confirm();
+            reservation.confirmAllSeats(LocalDateTime.now());
 
             BigDecimal seatTotal = reservation.getSeats().stream()
                     .map(seat -> BigDecimal.valueOf(seat.getPrice()))
@@ -155,8 +155,8 @@ public class PaymentService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        if(payment.getStatus() != PaymentStatus.PAID || payment.getStatus() != PaymentStatus.PENDING) {
-            throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        if(payment.getStatus() != PaymentStatus.PAID && payment.getStatus() != PaymentStatus.PENDING) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
         Reservation reservation = payment.getReservation();
@@ -211,6 +211,7 @@ public class PaymentService {
 
         BigDecimal refundAmount = seatTotal.subtract(cancelFee).add(refundableBookingFee);
 
+        reservation.cancelAll();
         payment.markAsCancelled(cancelFee, refundAmount);
 
         RefundHistory history = new RefundHistory(
