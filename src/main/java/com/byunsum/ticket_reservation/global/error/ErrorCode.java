@@ -40,6 +40,9 @@ public enum ErrorCode {
     BOOKING_CLOSED(HttpStatus.BAD_REQUEST, "예매 가능 시간이 지났습니다."),
     ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 예매입니다."),
     UNAUTHORIZED_CANCEL(HttpStatus.FORBIDDEN, "본인의 예매만 취소할 수 있습니다."),
+    INVALID_SEAT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 좌석 상태입니다."),
+    SEAT_HOLD_EXPIRED(HttpStatus.BAD_REQUEST, "좌석 홀딩 시간이 만료되었습니다."),
+    INVALID_RELEASE_REQUEST(HttpStatus.BAD_REQUEST, "좌석 해제 요청이 유효하지 않습니다."),
 
     //재확정
     INVALID_RECONFIRM_STATUS(HttpStatus.BAD_REQUEST, "재확정 가능한 상태가 아닙니다."),

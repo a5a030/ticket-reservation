@@ -48,7 +48,10 @@ public class Reservation {
 
     @Schema(description = "예매수량")
     public int getQuantity() {
-        return reservationSeats.size();
+        return (int) reservationSeats.stream()
+                .filter(rs -> rs.getStatus() == ReservationSeatStatus.HOLD
+                || rs.getStatus() == ReservationSeatStatus.CONFIRMED)
+                .count();
     }
 
     @Schema(description = "배송비")
@@ -62,13 +65,12 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private DeliveryStatus deliveryStatus = DeliveryStatus.NONE;
 
-    public void addSeat(Seat seat) {
+    public void addSeat(Seat seat, LocalDateTime holdExpiredAt) {
         if(seat.isReserved()) {
             throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
         }
-        seat.setReserved(true); //좌석 상태 업데이트
-        ReservationSeat rs = new ReservationSeat(this, seat);
-        this.reservationSeats.add(rs);
+        seat.setReserved(true); //좌석 상태 업데이트, HOLD 시점에 이선좌
+        this.reservationSeats.add(new ReservationSeat(this, seat, holdExpiredAt));
     }
 
     public void setId(Long id) {
@@ -159,20 +161,76 @@ public class Reservation {
         return cancelledAt;
     }
 
-    public void cancel() {
+    public void cancelAll() {
         if(this.status == ReservationStatus.CANCELLED) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED);
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         for(ReservationSeat seat : reservationSeats) {
-            seat.cancel();
+            seat.cancel(0,0,now);
         }
 
-        this.cancelledAt = LocalDateTime.now();
+        this.cancelledAt = now;
         this.status = ReservationStatus.CANCELLED;
     }
 
-    public void confirm() {
+    public void cancelSeats(List<Long> seatIds, int cancelFee, int refundAmount, LocalDateTime now) {
+        if(seatIds == null || seatIds.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        long matched = reservationSeats.stream()
+                .filter(rs -> seatIds.contains(rs.getSeat().getId()))
+                .count();
+
+        if(matched != seatIds.size()) {
+            throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
+        }
+
+        long cancelCount = 0;
+
+        for(ReservationSeat rs : reservationSeats) {
+            if(!seatIds.contains(rs.getSeat().getId())) continue;
+
+            if(rs.getStatus() == ReservationSeatStatus.CANCELLED || rs.getStatus() == ReservationSeatStatus.RELEASED) {
+                continue;
+            }
+
+            rs.cancel(cancelFee,refundAmount,now);
+            cancelCount++;
+        }
+
+        if(cancelCount == 0) {
+            throw new CustomException(ErrorCode.INVALID_SEAT_STATUS);
+        }
+
+        if(isAllInactive()) {
+            this.cancelledAt = now;
+            this.status = ReservationStatus.CANCELLED;
+        }
+    }
+
+    private boolean isAllInactive() {
+        return reservationSeats.stream()
+                .allMatch(seat -> seat.getStatus() == ReservationSeatStatus.CANCELLED
+                        || seat.getStatus() == ReservationSeatStatus.RELEASED);
+    }
+
+    public void confirmAllSeats(LocalDateTime now) {
+        boolean hasInactive = reservationSeats.stream()
+                .anyMatch(rs -> rs.getStatus() == ReservationSeatStatus.RELEASED
+                || rs.getStatus() == ReservationSeatStatus.CANCELLED);
+
+        if(hasInactive) {
+            throw new CustomException(ErrorCode.INVALID_SEAT_STATUS);
+        }
+
+        for(ReservationSeat seat : reservationSeats) {
+            seat.confirm(now);
+        }
+
         this.status = ReservationStatus.CONFIRMED;
     }
 
@@ -194,10 +252,6 @@ public class Reservation {
                 .toList();
     }
 
-    public void addReservationSeat(ReservationSeat rs) {
-        this.reservationSeats.add(rs);
-    }
-
     public boolean isReconfirmed() {
         return reconfirmed;
     }
@@ -216,12 +270,18 @@ public class Reservation {
     }
 
     public int calculateTotalAmount() {
+        long activeCount = reservationSeats.stream()
+                .filter(rs -> rs.getStatus() == ReservationSeatStatus.HOLD
+                        || rs.getStatus() == ReservationSeatStatus.CONFIRMED)
+                .count();
+
         int seatTotal = reservationSeats.stream()
-                .filter(seat -> seat.getStatus() != ReservationStatus.CANCELLED)
+                .filter(seat -> seat.getStatus() == ReservationSeatStatus.HOLD
+                        || seat.getStatus() == ReservationSeatStatus.CONFIRMED)
                 .mapToInt(ReservationSeat::getPriceAtReservation)
                 .sum();
 
-        int bookingFee = 2000 * getQuantity();
+        int bookingFee = (int) (2000 * activeCount);
 
         return seatTotal + bookingFee + deliveryFee;
     }
@@ -262,7 +322,9 @@ public class Reservation {
     }
 
     public boolean isPartiallyCancelled() {
-        return reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationStatus.CANCELLED)
-                && reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationStatus.CONFIRMED);
+        boolean hasCancelled = reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationSeatStatus.CANCELLED);
+        boolean hasConfirmed = reservationSeats.stream().anyMatch(s -> s.getStatus() == ReservationSeatStatus.CONFIRMED);
+
+        return hasCancelled && hasConfirmed;
     }
 }

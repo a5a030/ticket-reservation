@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.domain;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
 
@@ -20,9 +22,12 @@ public class ReservationSeat {
     private Seat seat;
 
     @Enumerated(EnumType.STRING)
-    private ReservationStatus status = ReservationStatus.PENDING;
+    private ReservationSeatStatus status = ReservationSeatStatus.HOLD;
 
+    private LocalDateTime holdExpiredAt;
+    private LocalDateTime confirmedAt;
     private LocalDateTime cancelledAt;
+    private LocalDateTime releasedAt;
 
     @Column(nullable = false)
     private int priceAtReservation;
@@ -32,11 +37,11 @@ public class ReservationSeat {
 
     public ReservationSeat() {}
 
-    public ReservationSeat(Reservation reservation, Seat seat) {
+    public ReservationSeat(Reservation reservation, Seat seat, LocalDateTime holdExpiredAt) {
         this.reservation = reservation;
         this.seat = seat;
         this.priceAtReservation = seat.getPrice();
-        reservation.addReservationSeat(this);
+        this.holdExpiredAt = holdExpiredAt;
     }
 
     public Long getId() {
@@ -51,23 +56,59 @@ public class ReservationSeat {
         return seat;
     }
 
-    public void cancel() {
-        cancel(0,0);
+    public void confirm(LocalDateTime now) {
+        status.assertTransitionTo(ReservationSeatStatus.CONFIRMED);
+
+        if(status != ReservationSeatStatus.HOLD) {
+            throw new CustomException(ErrorCode.INVALID_SEAT_STATUS);
+        }
+
+        if(holdExpiredAt != null && !now.isBefore(holdExpiredAt)) {
+            throw new CustomException(ErrorCode.SEAT_HOLD_EXPIRED);
+        }
+
+        this.status = ReservationSeatStatus.CONFIRMED;
+        this.confirmedAt = now;
     }
 
-    public void cancel(int cancelFee, int refundAmount) {
-        if(this.status == ReservationStatus.CANCELLED) {
+    public void cancel(int cancelFee, int refundAmount, LocalDateTime now) {
+        status.assertTransitionTo(ReservationSeatStatus.CANCELLED);
+
+        if(this.status == ReservationSeatStatus.CANCELLED || this.status == ReservationSeatStatus.RELEASED) {
             return;
         }
 
-        this.status = ReservationStatus.CANCELLED;
-        this.cancelledAt = LocalDateTime.now();
+        this.status = ReservationSeatStatus.CANCELLED;
+        this.cancelledAt = now;
         this.cancelFee = cancelFee;
         this.refundAmount = refundAmount;
         seat.release();
     }
 
-    public ReservationStatus getStatus() {
+    public void release(LocalDateTime now) {
+        status.assertTransitionTo(ReservationSeatStatus.RELEASED);
+
+        if(status == ReservationSeatStatus.RELEASED ||status == ReservationSeatStatus.CANCELLED) {
+            return;
+        }
+
+        // HOLD -> RELEASED는 만료 근거가 있어야 함
+        if(status == ReservationSeatStatus.HOLD) {
+            if(holdExpiredAt == null || now.isBefore(holdExpiredAt)) {
+                throw new CustomException(ErrorCode.INVALID_RELEASE_REQUEST);
+            }
+        }
+
+        this.status = ReservationSeatStatus.RELEASED;
+        this.releasedAt = now;
+
+        this.cancelFee = 0;
+        this.refundAmount = 0;
+
+        seat.release();
+    }
+
+    public ReservationSeatStatus getStatus() {
         return status;
     }
 
