@@ -10,6 +10,8 @@ import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class ReservationProcessor implements ItemProcessor<BatchReservationRequest, Reservation> {
     private final MemberRepository memberRepository;
@@ -32,12 +34,23 @@ public class ReservationProcessor implements ItemProcessor<BatchReservationReque
 
         Reservation reservation = new Reservation(performance, member);
 
-        request.getSeatIds().forEach(seatId -> {
-            var seat = seatRepository.findById(seatId)
-                    .orElseThrow(() -> new CustomException(ErrorCode.SEAT_NOT_FOUND));
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime holdExpiredAt = now;
 
-            reservation.addSeat(seat);
-        });
+        var seatIds = request.getSeatIds();
+        if(seatIds.size() != seatIds.stream().distinct().count()) {
+            throw new  CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        var seats = seatRepository.findAllById(seatIds);
+
+        if(seats.size() != seatIds.size()) {
+            throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
+        }
+
+        seats.forEach(seat -> reservation.addSeat(seat, holdExpiredAt));
+
+        reservation.confirmAllSeats(now);
 
         return reservation;
     }
