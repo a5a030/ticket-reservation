@@ -233,6 +233,20 @@ public class Reservation {
         this.status = ReservationStatus.CONFIRMED;
     }
 
+    public void expireAll(LocalDateTime now) {
+        if(this.status == ReservationStatus.CANCELLED) return;
+        if(this.status == ReservationStatus.EXPIRED) return;
+
+        for (ReservationSeat seat : reservationSeats) {
+            if (seat.getStatus() == ReservationSeatStatus.CANCELLED) continue;
+            if (seat.getStatus() == ReservationSeatStatus.RELEASED) continue;
+            seat.cancel(0, 0, now);
+        }
+
+        this.cancelledAt = now;
+        this.status = ReservationStatus.EXPIRED;
+    }
+
     public Member getMember() {
         return member;
     }
