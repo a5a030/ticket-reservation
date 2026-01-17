@@ -43,6 +43,8 @@ public enum ErrorCode {
     INVALID_SEAT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 좌석 상태입니다."),
     SEAT_HOLD_EXPIRED(HttpStatus.BAD_REQUEST, "좌석 홀딩 시간이 만료되었습니다."),
     INVALID_RELEASE_REQUEST(HttpStatus.BAD_REQUEST, "좌석 해제 요청이 유효하지 않습니다."),
+    INVALID_SEAT_SELECTION(HttpStatus.BAD_REQUEST, "선택되지 않았거나 본인이 선택한 좌석이 아닙니다."),
+
 
     //재확정
     INVALID_RECONFIRM_STATUS(HttpStatus.BAD_REQUEST, "재확정 가능한 상태가 아닙니다."),

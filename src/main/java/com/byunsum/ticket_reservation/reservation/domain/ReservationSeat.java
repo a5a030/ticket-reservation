@@ -59,10 +59,6 @@ public class ReservationSeat {
     public void confirm(LocalDateTime now) {
         status.assertTransitionTo(ReservationSeatStatus.CONFIRMED);
 
-        if(status != ReservationSeatStatus.HOLD) {
-            throw new CustomException(ErrorCode.INVALID_SEAT_STATUS);
-        }
-
         if(holdExpiredAt != null && !now.isBefore(holdExpiredAt)) {
             throw new CustomException(ErrorCode.SEAT_HOLD_EXPIRED);
         }
@@ -82,13 +78,12 @@ public class ReservationSeat {
         this.cancelledAt = now;
         this.cancelFee = cancelFee;
         this.refundAmount = refundAmount;
-        seat.release();
     }
 
     public void release(LocalDateTime now) {
         status.assertTransitionTo(ReservationSeatStatus.RELEASED);
 
-        if(status == ReservationSeatStatus.RELEASED ||status == ReservationSeatStatus.CANCELLED) {
+        if(status == ReservationSeatStatus.RELEASED) {
             return;
         }
 
@@ -134,5 +129,19 @@ public class ReservationSeat {
 
     public void setSeat(Seat seat) {
         this.seat = seat;
+    }
+
+    public void systemRelease(LocalDateTime now) {
+        if(this.status == ReservationSeatStatus.RELEASED) return;
+
+        status.assertTransitionTo(ReservationSeatStatus.RELEASED);
+
+        this.status = ReservationSeatStatus.RELEASED;
+        this.releasedAt = now;
+
+        this.cancelFee = 0;
+        this.refundAmount = 0;
+
+        seat.release();
     }
 }

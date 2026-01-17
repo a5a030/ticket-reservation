@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.controller;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.reservation.domain.ReservationSortOption;
 import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
@@ -24,19 +26,6 @@ public class ReservationController {
 
     public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
-    }
-
-    @Operation(summary = "예매 생성", description = "예매 요청을 통해 예매 정보를 생성합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "예매 생성 성공"),
-            @ApiResponse(responseCode = "400", description = "유효하지 않은 예매 요청"),
-            @ApiResponse(responseCode = "401", description = "인증 필요")
-    })
-    @PostMapping
-    public ResponseEntity<ReservationResponse> reservation(@RequestBody ReservationRequest request, @AuthenticationPrincipal Member member) {
-        ReservationResponse response = reservationService.createReservation(request, member);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "예매 조회", description = "예매 코드로 예매 정보를 조회합니다.")
@@ -100,7 +89,13 @@ public class ReservationController {
     })
     @GetMapping("/my")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Member member, @RequestParam(defaultValue = "recent", name = "sort") String sort) {
-        ReservationSortOption sortOption = ReservationSortOption.valueOf(sort.toUpperCase());
+        ReservationSortOption sortOption;
+        try {
+            sortOption = ReservationSortOption.valueOf(sort.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_SORT);
+        }
+
         List<ReservationResponse> responses = reservationService.getReservationsByMember(member.getId(), sortOption);
 
         return ResponseEntity.ok(responses);

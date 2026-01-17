@@ -45,16 +45,13 @@ public class ReservationService {
     }
 
     private Reservation saveReservation(Performance performance, List<Seat> seats, Member member) {
-        Reservation reservation = new Reservation();
-        reservation.setPerformance(performance);
-        reservation.setMember(member);
+        Reservation reservation = new Reservation(performance, member);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime holdExpiredAt = now.plusMinutes(10);
 
         for(Seat seat : seats) {
-            if(seat.isReserved()) {
-                throw new  CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
-            }
-
-            reservation.addSeat(seat);
+            reservation.addSeat(seat, holdExpiredAt);
         }
 
         return reservationRepository.save(reservation);
@@ -72,28 +69,6 @@ public class ReservationService {
         return new ReservationResponse(reservation, ttl);
     }
 
-    public ReservationResponse createReservation(ReservationRequest request, Member member) {
-        Performance performance = performanceRepository.findById(request.getPerformanceId())
-                .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
-
-        validateReservationPeriod(performance, member);
-
-        List<Seat> seats = seatRepository.findAllById(request.getSeatIds());
-
-        if(seats.size() != request.getSeatIds().size()) {
-            throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
-        }
-
-        Reservation reservation = saveReservation(performance, seats, member);
-
-        for(Seat seat : seats) {
-            String timeoutKey = "reservation:timeout:" + seat.getId();
-            redisTemplate.opsForValue().set(timeoutKey, "PENDING", Duration.ofMinutes(10));
-        }
-
-        return toResponse(reservation);
-    }
-
     public ReservationResponse getReservationByCode(String code) {
         Reservation reservation = reservationRepository.findByReservationCode(code)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
@@ -109,31 +84,35 @@ public class ReservationService {
         validateReservationPeriod(performance, member);
 
         List<Seat> seats = seatRepository.findAllById(seatIds);
-        if(seats.size() != seatIds.size()) {
+        if (seats.size() != seatIds.size()) {
             throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
         }
 
-        for(Seat seat : seats) {
+        for (Seat seat : seats) {
             String key = getKey(seat.getId());
             String selectedBy = redisTemplate.opsForValue().get(key);
 
-            if(selectedBy == null || !selectedBy.equals(member.getId().toString())) {
-                throw new CustomException(ErrorCode.SEAT_ALREADY_SELECTED);
+            if (selectedBy == null || !selectedBy.equals(member.getId().toString())) {
+                throw new CustomException(ErrorCode.INVALID_SEAT_SELECTION);
             }
 
-            if(seat.isReserved()) {
+            if (seat.isReserved()) {
                 throw new CustomException(ErrorCode.SEAT_ALREADY_RESERVED);
             }
         }
 
         Reservation reservation = saveReservation(performance, seats, member);
 
-        for(Seat seat : seats) {
+        for (Seat seat : seats) {
+            String timeoutKey = "reservation:timeout:" + seat.getId();
+            redisTemplate.opsForValue().set(timeoutKey, "HOLD", Duration.ofMinutes(10));
+
             redisTemplate.delete(getKey(seat.getId()));
         }
 
         return toResponse(reservation);
     }
+
 
     @Transactional
     public void cancelReservation(String reservationCode, Long memberId) {
@@ -148,18 +127,15 @@ public class ReservationService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_CANCEL);
         }
 
-        reservation.cancel();
+        reservation.cancelAll();
         paymentService.cancelByReservation(reservation);
 
         for(Seat seat : reservation.getSeats()) {
-            // Redis에 취소된 좌석 잠금 처리
             String reconfirmKey = "seat:reconfirm:" + seat.getId();
             redisTemplate.opsForValue().set(reconfirmKey, "LOCKED", Duration.ofMinutes(10));
 
-            // 좌석 선택 키도 일정 시간 후 사용 가능하게 등록
-            String seatKey = getKey(seat.getId());
-            long randomSeconds = ThreadLocalRandom.current().nextLong(300, 601);
-            redisTemplate.opsForValue().set(seatKey, "available", Duration.ofSeconds(randomSeconds));
+            redisTemplate.delete(getKey(seat.getId()));
+            redisTemplate.delete("reservation:timeout:" + seat.getId());
         }
     }
 
