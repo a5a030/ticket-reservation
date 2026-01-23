@@ -25,10 +25,19 @@ public enum ErrorCode {
     //회차/선예매
     ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "회차 정보를 찾을 수 없습니다."),
     DUPLICATE_PRE_RESERVATION(HttpStatus.CONFLICT, "이미 선예매에 응모하셨습니다."),
-    NO_PRE_RESERVATION_APPLICANTS(HttpStatus.NOT_FOUND, "해당 회차의 선예매 응모자가 없습니다."),
+    NO_PRE_RESERVATION_APPLICANTS(HttpStatus.NOT_FOUND, "해당 공연의 선예매 응모자가 없습니다."),
     PRE_RESERVATION_REQUIRED(HttpStatus.FORBIDDEN, "선예매 대상자만 예매할 수 있습니다."),
     NOT_PRE_RESERVATION_WINNER(HttpStatus.FORBIDDEN, "선예매 당첨자가 아닙니다."),
     RESERVATION_NOT_OPEN(HttpStatus.BAD_REQUEST, "아직 예매가 오픈되지 않았습니다."),
+    INVALID_PRE_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 선예매 상태입니다."),
+
+    // 추첨/배정
+    PRE_RESERVATION_DRAW_NOT_READY(HttpStatus.BAD_REQUEST, "아직 추첨을 진행할 수 없습니다."),
+    PRE_RESERVATION_NOT_WINNER(HttpStatus.FORBIDDEN, "좌석 추첨 당첨자가 아닙니다."),
+    PRE_RESERVATION_ASSIGNMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "좌석 배정 정보를 찾을 수 없습니다."),
+    PRE_RESERVATION_ASSIGNMENT_EXPIRED(HttpStatus.BAD_REQUEST, "좌석 배정 결제 기한이 만료되었습니다."),
+    PRE_RESERVATION_ASSIGNMENT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 좌석 배정입니다."),
+    INVALID_PRE_RESERVATION_ASSIGNMENT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 좌석 배정 상태입니다."),
 
     //예매/좌석
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예매 정보를 찾을 수 없습니다."),
