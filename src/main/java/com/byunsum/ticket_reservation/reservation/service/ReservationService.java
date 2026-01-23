@@ -6,9 +6,12 @@ import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.payment.service.PaymentService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
-import com.byunsum.ticket_reservation.reservation.domain.*;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationResponse;
+import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservationStatus;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSortOption;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationStatus;
+import com.byunsum.ticket_reservation.reservation.dto.reservation.ReservationResponse;
 import com.byunsum.ticket_reservation.reservation.repository.PreReservationRepository;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
@@ -20,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class ReservationService {

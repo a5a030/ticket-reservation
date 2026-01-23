@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.review.domain;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

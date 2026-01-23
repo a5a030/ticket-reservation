@@ -1,16 +1,11 @@
 package com.byunsum.ticket_reservation.ticket;
 
 import com.byunsum.ticket_reservation.DummyFactory;
-import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
-import com.byunsum.ticket_reservation.performance.domain.Performance;
-import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationSeatRepository;
-import com.byunsum.ticket_reservation.seat.domain.Seat;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import com.byunsum.ticket_reservation.ticket.domain.Ticket;
 import com.byunsum.ticket_reservation.ticket.repository.TicketRepository;

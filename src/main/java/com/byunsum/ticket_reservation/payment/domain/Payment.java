@@ -2,7 +2,7 @@ package com.byunsum.ticket_reservation.payment.domain;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 

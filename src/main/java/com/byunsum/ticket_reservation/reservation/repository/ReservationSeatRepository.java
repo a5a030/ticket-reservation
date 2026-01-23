@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.reservation.repository;
 
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

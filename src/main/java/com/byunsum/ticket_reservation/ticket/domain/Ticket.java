@@ -1,11 +1,10 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
 import jakarta.persistence.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 public class Ticket {

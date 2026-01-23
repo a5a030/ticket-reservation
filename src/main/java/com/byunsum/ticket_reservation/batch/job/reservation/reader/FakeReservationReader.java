@@ -1,8 +1,7 @@
 package com.byunsum.ticket_reservation.batch.job.reservation.reader;
 
 import com.byunsum.ticket_reservation.reservation.batch.FakeReservationGenerator;
-import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
+import com.byunsum.ticket_reservation.reservation.dto.reservation.BatchReservationRequest;
 import org.springframework.batch.item.ItemReader;
 
 import java.util.Iterator;

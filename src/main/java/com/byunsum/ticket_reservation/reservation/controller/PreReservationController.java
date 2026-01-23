@@ -1,9 +1,9 @@
 package com.byunsum.ticket_reservation.reservation.controller;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
-import com.byunsum.ticket_reservation.reservation.dto.PreReservationMyResponse;
-import com.byunsum.ticket_reservation.reservation.dto.PreReservationRequest;
-import com.byunsum.ticket_reservation.reservation.dto.PreReservationResponse;
+import com.byunsum.ticket_reservation.reservation.dto.pre.PreReservationMyResponse;
+import com.byunsum.ticket_reservation.reservation.dto.pre.PreReservationRequest;
+import com.byunsum.ticket_reservation.reservation.dto.pre.PreReservationResponse;
 import com.byunsum.ticket_reservation.reservation.service.PreReservationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

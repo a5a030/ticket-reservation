@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.reservation.dto;
+package com.byunsum.ticket_reservation.reservation.dto.pre;
 
 public record PreReservationRequest(Long performanceRoundId) {
 }

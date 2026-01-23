@@ -1,7 +1,6 @@
 package com.byunsum.ticket_reservation.reservation.batch;
 
-import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
+import com.byunsum.ticket_reservation.reservation.dto.reservation.BatchReservationRequest;
 
 import java.util.ArrayList;
 import java.util.List;

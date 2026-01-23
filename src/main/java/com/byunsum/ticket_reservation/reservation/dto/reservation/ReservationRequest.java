@@ -1,27 +1,21 @@
-package com.byunsum.ticket_reservation.reservation.dto;
+package com.byunsum.ticket_reservation.reservation.dto.reservation;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-public class BatchReservationRequest {
-    private Long memberId;
+public class ReservationRequest {
+    @Schema(description = "예매할 공연 ID", example = "1")
     private Long performanceId;
+
+    @Schema(description = "예매할 좌석 ID 리스트", example = "[5, 6, 7]")
     private List<Long> seatIds;
 
-    public BatchReservationRequest() {
-    }
+    public ReservationRequest() {}
 
-    public BatchReservationRequest(Long memberId, Long performanceId, List<Long> seatIds) {
-        this.memberId = memberId;
+    public ReservationRequest(Long performanceId, List<Long> seatIds) {
         this.performanceId = performanceId;
         this.seatIds = seatIds;
-    }
-
-    public Long getMemberId() {
-        return memberId;
-    }
-
-    public void setMemberId(Long memberId) {
-        this.memberId = memberId;
     }
 
     public Long getPerformanceId() {

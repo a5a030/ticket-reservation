@@ -1,7 +1,8 @@
-package com.byunsum.ticket_reservation.reservation.domain;
+package com.byunsum.ticket_reservation.reservation.domain.reservation;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import jakarta.persistence.*;
 

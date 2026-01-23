@@ -14,8 +14,8 @@ import com.byunsum.ticket_reservation.payment.repository.RefundHistoryRepository
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
-import com.byunsum.ticket_reservation.reservation.domain.DeliveryMethod;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.delivery.DeliveryMethod;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

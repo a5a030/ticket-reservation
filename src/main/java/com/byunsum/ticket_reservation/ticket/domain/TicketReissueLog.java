@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 

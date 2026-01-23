@@ -2,8 +2,8 @@ package com.byunsum.ticket_reservation.reservation.repository;
 
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeatStatus;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeatStatus;
 import org.springframework.data.domain.Pageable;
 import com.byunsum.ticket_reservation.reservation.repository.projection.MemberRoundCount;
 import org.springframework.data.jpa.repository.JpaRepository;

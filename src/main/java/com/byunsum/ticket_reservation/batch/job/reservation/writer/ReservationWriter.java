@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.batch.job.reservation.writer;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;

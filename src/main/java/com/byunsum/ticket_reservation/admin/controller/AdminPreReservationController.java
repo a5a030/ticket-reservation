@@ -1,6 +1,6 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
-import com.byunsum.ticket_reservation.reservation.dto.PreReservationAdminResponse;
+import com.byunsum.ticket_reservation.reservation.dto.pre.PreReservationAdminResponse;
 import com.byunsum.ticket_reservation.reservation.service.PreReservationService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;

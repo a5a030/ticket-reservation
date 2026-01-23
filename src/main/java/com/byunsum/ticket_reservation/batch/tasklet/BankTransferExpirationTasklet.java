@@ -6,7 +6,7 @@ import com.byunsum.ticket_reservation.payment.domain.PaymentCancelReason;
 import com.byunsum.ticket_reservation.payment.domain.PaymentMethod;
 import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;

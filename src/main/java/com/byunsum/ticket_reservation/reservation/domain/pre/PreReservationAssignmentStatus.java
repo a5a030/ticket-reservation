@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.reservation.domain;
+package com.byunsum.ticket_reservation.reservation.domain.pre;
 
 public enum PreReservationAssignmentStatus {
     ASSIGNED,   // 좌석 배정(결제 대기)

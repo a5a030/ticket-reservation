@@ -3,7 +3,7 @@ package com.byunsum.ticket_reservation.review.service;
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import com.byunsum.ticket_reservation.review.aop.InvalidateReviewCache;
 import com.byunsum.ticket_reservation.review.domain.Review;

@@ -1,6 +1,5 @@
 package com.byunsum.ticket_reservation.ticket.qr;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;

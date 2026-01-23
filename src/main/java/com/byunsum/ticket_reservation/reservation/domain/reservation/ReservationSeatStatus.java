@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.reservation.domain;
+package com.byunsum.ticket_reservation.reservation.domain.reservation;
 
 public enum ReservationSeatStatus {
     HOLD,           // 결제 전 좌석 점유(이선좌 표시)

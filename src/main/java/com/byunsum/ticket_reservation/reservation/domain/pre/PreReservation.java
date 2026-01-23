@@ -1,4 +1,4 @@
-package com.byunsum.ticket_reservation.reservation.domain;
+package com.byunsum.ticket_reservation.reservation.domain.pre;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;

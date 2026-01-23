@@ -9,14 +9,13 @@ import com.byunsum.ticket_reservation.payment.domain.PaymentStatus;
 import com.byunsum.ticket_reservation.payment.repository.PaymentRepository;
 import com.byunsum.ticket_reservation.payment.repository.RefundHistoryRepository;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;

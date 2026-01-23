@@ -1,7 +1,7 @@
 package com.byunsum.ticket_reservation.ticket.domain;
 
 import com.byunsum.ticket_reservation.DummyFactory;
-import com.byunsum.ticket_reservation.reservation.domain.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

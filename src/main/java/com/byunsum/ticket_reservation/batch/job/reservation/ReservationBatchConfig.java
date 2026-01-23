@@ -5,9 +5,8 @@ import com.byunsum.ticket_reservation.batch.job.reservation.reader.FakeReservati
 import com.byunsum.ticket_reservation.batch.job.reservation.writer.ReservationWriter;
 import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
-import com.byunsum.ticket_reservation.reservation.dto.BatchReservationRequest;
-import com.byunsum.ticket_reservation.reservation.dto.ReservationRequest;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
+import com.byunsum.ticket_reservation.reservation.dto.reservation.BatchReservationRequest;
 import com.byunsum.ticket_reservation.seat.repository.SeatRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;

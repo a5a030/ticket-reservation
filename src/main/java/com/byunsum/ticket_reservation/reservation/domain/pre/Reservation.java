@@ -1,9 +1,14 @@
-package com.byunsum.ticket_reservation.reservation.domain;
+package com.byunsum.ticket_reservation.reservation.domain.pre;
 
 import com.byunsum.ticket_reservation.global.error.CustomException;
 import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeat;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationSeatStatus;
+import com.byunsum.ticket_reservation.reservation.domain.reservation.ReservationStatus;
+import com.byunsum.ticket_reservation.reservation.domain.delivery.DeliveryMethod;
+import com.byunsum.ticket_reservation.reservation.domain.delivery.DeliveryStatus;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;

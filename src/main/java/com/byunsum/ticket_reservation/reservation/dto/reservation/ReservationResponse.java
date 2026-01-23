@@ -1,6 +1,6 @@
-package com.byunsum.ticket_reservation.reservation.dto;
+package com.byunsum.ticket_reservation.reservation.dto.reservation;
 
-import com.byunsum.ticket_reservation.reservation.domain.Reservation;
+import com.byunsum.ticket_reservation.reservation.domain.pre.Reservation;
 import com.byunsum.ticket_reservation.seat.domain.Seat;
 import io.swagger.v3.oas.annotations.media.Schema;
 
