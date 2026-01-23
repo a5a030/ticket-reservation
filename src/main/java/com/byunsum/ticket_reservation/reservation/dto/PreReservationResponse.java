@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 
 public record PreReservationResponse(
         Long id,
-        Long performanceId,
+        Long performanceRoundId,
+        String performanceTitle,
         String status,
         LocalDateTime appliedAt
 ) {
