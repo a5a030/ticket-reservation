@@ -5,7 +5,6 @@ import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.member.domain.Member;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,7 +13,12 @@ import java.time.LocalDateTime;
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_pre_reservation_member_performance",
                 columnNames = {"member_id", "performance_id"}
-        )
+        ),
+        indexes = {
+                @Index(name = "idx_pre_reservation_performance", columnList = "performance_id"),
+                @Index(name = "idx_pre_reservation_member", columnList = "member_id"),
+                @Index(name = "idx_pre_reservation_type_status", columnList = "type, status")
+        }
 )
 public class PreReservation {
     @Id
@@ -39,17 +43,26 @@ public class PreReservation {
     @Column(nullable = true)
     private LocalDateTime drawnAt;
 
-    // 당첨자 결제 권한 만료 시점
+    // 당첨자 결제 권한 만료 시점(추첨 발표 당일 23:59:59)
     @Column(nullable = true)
     private LocalDateTime expiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PreReservationType type;
 
     public PreReservation() {
     }
 
-    public PreReservation(Member member, Performance performance, PreReservationStatus status) {
+    public PreReservation(Member member, Performance performance, PreReservationType type) {
+        if(member == null || performance == null || type == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         this.member = member;
         this.performance = performance;
-        this.status = status;
+        this.type = type;
+        this.status = PreReservationStatus.WAITING;
     }
 
     public Long getId() {
@@ -70,10 +83,6 @@ public class PreReservation {
 
     public LocalDateTime getAppliedAt() {
         return appliedAt;
-    }
-
-    public void setStatus(PreReservationStatus status) {
-        this.status = status;
     }
 
     public void markWinner(LocalDateTime drawnAt, LocalDateTime expiresAt) {
