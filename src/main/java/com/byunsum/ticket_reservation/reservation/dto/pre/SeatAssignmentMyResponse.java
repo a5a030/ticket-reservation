@@ -2,12 +2,13 @@ package com.byunsum.ticket_reservation.reservation.dto.pre;
 
 import java.time.LocalDateTime;
 
-public record PreReservationMyResponse(
+public record SeatAssignmentMyResponse(
         Long performanceId,
         String performanceTitle,
-        String type,
-        String status,
-        LocalDateTime appliedAt,
+        String preReservationStatus,
+        Long assignmentId,
+        String seatNo,
+        String assignmentStatus,
         LocalDateTime expiresAt
 ) {
 }

@@ -23,11 +23,15 @@ public class PreReservationAdminResponse {
     @Schema(description = "응모 일시")
     private LocalDateTime appliedAt;
 
-    public PreReservationAdminResponse(Long id, Long memberId, String email, Long performanceId, String status, LocalDateTime appliedAt) {
+    @Schema(description = "응모 타입 (PRE_SALE, SEAT_ASSIGNMENT)")
+    private String type;
+
+    public PreReservationAdminResponse(Long id, Long memberId, String email, Long performanceId, String type, String status, LocalDateTime appliedAt) {
         this.id = id;
         this.memberId = memberId;
         this.email = email;
         this.performanceId = performanceId;
+        this.type = type;
         this.status = status;
         this.appliedAt = appliedAt;
     }
