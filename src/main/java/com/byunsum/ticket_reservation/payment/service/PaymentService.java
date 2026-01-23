@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -88,42 +89,54 @@ public class PaymentService {
                 reservation.setDeliveryMethod(DeliveryMethod.PICKUP);
             }
 
-            reservation.confirmAllSeats(LocalDateTime.now());
+            int seatCount = reservation.getReservationSeats().size();
+
+            if(seatCount <= 0) {
+                throw new CustomException(ErrorCode.INVALID_SEAT_SELECTION);
+            }
 
             BigDecimal seatTotal = reservation.getSeats().stream()
                     .map(seat -> BigDecimal.valueOf(seat.getPrice()))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             BigDecimal bookingFee = BigDecimal.valueOf(2000L)
-                    .multiply(BigDecimal.valueOf(reservation.getQuantity()));
+                    .multiply(BigDecimal.valueOf(seatCount));
             BigDecimal deliveryFee = BigDecimal.valueOf(reservation.getDeliveryFee());
             BigDecimal totalAmount = seatTotal.add(bookingFee).add(deliveryFee);
 
-            PaymentStatus initialStatus = (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER)
-                    ? PaymentStatus.PENDING
-                    : PaymentStatus.PAID;
+//            PaymentStatus initialStatus = (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER)
+//                    ? PaymentStatus.PENDING
+//                    : PaymentStatus.PAID;
+
+            PaymentMethod method = request.getPaymentMethod();
 
             Payment payment = new Payment(
                     totalAmount,
-                    request.getPaymentMethod(),
-                    initialStatus,
+                    method,
+                    PaymentStatus.PENDING,
                     reservation
             );
 
             Payment saved = paymentRepository.save(payment);
 
-            if (request.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
+            if(method == PaymentMethod.BANK_TRANSFER) {
                 String accountNumber = generateAccountNumber();
                 saved.setAccountNumber(accountNumber);
 
-                String bankKey = "payment:bank:timeout:" + reservation.getId();
+                String bankKey = "payment:bank:timeout:reservation:" + reservation.getId();
 
-                long secondUntilMidnight = java.time.Duration.between(
-                        LocalDateTime.now(),
-                        LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay()
+                LocalDateTime now = LocalDateTime.now();
+
+                long secondsUntilMidnight = Duration.between(
+                        now,
+                        now.toLocalDate().plusDays(1).atStartOfDay()
                 ).getSeconds();
 
-                redisTemplate.opsForValue().set(bankKey, "PENDING", java.time.Duration.ofSeconds(secondUntilMidnight));
+                redisTemplate.opsForValue().set(
+                        bankKey,
+                        "PENDING",
+                        Duration.ofSeconds(secondsUntilMidnight)
+                );
 
                 notificationService.send(
                         reservation.getMember(),
@@ -131,17 +144,27 @@ public class PaymentService {
                         "/payments/" + saved.getId()
                 );
 
-                paymentRepository.save(saved);
+                return toPaymentResponse(paymentRepository.save(saved));
             }
+
+            reservation.confirmAllSeats(LocalDateTime.now());
+
+            reservation.getReservationSeats().forEach(rs -> {
+                redisTemplate.delete("reservation:timeout:" + rs.getSeat().getId());
+            });
+
+            saved.markAsPaid();
 
             return toPaymentResponse(saved);
         } catch (CustomException e) {
-            slackNotifier.send("⚠️ 결제 실패: " + e.getErrorCode().name() + " / 요청: " + request);
-
+            try {
+                slackNotifier.send("결제 실패: " + e.getErrorCode().name() + " / 요청: " + request);
+            } catch (Exception ignored) {}
             throw e;
         } catch (Exception e) {
-            slackNotifier.send("🚨 시스템 오류: " + e.getMessage() + " / 요청: " + request);
-
+            try {
+                slackNotifier.send("시스템 오류: " + e.getMessage() + " / 요청: " + request);
+            } catch (Exception ignored) {}
             throw e;
         }
     }
@@ -171,14 +194,25 @@ public class PaymentService {
 
         Performance performance = reservation.getPerformance();
 
-        int ticketCount = reservation.getQuantity();
+        if(payment.getStatus() == PaymentStatus.PENDING) {
+            reservation.cancelAll();
+            payment.cancel(PaymentCancelReason.USER_REQUEST);
+
+            return toPaymentResponse(payment);
+        }
+
+        int ticketCount = reservation.getReservationSeats().size();
+
+        if(ticketCount <= 0) {
+            throw new CustomException(ErrorCode.INVALID_SEAT_SELECTION);
+        }
 
         BigDecimal seatTotal = reservation.getSeats().stream()
                 .map(seat -> BigDecimal.valueOf(seat.getPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal bookingFee = BigDecimal.valueOf(2000L)
-                .multiply(BigDecimal.valueOf(reservation.getQuantity()));
+                .multiply(BigDecimal.valueOf(ticketCount));
         BigDecimal deliveryFee = BigDecimal.valueOf(reservation.getDeliveryFee());
         BigDecimal cancelFee;
 
@@ -209,10 +243,10 @@ public class PaymentService {
 
         BigDecimal refundableBookingFee = (isSameDayBooking && beforeMidnight) ? bookingFee : BigDecimal.ZERO;
 
-        BigDecimal refundAmount = seatTotal.subtract(cancelFee).add(refundableBookingFee);
+        BigDecimal refundAmount = seatTotal.subtract(cancelFee).add(refundableBookingFee).add(deliveryFee);
 
         reservation.cancelAll();
-        payment.markAsCancelled(cancelFee, refundAmount);
+        payment.markAsCancelled(cancelFee, refundAmount, PaymentCancelReason.USER_REQUEST);
 
         RefundHistory history = new RefundHistory(
                 payment,
@@ -306,7 +340,8 @@ public class PaymentService {
         if(optional.isEmpty()) return;
 
         Payment payment = optional.get();
-        if(payment.getStatus() == PaymentStatus.PAID || payment.getStatus() == PaymentStatus.PENDING) {
+        if(payment.getStatus() == PaymentStatus.PENDING) {
+            reservation.cancelAll();
             payment.cancel(PaymentCancelReason.USER_REQUEST);
         }
     }

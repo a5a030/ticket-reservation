@@ -17,21 +17,25 @@ public class Payment {
     private Long id;
 
     @Schema(description = "결제 금액")
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Schema(description = "결제 수단", example = "BANK_TRANSFER")
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Schema(description = "결제 상태", example = "PENDING")
     private PaymentStatus status;
 
     @Schema(description = "결제일시")
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @OneToOne
-    @JoinColumn(name = "reservation_id")
+    @JoinColumn(name = "reservation_id", nullable = false)
     @Schema(description = "연결된 예매 정보")
     private Reservation reservation;
 
@@ -46,19 +50,24 @@ public class Payment {
     private String accountNumber;
 
     @Schema(description = "취소 수수료")
+    @Column(nullable = false)
     private BigDecimal cancelFee = BigDecimal.ZERO;
 
     @Schema(description = "실제 환불금액")
+    @Column(nullable = false)
     private BigDecimal refundAmount =  BigDecimal.ZERO;
 
     @Schema(description = "부분 취소된 누적 금액")
+    @Column(nullable = false)
     private BigDecimal partialAmount = BigDecimal.ZERO;
 
     @Schema(description = "취소사유")
     @Enumerated(EnumType.STRING)
     private PaymentCancelReason cancelReason;
 
-
+    private boolean isPaidOrPartialCancelled()  {
+        return this.status == PaymentStatus.PAID || this.status == PaymentStatus.PARTIAL_CANCELLED;
+    }
 
     public BigDecimal getCancelFee() {
         return cancelFee;
@@ -137,23 +146,38 @@ public class Payment {
     }
 
     public void markAsPaid() {
+        if(this.status != PaymentStatus.PENDING) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
         this.status = PaymentStatus.PAID;
     }
 
+    //paid/partial_canclled 취소
     public void markAsCancelled(BigDecimal cancelFee, BigDecimal refundAmount) {
+        if(this.status != PaymentStatus.PAID && this.status != PaymentStatus.PARTIAL_CANCELLED) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
         this.cancelFee = (cancelFee == null ? BigDecimal.ZERO : cancelFee).max(BigDecimal.ZERO);
         this.refundAmount = ((refundAmount == null) ? BigDecimal.ZERO : refundAmount).max(BigDecimal.ZERO);
-
-        if(this.reservation != null) {
-            this.reservation.cancel();
-        }
     }
 
+    public void markAsCancelled(BigDecimal cancelFee, BigDecimal refundAmount, PaymentCancelReason reason) {
+        markAsCancelled(cancelFee, refundAmount);
+        this.cancelReason = reason;
+    }
+
+    //pending 취소
     public void cancel(PaymentCancelReason reason) {
         if(isCancelled()) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        }
+
+        if(this.status != PaymentStatus.PENDING) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
         }
 
         this.status = PaymentStatus.CANCELLED;
@@ -161,10 +185,6 @@ public class Payment {
         this.cancelFee = BigDecimal.ZERO;
         this.refundAmount = BigDecimal.ZERO;
         this.cancelReason = reason;
-
-        if(this.reservation != null) {
-            this.reservation.cancel();
-        }
     }
 
     public void markAsReconfirmed() {
@@ -182,12 +202,16 @@ public class Payment {
     }
 
     public void cancelPartial(BigDecimal cancelAmount, BigDecimal cancelFee, PaymentCancelReason reason) {
-        if(reason == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
-        }
-
         if(isCancelled()) {
             throw new CustomException(ErrorCode.ALREADY_CANCELED_PAYMENT);
+        }
+
+        if(!isPaidOrPartialCancelled()) {
+            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
+        }
+
+        if(reason == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         if(cancelAmount == null || cancelAmount.compareTo(BigDecimal.ZERO) <= 0 || cancelAmount.compareTo(this.amount) > 0) {
@@ -213,10 +237,6 @@ public class Payment {
 
             BigDecimal calculated = this.amount.subtract(this.cancelFee);
             this.refundAmount = calculated.max(BigDecimal.ZERO);
-
-            if(this.reservation != null) {
-                this.reservation.cancel();
-            }
 
             return;
         }
