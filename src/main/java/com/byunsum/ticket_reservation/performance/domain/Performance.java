@@ -1,6 +1,11 @@
 package com.byunsum.ticket_reservation.performance.domain;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.dto.PerformanceRequest;
+import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservationType;
+import com.byunsum.ticket_reservation.reservation.domain.sale.ReleaseTarget;
+import com.byunsum.ticket_reservation.reservation.domain.sale.SalePhase;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -23,8 +28,10 @@ public class Performance {
     private String posterUrl;
     private LocalDate startDate;
     private LocalDate endDate;
+
     private LocalDateTime preReservationOpenDateTime;
     private LocalDateTime generalReservationOpenDateTime;
+
     private int maxTicketsPerPerson;
 
     @Enumerated(EnumType.STRING)
@@ -32,6 +39,18 @@ public class Performance {
 
     @OneToMany(mappedBy = "performance", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PerformanceRound> rounds = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PreReservationType preReservationType = PreReservationType.PRE_SALE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SalePhase salePhase = SalePhase.GENERAL_SALE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReleaseTarget releaseTarget = ReleaseTarget.GENERAL_SALE;
 
     //출연진, 가격 등 확장 예정
 
@@ -55,7 +74,7 @@ public class Performance {
     public void addRound(PerformanceRound round) {
         if(round == null) return;
         if(round.getPerformance() != null && round.getPerformance() != this) {
-            throw new IllegalStateException("Round already belongs to another performance");
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         if(!this.rounds.contains(round)) {
@@ -170,6 +189,50 @@ public class Performance {
         return Collections.unmodifiableList(rounds);
     }
 
+    public PreReservationType getPreReservationType() {
+        return preReservationType;
+    }
+
+    public void setPreReservationType(PreReservationType preReservationType) {
+        this.preReservationType = preReservationType;
+    }
+
+    public SalePhase getSalePhase() {
+        return salePhase;
+    }
+
+    public void setSalePhase(SalePhase salePhase) {
+        this.salePhase = salePhase;
+    }
+
+    public ReleaseTarget getReleaseTarget() {
+        return releaseTarget;
+    }
+
+    public void setReleaseTarget(ReleaseTarget releaseTarget) {
+        this.releaseTarget = releaseTarget;
+    }
+
+    public boolean isPreSalePolicy() {
+        return this.preReservationType == PreReservationType.PRE_SALE;
+    }
+
+    public boolean isSeatAssignmentPolicy() {
+        return this.preReservationType == PreReservationType.SEAT_ASSIGNMENT;
+    }
+
+    public boolean isDrawPayPhase() {
+        return this.salePhase == SalePhase.DRAW_PAY;
+    }
+
+    public boolean isPreSalePhase() {
+        return this.salePhase == SalePhase.PRE_SALE;
+    }
+
+    public boolean isGeneralPhase() {
+        return this.salePhase == SalePhase.GENERAL_SALE;
+    }
+
     public void updateFrom(PerformanceRequest request) {
         this.title = request.getTitle();
         this.description = request.getDescription();
@@ -182,5 +245,21 @@ public class Performance {
         this.generalReservationOpenDateTime = request.getGeneralReservationOpenDateTime();
         this.maxTicketsPerPerson = request.getMaxTicketsPerPerson();
         this.type = request.getType();
+        this.preReservationType = request.getPreReservationType();
+        this.salePhase = request.getSalePhase();
+        this.releaseTarget = request.getReleaseTarget();
+
+        validatePolicy();
+
+    }
+
+    public void validatePolicy() {
+        if(preReservationType == PreReservationType.SEAT_ASSIGNMENT && salePhase == SalePhase.PRE_SALE) {
+            throw new CustomException(ErrorCode.INVALID_SALE_POLICY);
+        }
+
+        if(preReservationType == PreReservationType.PRE_SALE && salePhase == SalePhase.DRAW_PAY) {
+            throw new CustomException(ErrorCode.INVALID_SALE_POLICY);
+        }
     }
 }

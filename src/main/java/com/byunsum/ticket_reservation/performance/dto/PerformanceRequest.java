@@ -1,6 +1,9 @@
 package com.byunsum.ticket_reservation.performance.dto;
 
 import com.byunsum.ticket_reservation.performance.domain.PerformanceType;
+import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservationType;
+import com.byunsum.ticket_reservation.reservation.domain.sale.ReleaseTarget;
+import com.byunsum.ticket_reservation.reservation.domain.sale.SalePhase;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -50,6 +53,18 @@ public class PerformanceRequest {
     @NotNull
     @Schema(description = "예매정책을 위한 분류")
     private PerformanceType type;
+
+    @NotNull
+    @Schema(description = "선예매 정책 (PRE_SALE / SEAT_ASSIGNMENT)")
+    private PreReservationType preReservationType;
+
+    @NotNull
+    @Schema(description = "판매 단계 (DRAW_PAY / PRE_SALE / GENERAL_SALE)")
+    private SalePhase salePhase;
+
+    @NotNull
+    @Schema(description = "취소표/잔여석 공개 대상 (PRE_SALE / GENERAL_SALE)")
+    private ReleaseTarget releaseTarget;
 
     public PerformanceRequest() {}
 
@@ -139,5 +154,29 @@ public class PerformanceRequest {
 
     public void setType(PerformanceType type) {
         this.type = type;
+    }
+
+    public PreReservationType getPreReservationType() {
+        return preReservationType;
+    }
+
+    public void setPreReservationType(PreReservationType preReservationType) {
+        this.preReservationType = preReservationType;
+    }
+
+    public SalePhase getSalePhase() {
+        return salePhase;
+    }
+
+    public void setSalePhase(SalePhase salePhase) {
+        this.salePhase = salePhase;
+    }
+
+    public ReleaseTarget getReleaseTarget() {
+        return releaseTarget;
+    }
+
+    public void setReleaseTarget(ReleaseTarget releaseTarget) {
+        this.releaseTarget = releaseTarget;
     }
 }

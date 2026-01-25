@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "공연 시작일은 종료일보다 늦을 수 없습니다."),
     INVALID_RESERVATION_OPEN_TIME(HttpStatus.BAD_REQUEST, "선예매 오픈일시는 일반 예매 오픈일시보다 늦을 수 없습니다."),
     INVALID_SORT(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 조건입니다."),
+    INVALID_SALE_POLICY(HttpStatus.BAD_REQUEST, "공연 예매 정책과 판매 단계 조합이 올바르지 않습니다."),
 
     //회차/선예매
     ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "회차 정보를 찾을 수 없습니다."),
