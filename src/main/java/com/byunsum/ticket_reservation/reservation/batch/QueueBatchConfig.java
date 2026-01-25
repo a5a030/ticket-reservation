@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.reservation.batch;
 
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
+import com.byunsum.ticket_reservation.reservation.domain.sale.SalePhase;
 import com.byunsum.ticket_reservation.reservation.service.ReservationQueueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class QueueBatchConfig {
         int totalEntered = 0;
 
         try {
-            List<Long> performanceIds = performanceRepository.findAllIds();
+            List<Long> performanceIds = performanceRepository.findQueueOpenPerformanceIds(SalePhase.PRE_SALE, SalePhase.GENERAL_SALE);
 
             for(Long performanceId : performanceIds) {
                 try {
