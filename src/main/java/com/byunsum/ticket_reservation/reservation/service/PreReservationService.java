@@ -7,9 +7,7 @@ import com.byunsum.ticket_reservation.member.repository.MemberRepository;
 import com.byunsum.ticket_reservation.notification.domain.NotificationType;
 import com.byunsum.ticket_reservation.notification.service.NotificationService;
 import com.byunsum.ticket_reservation.performance.domain.Performance;
-import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import com.byunsum.ticket_reservation.performance.repository.PerformanceRepository;
-import com.byunsum.ticket_reservation.performance.repository.PerformanceRoundRepository;
 import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservation;
 import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservationStatus;
 import com.byunsum.ticket_reservation.reservation.domain.pre.PreReservationType;
@@ -28,6 +26,8 @@ import java.util.List;
 
 @Service
 public class PreReservationService {
+    private static final double PRE_RESERVATION_CAPACITY_RATE = 0.9;
+
     private final MemberRepository memberRepository;
     private final PreReservationRepository preReservationRepository;
     private final PerformanceRepository performanceRepository;
@@ -78,22 +78,75 @@ public class PreReservationService {
         Performance performance = performanceRepository.findById(performanceId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PERFORMANCE_NOT_FOUND));
 
-        PreReservationType policyType = performance.getPreReservationType();
+        PreReservationType type = performance.getPreReservationType();
 
+        if(type == PreReservationType.SEAT_ASSIGNMENT) {
+            drawSeatAssignment(performance);
+            return;
+        }
+
+        if(type == PreReservationType.PRE_SALE) {
+            drawPreSaleAccess(performance);
+            return;
+        }
+
+        throw new CustomException(ErrorCode.INVALID_SALE_POLICY);
+    }
+
+    private int calculateWinnerCount(Performance performance, int applicantSize) {
         long totalSeats = seatRepository.countByPerformance(performance);
 
         if(totalSeats <= 0) {
             throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
         }
 
-        List<PreReservation> applicants = preReservationRepository.findByPerformanceAndTypeAndStatus(performance, policyType, PreReservationStatus.WAITING);
+        int maxPreSaleCapacity = (int) Math.floor(totalSeats * PRE_RESERVATION_CAPACITY_RATE);
+        return Math.min(applicantSize, maxPreSaleCapacity);
+    }
+
+    private void drawPreSaleAccess(Performance performance) {
+        List<PreReservation> applicants = preReservationRepository.findByPerformanceAndTypeAndStatus(performance, PreReservationType.PRE_SALE, PreReservationStatus.WAITING);
 
         if(applicants.isEmpty()) {
             throw new CustomException(ErrorCode.NO_PRE_RESERVATION_APPLICANTS);
         }
 
-        int winnerCount = (int) Math.min(applicants.size(), Math.floor(totalSeats * 0.9));
+        int winnerCount = calculateWinnerCount(performance, applicants.size());
+        Collections.shuffle(applicants);
 
+        LocalDateTime drawnAt = LocalDateTime.now();
+
+        for(int i=0; i<applicants.size(); i++) {
+            PreReservation pre =  applicants.get(i);
+
+            if(i < winnerCount) {
+                pre.markWinner(drawnAt);
+                notificationService.createNotification(
+                        "[당첨] " + performance.getTitle() + " 선예매 권한이 부여되었습니다.",
+                        pre.getMember(),
+                        NotificationType.PRE_RESERVATION
+                );
+            }  else {
+                pre.markLoser(drawnAt);
+                notificationService.createNotification(
+                        "[미당첨] " + performance.getTitle() + " 선예매 권한이 부여되지 않았습니다.",
+                        pre.getMember(),
+                        NotificationType.PRE_RESERVATION
+                );
+            }
+        }
+
+        preReservationRepository.saveAll(applicants);
+    }
+
+    private void drawSeatAssignment(Performance performance) {
+        List<PreReservation> applicants = preReservationRepository.findByPerformanceAndTypeAndStatus(performance, PreReservationType.SEAT_ASSIGNMENT, PreReservationStatus.WAITING);
+
+        if(applicants.isEmpty()) {
+            throw new CustomException(ErrorCode.NO_PRE_RESERVATION_APPLICANTS);
+        }
+
+        int winnerCount = calculateWinnerCount(performance, applicants.size());
         Collections.shuffle(applicants);
 
         LocalDateTime drawnAt = LocalDateTime.now();
@@ -102,17 +155,11 @@ public class PreReservationService {
         for(int i=0; i<applicants.size(); i++) {
             PreReservation pre =  applicants.get(i);
 
-            boolean isWinner = i < winnerCount;
-
-            if(isWinner) {
-                if(policyType == PreReservationType.SEAT_ASSIGNMENT) {
-                    pre.markWinner(drawnAt, expiresAt);
-                } else {
-                    pre.markWinner(drawnAt); //PRE_SALE
-                }
+            if(i < winnerCount) {
+                pre.markWinner(drawnAt, expiresAt);
 
                 notificationService.createNotification(
-                        buildWinnerMessage(performance, policyType, expiresAt),
+                        "[당첨] " + performance.getTitle() + " 좌석추첨에 당첨됐습니다. 결제기한: " + expiresAt.toLocalDate() + " 23:59:59",
                         pre.getMember(),
                         NotificationType.PRE_RESERVATION
                 );
@@ -167,15 +214,5 @@ public class PreReservationService {
                         pre.getAppliedAt()
                 ))
                 .toList();
-    }
-
-    private String buildWinnerMessage(Performance performance, PreReservationType policyType, LocalDateTime expiresAt) {
-        if(policyType == PreReservationType.SEAT_ASSIGNMENT) {
-            return "[당첨] " + performance.getTitle()
-                    + " 좌석 추첨에 당첨되었습니다. 결제 기한: "
-                    + expiresAt.toLocalDate() + " 23:59:59";
-        }
-
-        return "[당첨] " + performance.getTitle() + " 선예매 대상자로 선정되었습니다. 예매일정을 확인하세요.";
     }
 }
