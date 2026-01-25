@@ -85,14 +85,36 @@ public class PreReservation {
         return appliedAt;
     }
 
+    public LocalDateTime getDrawnAt() {
+        return drawnAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public PreReservationType getType() {
+        return type;
+    }
+
+    public void markWinner(LocalDateTime drawnAt) {
+        if(drawnAt == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        validateWaiting();
+
+        this.status = PreReservationStatus.WINNER;
+        this.drawnAt = drawnAt;
+        this.expiresAt = null;
+    }
+
     public void markWinner(LocalDateTime drawnAt, LocalDateTime expiresAt) {
         if(drawnAt == null || expiresAt == null) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        if(this.status != PreReservationStatus.WAITING) {
-            throw new CustomException(ErrorCode.INVALID_PRE_RESERVATION_STATUS);
-        }
+        validateWaiting();
 
         this.status = PreReservationStatus.WINNER;
         this.drawnAt = drawnAt;
@@ -104,9 +126,7 @@ public class PreReservation {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        if(this.status != PreReservationStatus.WAITING) {
-            throw new CustomException(ErrorCode.INVALID_PRE_RESERVATION_STATUS);
-        }
+        validateWaiting();
 
         this.status = PreReservationStatus.LOSER;
         this.drawnAt = drawnAt;
@@ -117,6 +137,12 @@ public class PreReservation {
     public void prePersist() {
         if(this.appliedAt == null) {
             this.appliedAt = LocalDateTime.now();
+        }
+    }
+
+    private void validateWaiting() {
+        if(this.status != PreReservationStatus.WAITING) {
+            throw new CustomException(ErrorCode.INVALID_PRE_RESERVATION_STATUS);
         }
     }
 }
