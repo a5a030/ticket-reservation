@@ -16,8 +16,6 @@ public class ReservationWriter implements ItemWriter<Reservation> {
 
     @Override
     public void write(Chunk<? extends Reservation> chunk){
-        for (Reservation reservation : chunk) {
-            reservationRepository.save(reservation);
-        }
+        reservationRepository.saveAll(chunk.getItems());
     }
 }

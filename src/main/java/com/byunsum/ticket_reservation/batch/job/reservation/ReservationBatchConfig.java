@@ -44,7 +44,7 @@ public class ReservationBatchConfig {
                                 ReservationWriter reservationWriter) {
         return new StepBuilder("reservationStep", jobRepository)
                 .<BatchReservationRequest, Reservation>chunk(100, transactionManager)
-                .reader(new FakeReservationReader())
+                .reader(new FakeReservationReader(seatRepository, 100, 500))
                 .processor(new ReservationProcessor(memberRepository, performanceRepository, seatRepository))
                 .writer(reservationWriter)
                 .build();
