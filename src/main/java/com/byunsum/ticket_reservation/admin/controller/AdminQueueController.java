@@ -1,6 +1,7 @@
 package com.byunsum.ticket_reservation.admin.controller;
 
 import com.byunsum.ticket_reservation.reservation.repository.ReservationRepository;
+import com.byunsum.ticket_reservation.reservation.repository.projection.MemberRoundCount;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -36,23 +37,31 @@ public class AdminQueueController {
 
         return Map.of(
                 "performanceId", performanceId,
-                "maxQueueSize", max != null ? Long.parseLong(max) : 0,
+                "maxQueueSize", parseLongOrZero(max),
                 "maxQueueTime", maxTime != null ? maxTime : "-",
-                "firstMinuteJoins", firstMinute != null ? Long.parseLong(firstMinute) : 0,
-                "multiAttemptUsers", multiAttempts != null ? Long.parseLong(multiAttempts) : 0
+                "firstMinuteJoins", parseLongOrZero(firstMinute),
+                "multiAttemptUsers", parseLongOrZero(multiAttempts)
         );
     }
 
     @GetMapping("/{performanceId}/multi-round-buyers")
     @Operation(summary = "여러 회차 예매자 수", description = "대기열을 통과해 여러 날짜/회차 티켓을 구매한 회원 수를 조회합니다.")
     public Map<String, Object> getMultiRoundBuyers(@PathVariable Long performanceId) {
-        List<Object[]> result = reservationRepository.findMembersWithMultipleRounds(performanceId);
+        List<MemberRoundCount> result = reservationRepository.findMembersWithMultipleRounds(performanceId);
         long count = result.size();
 
         return Map.of(
                 "performanceId", performanceId,
                 "multiRoundBuyerCount", count
         );
+    }
+
+    private long parseLongOrZero(String s) {
+        try {
+            return s == null ? 0L : Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 }
 
