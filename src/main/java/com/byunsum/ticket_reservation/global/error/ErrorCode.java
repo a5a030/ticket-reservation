@@ -23,6 +23,10 @@ public enum ErrorCode {
     INVALID_SORT(HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 조건입니다."),
     INVALID_SALE_POLICY(HttpStatus.BAD_REQUEST, "공연 예매 정책과 판매 단계 조합이 올바르지 않습니다."),
 
+    VENUE_NAME_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 이름은 필수입니다."),
+    VENUE_CITY_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 도시는 필수입니다."),
+    VENUE_MAP_SIZE_INVALID(HttpStatus.BAD_REQUEST, "공연장 좌석 맵 크기는 0보다 커야 합니다."),
+
     //회차/선예매
     ROUND_NOT_FOUND(HttpStatus.NOT_FOUND, "회차 정보를 찾을 수 없습니다."),
     DUPLICATE_PRE_RESERVATION(HttpStatus.CONFLICT, "이미 선예매에 응모하셨습니다."),
@@ -54,6 +58,15 @@ public enum ErrorCode {
     SEAT_HOLD_EXPIRED(HttpStatus.BAD_REQUEST, "좌석 홀딩 시간이 만료되었습니다."),
     INVALID_RELEASE_REQUEST(HttpStatus.BAD_REQUEST, "좌석 해제 요청이 유효하지 않습니다."),
     INVALID_SEAT_SELECTION(HttpStatus.BAD_REQUEST, "선택되지 않았거나 본인이 선택한 좌석이 아닙니다."),
+
+    SEAT_NO_REQUIRED(HttpStatus.BAD_REQUEST, "좌석 번호는 필수입니다."),
+    SEAT_PRICE_INVALID(HttpStatus.BAD_REQUEST, "좌석 가격은 0 이상이어야 합니다."),
+    SEAT_ROUND_REQUIRED(HttpStatus.BAD_REQUEST, "좌석은 공연 회차에 속해야 합니다."),
+
+    SEAT_TEMPLATE_LABEL_REQUIRED(HttpStatus.BAD_REQUEST, "좌석 라벨은 필수입니다."),
+    SEAT_TEMPLATE_GRADE_REQUIRED(HttpStatus.BAD_REQUEST, "좌석 등급은 필수입니다."),
+    SEAT_TEMPLATE_COORDINATE_INVALID(HttpStatus.BAD_REQUEST, "좌석 좌표는 0 이상이어야 합니다."),
+    SEAT_TEMPLATE_VENUE_REQUIRED(HttpStatus.BAD_REQUEST, "좌석 템플릿에는 공연장이 필요합니다."),
 
 
     //재확정

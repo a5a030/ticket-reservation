@@ -1,5 +1,7 @@
 package com.byunsum.ticket_reservation.seat.domain;
 
+import com.byunsum.ticket_reservation.global.error.CustomException;
+import com.byunsum.ticket_reservation.global.error.ErrorCode;
 import com.byunsum.ticket_reservation.performance.domain.PerformanceRound;
 import jakarta.persistence.*;
 
@@ -38,11 +40,11 @@ public class Seat {
 
     public Seat(String seatNo, int price, PerformanceRound round) {
         if(round == null) {
-            throw new IllegalArgumentException("round required");
+            throw new CustomException(ErrorCode.SEAT_ROUND_REQUIRED);
         }
 
         if(price<0) {
-            throw new IllegalArgumentException("price must be >=0");
+            throw new CustomException(ErrorCode.SEAT_PRICE_INVALID);
         }
 
         this.seatNo = normalizedSeatNo(seatNo);
@@ -68,6 +70,9 @@ public class Seat {
     }
 
     public void setPrice(int price) {
+        if(price < 0) {
+            throw new CustomException(ErrorCode.SEAT_PRICE_INVALID);
+        }
         this.price = price;
     }
 
@@ -89,15 +94,15 @@ public class Seat {
 
     private String normalizedSeatNo(String seatNo) {
         if(seatNo == null) {
-            throw new IllegalArgumentException("seatNo required");
+            throw new CustomException(ErrorCode.SEAT_NO_REQUIRED);
         }
 
-        String normalizedSeatNo = seatNo.trim().toUpperCase();
+        String normalized = seatNo.trim().toUpperCase();
 
-        if(normalizedSeatNo.isBlank()) {
-            throw new IllegalArgumentException("seatNo required");
+        if(normalized.isBlank()) {
+            throw new CustomException(ErrorCode.SEAT_NO_REQUIRED);
         }
 
-        return normalizedSeatNo;
+        return normalized;
     }
 }
